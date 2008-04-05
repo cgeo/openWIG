@@ -12,35 +12,32 @@ public class Details extends Form implements CommandListener, Pushable {
 	
 	private StringItem description = new StringItem(null, null);
 	private Thing thing;
-	private Vector actions = new Vector();
 	
 	public Details (Thing t) {
 		super(null);
 		thing = t;
 		append(description);
 		setCommandListener(this);
-		addCommand(CMD_ACTIONS);
 		addCommand(Midlet.CMD_BACK);
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_ACTIONS) {
-			Midlet.push(new Actions(getTitle(), thing));
-		} else switch (cmd.getCommandType()) {
-			case Command.SCREEN:
-				// perform single action
-				break;
-			case Command.BACK:
-				Midlet.pop();
-				break;
+			Midlet.push(new Actions(thing.name, thing));
+		} else if (cmd == Midlet.CMD_BACK) {
+			Midlet.pop();
 		}
 	}
 
 	public void prepare() {
-		String title = (String)thing.table.rawget("Name");
+		String title = thing.name;
 		String desc = (String)thing.table.rawget("Description");
 		setTitle(title);
 		description.setText(desc);
+		
+		int actions = thing.visibleActions() + Engine.instance.cartridge.visibleUniversalActions();
+		if (actions > 0) addCommand(CMD_ACTIONS);
+		else removeCommand(CMD_ACTIONS);
 	}
 	
 }

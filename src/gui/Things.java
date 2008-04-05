@@ -42,7 +42,7 @@ public class Things extends List implements CommandListener, Pushable {
 			Thing t = (Thing)v.elementAt(i);
 			if (t.isVisible()) {
 				things.addElement(t);
-				append((String)t.table.rawget("Name"), null);
+				append(t.name, null);
 			}
 		}
 		int s = size();

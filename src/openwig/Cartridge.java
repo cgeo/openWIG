@@ -8,6 +8,7 @@ public class Cartridge extends EventTable {
 	public Zone currentZone = null;
 	
 	public Vector things = new Vector();
+	public Vector universalActions = new Vector();
 	
 	public static void register(LuaState state) {
 		EventTable.register(state);
@@ -42,5 +43,14 @@ public class Cartridge extends EventTable {
 	public int visibleThings () {
 		if (currentZone == null) return 0;
 		return currentZone.visibleThings();
-	}	
+	}
+	
+	public int visibleUniversalActions () {
+		int count = 0;
+		for (int i = 0; i < universalActions.size(); i++) {
+			Action a = (Action)universalActions.elementAt(i);
+			if (a.isEnabled()) count++;
+		}
+		return count;
+	}
 }

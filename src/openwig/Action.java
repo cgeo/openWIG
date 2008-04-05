@@ -2,11 +2,17 @@ package openwig;
 
 import se.krka.kahlua.vm.*;
 
+import java.util.Vector;
+
 public class Action extends EventTable {
 	
 	private String name;
 	private boolean parameter;
 	private boolean enabled;
+
+	private Thing actor = null;
+	private Vector targets = new Vector();
+	private boolean universal;
 	
 	public static void register (LuaState state) {
 		EventTable.register(state);
@@ -28,6 +34,24 @@ public class Action extends EventTable {
 			parameter = LuaState.boolEval(value);
 		} else if (key == "Enabled") {
 			enabled = LuaState.boolEval(value);
+		} else if (key == "WorksWithAll") {
+			universal = LuaState.boolEval(value);
+		} else if (key == "WorksWithList") {
+			LuaTable lt = (LuaTable)value;
+			Object i = null;
+			while ((i = lt.next(i)) != null) {
+				targets.addElement(lt.rawget(i));
+			}
+			setTargets();
+		}
+	}
+	
+	private void setTargets() {
+		if (actor == null) return;
+		
+		for (int i = 0; i < targets.size(); i++) {
+			Thing target = (Thing)targets.elementAt(i);
+			target.foreignActions.addElement(this);
 		}
 	}
 
@@ -42,5 +66,17 @@ public class Action extends EventTable {
 	public boolean isEnabled() {
 		return enabled;
 	}
-
+	
+	public boolean isUniversal() {
+		return universal;
+	}
+	
+	public void setActor (Thing a) {
+		actor = a;
+		setTargets();
+	}
+	
+	public Thing getActor () {
+		return actor;
+	}
 }

@@ -9,7 +9,11 @@ public class Thing extends EventTable {
 	private boolean character = false;
 	private Container location = null;
 	
+	public String name;
+	
 	public Vector actions = new Vector();
+	
+	public Vector foreignActions = new Vector();
 	
 	private static class MovetoMethod implements JavaFunction {
 		public int call(LuaCallFrame callFrame, int nArguments) {
@@ -35,13 +39,20 @@ public class Thing extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Visible") {
+		if (key == "Name") {
+			name = (String)value;
+		} else if (key == "Visible") {
 			visible = LuaState.boolEval(value);
 		} else if (key == "Commands") {
 			LuaTable lt = (LuaTable)value;
 			Object i = null;
 			while ((i = lt.next(i)) != null) {
-				actions.addElement(lt.rawget(i));
+				Action a = (Action)lt.rawget(i);
+				a.setActor(this);
+				actions.addElement(a);
+				if (a.hasParameter()) {
+					
+				}
 			}
 		}
 	}
@@ -50,6 +61,10 @@ public class Thing extends EventTable {
 		int count = 0;
 		for (int i = 0; i < actions.size(); i++) {
 			Action c = (Action)actions.elementAt(i);
+			if (c.isEnabled()) count++;
+		}
+		for (int i = 0; i < foreignActions.size(); i++) {
+			Action c = (Action)foreignActions.elementAt(i);
 			if (c.isEnabled()) count++;
 		}
 		return count;
