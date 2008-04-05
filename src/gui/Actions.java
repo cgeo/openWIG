@@ -26,8 +26,9 @@ public class Actions extends List implements CommandListener, Pushable {
 				Action z = (Action) actions.elementAt(index);
 				Engine.callEvent(thing, "On"+z.getName(), null);
 			}
+		} else if (cmd == Midlet.CMD_BACK) {
+			Midlet.pop();
 		}
-		Midlet.pop();
 	}
 
 	public void prepare() {
