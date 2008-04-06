@@ -24,16 +24,20 @@ public class Actions extends List implements CommandListener, Pushable {
 			int index = getSelectedIndex();
 			if (index >= 0 && index < actions.size()) {
 				Action z = (Action) actions.elementAt(index);
-				Thing source = thing;
-				Thing target = null;
-				if (z.hasParameter()) {
-					source = z.getActor();
-					target = thing;
+				String eventName = "On"+z.getName();
+				
+				if (z.getActor() == thing) {
+					if (z.hasParameter()) {
+						Midlet.push(new Targets(thing.name+": "+z.getName(), z));
+					} else {
+						Engine.callEvent(thing, eventName, null);
+					}
+				} else if (z.hasParameter()) {
+					Engine.callEvent(z.getActor(), eventName, thing);
 				}
-				Engine.callEvent(source, "On" + z.getName(), target);
 			}
 		} else if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop();
+			Midlet.pop(this);
 		}
 	}
 
@@ -42,10 +46,16 @@ public class Actions extends List implements CommandListener, Pushable {
 			Action a = (Action) v.elementAt(i);
 			if (a.isEnabled()) {
 				String name;
-				if (a.getActor() == thing)
+				if (a.getActor() == thing) {
 					name = a.getName();
-				else
+					if (a.hasParameter()) {
+						int targets = a.visibleTargets(Engine.instance.cartridge.currentZone)
+							+ a.visibleTargets(Engine.instance.player);
+						if (targets < 1) continue;
+					}
+				} else {
 					name = a.getActor().name + ": " + a.getName();
+				}
 				append(name, null);
 				actions.addElement(a);
 			}
@@ -54,6 +64,11 @@ public class Actions extends List implements CommandListener, Pushable {
 	}
 
 	public void prepare() {
+		if (!thing.isVisible()) {
+			Midlet.pop(this);
+			return;
+		}
+		
 		int index = getSelectedIndex();
 		deleteAll();
 		actions.removeAllElements();

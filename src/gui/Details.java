@@ -1,10 +1,8 @@
 package gui;
 
-import java.util.Vector;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.Thing;
-import openwig.Action;
 
 public class Details extends Form implements CommandListener, Pushable {
 	
@@ -25,11 +23,16 @@ public class Details extends Form implements CommandListener, Pushable {
 		if (cmd == CMD_ACTIONS) {
 			Midlet.push(new Actions(thing.name, thing));
 		} else if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop();
+			Midlet.pop(this);
 		}
 	}
 
 	public void prepare() {
+		if (!thing.isVisible()) {
+			Midlet.pop(this);
+			return;
+		}
+		
 		String title = thing.name;
 		String desc = (String)thing.table.rawget("Description");
 		setTitle(title);

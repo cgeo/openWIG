@@ -28,7 +28,7 @@ public class Zones extends List implements CommandListener, Pushable {
 				}
 				break;
 			case Command.BACK:
-				Midlet.pop();
+				Midlet.pop(this);
 				break;
 		}
 	}

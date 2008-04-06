@@ -36,7 +36,6 @@ public class Zone extends EventTable implements Container {
 			aleft = Math.min(aleft, zp.longitude);
 			aright = Math.max(aright, zp.longitude);
 		}
-		Engine.message("approx coordinates for zone '"+((String)table.rawget("Name"))+"' are:\ntop: "+atop+"\nbottom: "+abottom+"\nleft: "+aleft+"\nright: "+aright);
 	}
 	
 	protected void setItem (String key, Object value) {

@@ -76,27 +76,20 @@ public class Midlet extends MIDlet implements CommandListener {
 		display.setCurrent(mainForm);
 	}
 	
-	public static void dialog(String[] texts) {
-		Dialog d = new Dialog();
-		
+	synchronized public static void pushDialog(String[] texts) {
+		Dialog d = new Dialog(texts);
+
 		//display.flashBacklight(500);
 		//display.vibrate(500);
 		
-		synchronized (Midlet.class) {
-			if (currentDialog != null) {
-				currentDialog.kill();
-				pop();
-			}
-			currentDialog = d;
-			push(d);
-		}
-		d.run(texts);
-		synchronized (Midlet.class) {
-			if (currentDialog == d) {
-				currentDialog = null;
-				pop();
-			}
-		}
+		if (currentDialog != null) pop(currentDialog);
+		currentDialog = d;
+		push(d);
+	}
+	
+	synchronized public static void popDialog(Dialog d) {
+		pop(d);
+		if (currentDialog == d) currentDialog = null;
 	}
 	
 	synchronized public static void push (Displayable d) {
@@ -105,19 +98,22 @@ public class Midlet extends MIDlet implements CommandListener {
 		display.setCurrent(d);
 	}
 	
-	synchronized public static void pop () {
+	synchronized public static void pop (Displayable disp) {
 		int ss = screens.size();
-		if (ss > 1) {
-			Displayable d = (Displayable)screens.elementAt(ss-2);
-			display.setCurrent(d);
-			screens.removeElementAt(ss-1);
-		} else {
-			// XXX ??
-			screens.removeAllElements();
-			screens.addElement(mainForm);
-			// XXX
-			display.setCurrent(mainForm);
+		for (int i = ss-1; i >= 0; i--) {
+			Object o = screens.elementAt(i);
+			if (o == disp) {
+				screens.removeElementAt(i);
+				ss--;
+				break;
+			}
 		}
+		if (ss == 0) {
+			screens.addElement(mainForm);
+			ss = 1;
+		}
+		
+		display.setCurrent((Displayable)screens.elementAt(ss-1));
 	}
 	
 	public static void start () {

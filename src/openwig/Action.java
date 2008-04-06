@@ -54,6 +54,19 @@ public class Action extends EventTable {
 			target.foreignActions.addElement(this);
 		}
 	}
+	
+	public int visibleTargets(Container where) {
+		int count = 0;
+		for (int i = 0; i < where.things().size(); i++) {
+			Thing t = (Thing)where.things().elementAt(i);
+			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
+		}
+		return count;
+	}
+	
+	public boolean isTarget(Thing t) {
+		return targets.contains(t) || isUniversal();
+	}
 
 	public String getName() {
 		return name;

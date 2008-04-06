@@ -27,7 +27,7 @@ public class Coordinates extends Form implements CommandListener, Pushable {
 				Engine.newPosition(z);
 				break;
 			case Command.BACK:
-				Midlet.pop();
+				Midlet.pop(this);
 				break;
 			default:
 				break;

@@ -20,7 +20,6 @@ public class Engine implements Runnable {
 	
 	public static Engine instance;
 	public static LuaState state;
-	public static Mutex stateLock;
 	
 	private boolean end = false;
 
@@ -31,7 +30,6 @@ public class Engine implements Runnable {
 	
 	public void run() {
 		state = new LuaState(System.out);
-		stateLock = new Mutex(state);
 		
 		BaseLib.register(state);
 		MathLib.register(state);
@@ -54,7 +52,6 @@ public class Engine implements Runnable {
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
 			
 			Midlet.state("yay for us!!");
-			stateLock.unlock();
 			
 			/*Coordinates c = new Coordinates();
 			Midlet.push(c);*/
@@ -104,9 +101,7 @@ public class Engine implements Runnable {
 	}
 	
 	public static void dialog(String[] texts) {
-		stateLock.unlock();
-		Midlet.dialog(texts);
-		stateLock.lock();
+		Midlet.pushDialog(texts);
 	}
 	
 	public static void callEvent(EventTable subject, String name, Object param) {

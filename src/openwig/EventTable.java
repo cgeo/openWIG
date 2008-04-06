@@ -70,16 +70,13 @@ public class EventTable {
 	}
 	
 	public void callEvent(String name, Object param) {
-		try {
-			Engine.stateLock.lock();
+		synchronized (Engine.state) {
 			Object o = table.rawget(name.intern());
 			if (o != null && o instanceof LuaClosure) {
 				LuaClosure event = (LuaClosure) o;
 				Engine.state.call(event, this, param, null);
 			}
 			gui.Midlet.refresh();
-		} finally {
-			Engine.stateLock.unlock();
 		}
 	}	
 }
