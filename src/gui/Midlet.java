@@ -15,8 +15,6 @@ import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
 
-import util.*;
-
 /**
  * @author matejcik
  */

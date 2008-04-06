@@ -8,8 +8,6 @@ import java.io.*;
 import java.util.*;
 import javax.microedition.lcdui.*;
 
-import util.*;
-
 public class Engine implements Runnable {
 	
 	private Vector queue = new Vector();
