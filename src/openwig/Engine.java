@@ -49,8 +49,6 @@ public class Engine implements Runnable {
 			
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
 			
-			Midlet.state("yay for us!!");
-			
 			/*Coordinates c = new Coordinates();
 			Midlet.push(c);*/
 			
@@ -58,7 +56,8 @@ public class Engine implements Runnable {
 			cartridge.callEvent("OnStart", null);
 			
 			while (! end ) {
-				synchronized (queue) {
+				try { Thread.sleep(1000); } catch (Exception e) {}
+/*				synchronized (queue) {
 					if (queue.isEmpty()) {
 						try { queue.wait(); } catch (InterruptedException e) { e.printStackTrace(); }
 						continue;
@@ -66,16 +65,17 @@ public class Engine implements Runnable {
 
 					player.position = (ZonePoint)queue.elementAt(0);
 					queue.removeElementAt(0);
-				}
+				}*/
+				player.position = new ZonePoint(Midlet.gpsParser.getLatitude(), Midlet.gpsParser.getLongitude(), Midlet.gpsParser.getAltitude());
 				cartridge.newPosition(player.position);
 			} 
 			
 		} catch (RuntimeException e) {
 			e.printStackTrace();
-			Midlet.state("Runtime Exception... "+e.toString());
+			Midlet.error("Runtime Exception... "+e.toString());
 			System.out.println(state.currentThread.stackTrace);
 		} catch (IOException e) {
-			Midlet.state("IOException... "+e.getMessage());
+			Midlet.error("IOException... "+e.getMessage());
 		}
 	}
 
@@ -87,6 +87,7 @@ public class Engine implements Runnable {
 	}
 	
 	public static void kill () {
+		if (instance == null) return;
 		synchronized (instance.queue) {
 			instance.end = true;
 			instance.queue.notify();
@@ -105,5 +106,13 @@ public class Engine implements Runnable {
 	public static void callEvent(EventTable subject, String name, Object param) {
 		EventCaller ec = new EventCaller(subject, name, param);
 		ec.start();
+	}
+	
+	public static ZonePoint diff;
+	
+	public static void reposition(double lat, double lon, double alt) {
+		ZonePoint p = instance.player.position;
+		diff = new ZonePoint(p.latitude - lat, p.longitude - lon, 0);
+		instance.cartridge.reposition(diff);
 	}
 }

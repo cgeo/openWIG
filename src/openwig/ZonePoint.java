@@ -11,4 +11,9 @@ public class ZonePoint {
 		longitude = lon;
 		height = h;
 	}
+	
+	public void diff (ZonePoint z) {
+		latitude -= z.latitude;
+		longitude -= z.longitude;
+	}
 }

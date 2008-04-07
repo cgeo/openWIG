@@ -28,7 +28,20 @@ public class MainMenu extends List implements CommandListener, Pushable {
 						Midlet.push(Midlet.zones);
 						break;
 					case COORDS:
-						Midlet.push(Midlet.coordinates);
+						//Midlet.push(Midlet.coordinates);
+						Alert a = new Alert("coords","",null,AlertType.INFO);
+						a.setTimeout(Alert.FOREVER);
+						String c = "pos: "+Engine.instance.player.position.latitude+","
+							+Engine.instance.player.position.longitude+","
+							+Engine.instance.player.position.height;
+						String g = "gps: "+Midlet.gpsParser.getLatitude()+","
+							+Midlet.gpsParser.getLongitude()+","
+							+Midlet.gpsParser.getAltitude();
+						String o = "ofs: "+(Engine.instance.player.position.latitude+Engine.diff.latitude)+","
+							+(Engine.instance.player.position.longitude+Engine.diff.longitude)+","
+							+(Engine.instance.player.position.height+Engine.diff.height);
+						a.setString(c+"\n"+g+"\n"+o);
+						Midlet.display.setCurrent(a,this);
 						break;
 					case INVENTORY:
 						Midlet.push(Midlet.inventory);

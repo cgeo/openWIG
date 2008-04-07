@@ -75,4 +75,12 @@ public class Zone extends EventTable implements Container {
 		}
 		return count;
 	}
+	
+	public void reposition(ZonePoint diff) {
+		for (int i = 0; i < points.size(); i++) {
+			ZonePoint z = (ZonePoint)points.elementAt(i);
+			z.diff(diff);
+		}
+		approximate();
+	}
 }
