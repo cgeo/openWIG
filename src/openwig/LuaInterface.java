@@ -20,8 +20,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int TIMER = 12;
 	private static final int TASK = 13;
 	private static final int AUDIO = 14;
+	private static final int GETINPUT = 15;
 	
-	private static final int NUM_FUNCTIONS = 15;
+	private static final int NUM_FUNCTIONS = 16;
 	
 	private static final String[] names;
 	static {
@@ -41,6 +42,7 @@ public class LuaInterface implements JavaFunction {
 		names[TIMER] = "ZTimer";
 		names[TASK] = "ZTask";
 		names[AUDIO] = "PlayAudio";
+		names[GETINPUT] = "GetInput";
 	}
 
 	private int index;
