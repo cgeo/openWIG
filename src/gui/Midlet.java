@@ -16,6 +16,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Coordinates coordinates;
 	public static Zones zones;
 	public static Things inventory;
+	public static Tasks tasks;
 	public static MainMenu mainMenu;
 	public static Form mainForm;
 	private static StringItem si;
@@ -164,6 +165,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		mainMenu = new MainMenu();
 		zones = new Zones();
 		inventory = new Things("Inventáø", Engine.instance.player);
+		tasks = new Tasks();
 		//Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 		push(mainMenu);
 	}

@@ -6,10 +6,6 @@ import java.util.Vector;
 
 public class Zone extends EventTable implements Container {
 
-	public boolean isVisible() {
-		return visible;
-	}
-
 	public boolean isActive() {
 		return active;
 	}
@@ -17,7 +13,6 @@ public class Zone extends EventTable implements Container {
 	private Vector points = new Vector();
 	private Vector things = new Vector();
 	private double atop = -500,  aleft = 500,  abottom = 500,  aright = -500;
-	private boolean visible = false;
 	private boolean active = false;
 	
 	public static void register(LuaState state) {
@@ -47,11 +42,9 @@ public class Zone extends EventTable implements Container {
 				points.addElement(zp);
 			}
 			approximate();
-		} else if (key == "Visible") {
-			visible = LuaState.boolEval(value);
 		} else if (key == "Active") {
 			active = LuaState.boolEval(value);
-		}
+		} else super.setItem(key, value);
 	}
 
 	public boolean contains(ZonePoint z) {

@@ -15,8 +15,13 @@ public class LuaInterface implements JavaFunction {
 	private static final int CHARACTER = 7;
 	private static final int ITEM = 8;
 	private static final int COMMAND = 9;
+	private static final int MEDIA = 10;
+	private static final int INPUT = 11;
+	private static final int TIMER = 12;
+	private static final int TASK = 13;
+	private static final int AUDIO = 14;
 	
-	private static final int NUM_FUNCTIONS = 10;
+	private static final int NUM_FUNCTIONS = 15;
 	
 	private static final String[] names;
 	static {
@@ -31,6 +36,11 @@ public class LuaInterface implements JavaFunction {
 		names[CHARACTER] = "ZCharacter";
 		names[ITEM] = "ZItem";
 		names[COMMAND] = "ZCommand";
+		names[MEDIA] = "ZMedia";
+		names[INPUT] = "ZInput";
+		names[TIMER] = "ZTimer";
+		names[TASK] = "ZTask";
+		names[AUDIO] = "PlayAudio";
 	}
 
 	private int index;
@@ -65,6 +75,7 @@ public class LuaInterface implements JavaFunction {
 		Thing.register(state);
 		Action.register(state);
 		Player.register(state);
+		Task.register(state);
 	}
 
 	public String toString() {
@@ -84,6 +95,10 @@ public class LuaInterface implements JavaFunction {
 			case ITEM: return item(callFrame, nArguments, false);
 			case CHARACTER: return item(callFrame, nArguments, true);
 			case COMMAND: return command(callFrame, nArguments);
+			case MEDIA: case INPUT: case TIMER:
+				callFrame.push(new LuaTable());
+				return 1;
+			case TASK: return task(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -115,7 +130,6 @@ public class LuaInterface implements JavaFunction {
 		lt.rawset("dist", new Double(a));
 		lt.rawset("unit", b.intern());
 		callFrame.push(lt);
-		System.out.println("new Distance of "+a+" "+b);
 		return 1;
 	}
 	
@@ -156,6 +170,14 @@ public class LuaInterface implements JavaFunction {
 	private int command (LuaCallFrame callFrame, int nArguments) {
 		LuaTable lt = (LuaTable)callFrame.get(0);
 		callFrame.push(new Action(lt));
+		return 1;
+	}
+	
+	private int task (LuaCallFrame callFrame, int nArguments) {
+		Cartridge c = (Cartridge)callFrame.get(0);
+		Task t = new Task();
+		c.tasks.addElement(t);
+		callFrame.push(t);
 		return 1;
 	}
 }

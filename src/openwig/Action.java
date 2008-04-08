@@ -6,7 +6,6 @@ import java.util.Vector;
 
 public class Action extends EventTable {
 	
-	private String name;
 	private boolean parameter;
 	private boolean enabled;
 

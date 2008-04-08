@@ -6,29 +6,6 @@ Player = Wherigo.Player
 -- #Author Directives Go Here# --
 -- #End Author Directives# --
 
--- lua functions
-function empty (self, a)
-end
-function Wherigo.ZMedia(a)
-	return {}
-end
---function Wherigo.Zone(a)
---	return {}
---end
---function Wherigo.ZCharacter(a)
---	return {MoveTo = empty}
---end
---function Wherigo.ZCommand(a)
---	return a
---end
---function Wherigo.ZItem(a)
---	return {}
---end
-function Wherigo.ZTask(a)
-	return {}
-end
-
-
 cartZooventureLevelTwo = Wherigo.ZCartridge()
 
 -- MessageBox Callback Functions Table used by the Builder --

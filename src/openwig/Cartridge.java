@@ -10,6 +10,8 @@ public class Cartridge extends EventTable {
 	public Vector things = new Vector();
 	public Vector universalActions = new Vector();
 	
+	public Vector tasks = new Vector();
+	
 	public static void register(LuaState state) {
 		EventTable.register(state);
 		state.setUserdataMetatable(Cartridge.class, metatable);
@@ -51,6 +53,15 @@ public class Cartridge extends EventTable {
 		for (int i = 0; i < universalActions.size(); i++) {
 			Action a = (Action)universalActions.elementAt(i);
 			if (a.isEnabled()) count++;
+		}
+		return count;
+	}
+	
+	public int visibleTasks () {
+		int count = 0;
+		for (int i = 0; i < tasks.size(); i++) {
+			Task a = (Task)tasks.elementAt(i);
+			if (a.isVisible()) count++;
 		}
 		return count;
 	}

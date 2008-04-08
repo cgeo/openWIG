@@ -6,6 +6,11 @@ import se.krka.kahlua.stdlib.BaseLib;
 public class EventTable {
 
 	public LuaTable table = new LuaTable();
+	
+	public String name, description;
+	protected boolean visible = false;
+	
+	public boolean isVisible() { return visible; }
 
 	private static class Method implements JavaFunction {
 
@@ -67,6 +72,13 @@ public class EventTable {
 	}
 
 	protected void setItem(String key, Object value) {
+		if (key == "Name") {
+			name = (String)value;
+		} else if (key == "Description") {
+			description = (String)value;
+		} else if (key == "Visible") {
+			visible = LuaState.boolEval(value);
+		}
 	}
 	
 	public void callEvent(String name, Object param) {

@@ -28,9 +28,6 @@ public class MainMenu extends List implements CommandListener, Pushable {
 					case ZONES:
 						Midlet.push(Midlet.zones);
 						break;
-/*					case COORDS:
-						Midlet.push(Midlet.coordinates);
-						break;*/
 					case INVENTORY:
 						Midlet.push(Midlet.inventory);
 						break;
@@ -42,8 +39,8 @@ public class MainMenu extends List implements CommandListener, Pushable {
 							Midlet.display.setCurrent(new Alert("Okolí", "nic tu není", null, AlertType.INFO));
 						}
 						break;
-					default:
-						Midlet.display.setCurrent(new Alert("chyba","nefunguje",null,AlertType.ERROR), disp);
+					case TASKS:
+						Midlet.push(Midlet.tasks);
 				}
 				break;
 			case Command.SCREEN:
@@ -63,10 +60,11 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		int zones = Engine.instance.cartridge.visibleZones();
 		int items = Engine.instance.player.visibleThings();
 		int things = Engine.instance.cartridge.visibleThings();
+		int tasks = Engine.instance.cartridge.visibleTasks();
 		append("Zóny ("+zones+")", null);
 		append("Inventáø ("+items+")", null);
 		append("Okolí ("+things+")", null);
-		append("Úkoly", null);
+		append("Úkoly ("+tasks+")", null);
 		if (i >= 0 && i < 4) setSelectedIndex(i, true);
 	}
 	

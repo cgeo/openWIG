@@ -5,12 +5,9 @@ import java.util.Vector;
 
 public class Thing extends EventTable {
 	
-	private boolean visible = false;
 	private boolean character = false;
 	private Container location = null;
-	
-	public String name;
-	
+
 	public Vector actions = new Vector();
 	
 	public Vector foreignActions = new Vector();
@@ -39,11 +36,7 @@ public class Thing extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Name") {
-			name = (String)value;
-		} else if (key == "Visible") {
-			visible = LuaState.boolEval(value);
-		} else if (key == "Commands") {
+		if (key == "Commands") {
 			LuaTable lt = (LuaTable)value;
 			Object i = null;
 			while ((i = lt.next(i)) != null) {
@@ -54,7 +47,7 @@ public class Thing extends EventTable {
 					
 				}
 			}
-		}
+		} else super.setItem(key, value);
 	}
 	
 	public int visibleActions() {
@@ -69,11 +62,7 @@ public class Thing extends EventTable {
 		}
 		return count;
 	}
-
-	public boolean isVisible() {
-		return visible;
-	}
-
+	
 	public boolean isItem() {
 		return !character;
 	}
