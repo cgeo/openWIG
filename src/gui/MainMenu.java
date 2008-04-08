@@ -11,10 +11,11 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	private static final int LOCATION = 2;
 	private static final int TASKS = 3;
 	
-	private static final int COORDS = 4;
+	private static Command CMD_GPS = new Command("Poloha", Command.SCREEN, 5);
 	
 	public MainMenu () {
 		super("menu", IMPLICIT);
+		addCommand(CMD_GPS);
 		addCommand(Midlet.CMD_EXIT);
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
@@ -27,22 +28,9 @@ public class MainMenu extends List implements CommandListener, Pushable {
 					case ZONES:
 						Midlet.push(Midlet.zones);
 						break;
-					case COORDS:
-						//Midlet.push(Midlet.coordinates);
-						Alert a = new Alert("coords","",null,AlertType.INFO);
-						a.setTimeout(Alert.FOREVER);
-						String c = "pos: "+Engine.instance.player.position.latitude+","
-							+Engine.instance.player.position.longitude+","
-							+Engine.instance.player.position.height;
-						String g = "gps: "+Midlet.gpsParser.getLatitude()+","
-							+Midlet.gpsParser.getLongitude()+","
-							+Midlet.gpsParser.getAltitude();
-						String o = "ofs: "+(Engine.instance.player.position.latitude+Engine.diff.latitude)+","
-							+(Engine.instance.player.position.longitude+Engine.diff.longitude)+","
-							+(Engine.instance.player.position.height+Engine.diff.height);
-						a.setString(c+"\n"+g+"\n"+o);
-						Midlet.display.setCurrent(a,this);
-						break;
+/*					case COORDS:
+						Midlet.push(Midlet.coordinates);
+						break;*/
 					case INVENTORY:
 						Midlet.push(Midlet.inventory);
 						break;
@@ -56,6 +44,11 @@ public class MainMenu extends List implements CommandListener, Pushable {
 						break;
 					default:
 						Midlet.display.setCurrent(new Alert("chyba","nefunguje",null,AlertType.ERROR), disp);
+				}
+				break;
+			case Command.SCREEN:
+				if (cmd == CMD_GPS) {
+					Midlet.push(Midlet.coordinates);
 				}
 				break;
 			case Command.EXIT:
@@ -74,8 +67,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		append("Inventáø ("+items+")", null);
 		append("Okolí ("+things+")", null);
 		append("Úkoly", null);
-		append("Jít na...", null);
-		if (i >= 0 && i < 5) setSelectedIndex(i, true);
+		if (i >= 0 && i < 4) setSelectedIndex(i, true);
 	}
 	
 }

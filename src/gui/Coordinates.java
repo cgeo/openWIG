@@ -1,42 +1,191 @@
 package gui;
 
+import gps.GpsParser;
 import javax.microedition.lcdui.*;
-import openwig.ZonePoint;
+import javax.bluetooth.*;
+import net.benhui.btgallery.bluelet.BLUElet;
 import openwig.Engine;
 
-public class Coordinates extends Form implements CommandListener, Pushable {
+public class Coordinates extends Form implements CommandListener, Pushable, Runnable {
 	
 	private TextField latitude = new TextField("latitude", "47.6666", 99, TextField.DECIMAL);
 	private TextField longitude = new TextField("longitude", "-122.351", 99, TextField.DECIMAL);
 	
-	private static Command CMD_SET = new Command("Set", Command.SCREEN, 0);
+	private StringItem lblGps = new StringItem("GPS: ", null);
+	private StringItem lblLat = new StringItem("\nLatitude: ", null);
+	private StringItem lblLon = new StringItem("\nLongitude: ", null);
+	private StringItem lblAlt = new StringItem("\nAltitude: ", null);
+	
+	private StringItem lblRepos = new StringItem(null, "\n-- repositioned --");
+	private StringItem lblLatR = new StringItem("\nLatitude: ", null);
+	private StringItem lblLonR = new StringItem("\nLongitude: ", null);
+	
+	private static Command CMD_SET = new Command("Nastavit", Command.SCREEN, 0);
+	
+	private static Command CMD_GPS_ON = new Command("Zapnout GPS", Command.SCREEN, 5);
+	private static Command CMD_GPS_OFF = new Command("Vypnout GPS", Command.SCREEN, 5);
+	private static Command CMD_REPOSITION = new Command("Reposition", Command.SCREEN, 6);
+	
+	private static final int MODE_MANUAL = 0;
+	private static final int MODE_GPS = 1;
+	private int mode = MODE_MANUAL;
+	
+	private BLUElet bluelet;
+	private static GpsParser gpsParser;
+	
+	private static int gpsStatus = 0;
+	
+	private static final int GPS_OFF = 0;
+	private static final int GPS_SEARCHING = 1;
+	private static final int GPS_LOCKING = 2;
+	private static final int GPS_ON = 3;
+	private static String[] states = { "offline", "p¯ipojuje se", "zjiöùuje pozici", "online" };
 	
 	public Coordinates () {
-		super("coordinates");
-		append(latitude);
-		append(longitude);
+		super("sou¯adnice");
 		setCommandListener(this);
-		addCommand(CMD_SET);
 		addCommand(Midlet.CMD_BACK);
+		prepare();
 	}
-
-	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.SCREEN:
-				ZonePoint z = new ZonePoint(Double.parseDouble(latitude.getString()), Double.parseDouble(longitude.getString()), 0);
-				Engine.newPosition(z);
+	
+	public void prepare () {
+		deleteAll();
+		append(lblGps);
+		switch (mode) {
+			case MODE_MANUAL:
+				removeCommand(CMD_GPS_OFF);
+				removeCommand(CMD_REPOSITION);
+				addCommand(CMD_SET);
+				addCommand(CMD_GPS_ON);
+				append(latitude);
+				append(longitude);
 				break;
-			case Command.BACK:
-				Midlet.pop(this);
+			case MODE_GPS:
+				removeCommand(CMD_SET);
+				removeCommand(CMD_GPS_ON);
+				addCommand(CMD_GPS_OFF);
+				addCommand(CMD_REPOSITION);
+				append(lblLat);
+				append(lblLon);
+				append(lblAlt);
 				break;
-			default:
-				break;
+		}
+		if (Engine.shifted) {
+			removeCommand(CMD_REPOSITION);
+			append(lblRepos);
+			append(lblLatR);
+			append(lblLonR);
+		}
+		
+		if (gpsStatus == GPS_ON) {
+			start();
+		} else {
+			stop();
+			updateScreen();
+		}
+	}
+	
+	private boolean running = false;
+	
+	public void start () {
+		running = true;
+		Thread t = new Thread(this);
+		t.start();
+	}
+	public void stop () {
+		running = false;
+	}
+	
+	public void run () {
+		while (running) {
+			updateScreen();
+			try { Thread.sleep(1000); } catch (Exception e) { }
+		}
+	}
+	
+	private void updateScreen () {
+		lblGps.setText(states[gpsStatus]);
+		if (gpsStatus == GPS_ON) {
+			lblLat.setText(gpsParser.getFriendlyLatitude());
+			lblLon.setText(gpsParser.getFriendlyLongitude());
+			lblAlt.setText(String.valueOf(gpsParser.getAltitude()));
+			
+			latitude.setString(String.valueOf(gpsParser.getLatitude()));
+			longitude.setString(String.valueOf(gpsParser.getLongitude()));
+		} else {
+			lblLat.setText(null);
+			lblLon.setText(null);
+			lblAlt.setText(null);
+		}
+		if (Engine.shifted) {
+			lblLatR.setText(String.valueOf(Midlet.latitude + Engine.diff.latitude));
+			lblLonR.setText(String.valueOf(Midlet.longitude + Engine.diff.longitude));
 		}
 	}
 
-	public void prepare() {
-		/*latitude.setString(Double.toString(Engine.instance.player.position.latitude));
-		longitude.setString(Double.toString(Engine.instance.player.position.longitude));*/
+	private void startGPS() {
+		bluelet = new BLUElet(Midlet.instance, this);
+		bluelet.startApp();
+		Midlet.push(bluelet.getUI());
+		bluelet.startInquiry(DiscoveryAgent.GIAC, new UUID[]{new UUID(0x1101)});
 	}
 
+	private void stopGPS() {
+		if (gpsParser != null) gpsParser.close();
+		gpsParser = null;
+	}
+
+	public void commandAction(Command cmd, Displayable disp) {
+		if (disp == this) {
+			if (cmd == CMD_GPS_ON) {
+				startGPS();
+			} else if (cmd == CMD_GPS_OFF) {
+				stopGPS();
+				mode = MODE_MANUAL;
+				prepare();
+			} else if (cmd == CMD_SET) {
+				Midlet.latitude = Double.parseDouble(latitude.getString());
+				Midlet.longitude = Double.parseDouble(longitude.getString());
+				Midlet.altitude = 0;
+			} else if (cmd == CMD_REPOSITION) {
+				Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
+				prepare();
+			} else if (cmd == Midlet.CMD_BACK) {
+				Midlet.pop(this);
+			}
+		} else if (bluelet != null && disp == bluelet.getUI()) {
+			if (cmd == BLUElet.SELECTED) {
+				Midlet.pop(bluelet.getUI());
+				mode = MODE_GPS;
+				gpsStatus = GPS_SEARCHING;
+				prepare();
+			} else if (cmd == BLUElet.COMPLETED) {
+				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
+				bluelet = null;
+				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
+				gpsParser = new GpsParser(url, GpsParser.BLUETOOTH);
+				gpsParser.open();
+			} else if (cmd == BLUElet.BACK) {
+				Midlet.pop(bluelet.getUI());
+				bluelet = null;
+			}
+		}
+	}
+	
+	public void gpsConnected () {
+		gpsStatus = GPS_LOCKING;
+		updateScreen();
+	}
+	
+	public void gpsDisconnected () {
+		gpsStatus = GPS_OFF;
+		mode = MODE_MANUAL;
+		prepare();
+	}
+	
+	public void fixChanged (boolean fix) {
+		if (fix) gpsStatus = GPS_ON;
+		else gpsStatus = GPS_LOCKING;
+		updateScreen();
+	}
 }

@@ -1,6 +1,5 @@
 package openwig;
 
-import gui.Midlet;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
 
@@ -20,7 +19,6 @@ public class Cartridge extends EventTable {
 		if (currentZone != null && !currentZone.contains(zp)) {
 			Engine.callEvent(currentZone, "OnExit", null);
 			currentZone = null;
-			Midlet.refresh(); // XXX workaround for item counter
 		}
 		
 		for (int i = 0; i < zones.size(); i++) {

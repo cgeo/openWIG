@@ -185,12 +185,13 @@ public class GpsParser implements Runnable {
 			inputStream = streamConnection.openInputStream();
 		} catch (Exception e) {
 			Midlet.error(e.toString());
+			Midlet.coordinates.gpsDisconnected();
 			close();
 			return;
 		}
 
 		//uspesne pripojeni
-		Midlet.gpsConnected();
+		Midlet.coordinates.gpsConnected();
 
 		//cteni dat
 		ByteArrayOutputStream byteArrayOutputStream = null;
@@ -212,7 +213,7 @@ public class GpsParser implements Runnable {
 				nmea = s;
 				receiveNmea(s);
 				byteArrayOutputStream.close();
-				if (prevfix != fix) Midlet.gpsFixChanged(fix);
+				if (prevfix != fix) Midlet.coordinates.fixChanged(fix);
 				prevfix = fix;
 			} catch (Exception ex) {
 				Midlet.error(ex.toString());
@@ -221,6 +222,7 @@ public class GpsParser implements Runnable {
 
 		if (inputStream != null) try { inputStream.close(); } catch (Exception e) {}
 		if (streamConnection != null) try { streamConnection.close(); } catch (Exception e) {}
+		Midlet.coordinates.gpsDisconnected();
 	}
 	
 	/**
@@ -237,6 +239,7 @@ public class GpsParser implements Runnable {
 			latitude = degrees + ((double) minutes + (double) fraction / 10000) / 60;
 			if (param[b].charAt(0) == 'S') latitude = -latitude;
 			friendlyLatitude = param[b].charAt(0) + " " + degrees + "° " + minutes + "." + friendlyFraction;
+			Midlet.latitude = latitude;
 		}
 		if (param[c].length() > 9 && param[d].length() == 1) {
 			degrees = Integer.parseInt(param[c].substring(0, 3));
@@ -247,6 +250,7 @@ public class GpsParser implements Runnable {
 			longitude = degrees + ((double) minutes + (double) fraction / 10000) / 60;
 			if (param[d].charAt(0) == 'W') longitude = -longitude;
 			friendlyLongitude = param[d].charAt(0) + " " + degree2 + "° " + minutes + "." + friendlyFraction;
+			Midlet.longitude = longitude;
 		}
 		if (param[e].length() > 5) {
 			hour = Integer.parseInt(param[e].substring(0, 2));
@@ -364,6 +368,7 @@ public class GpsParser implements Runnable {
 				fixSatellites = Integer.parseInt(param[7]);
 				if (param[9].length() > 0) {
 					altitude = Double.parseDouble(param[9]);
+					Midlet.altitude = altitude;
 				}
 			}
 		} else if (param[0].equals("$GPGSA")) {

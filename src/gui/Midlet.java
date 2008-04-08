@@ -1,16 +1,12 @@
 package gui;
 
-import gps.GpsParser;
 import openwig.Engine;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
-import javax.bluetooth.*;
-
 import java.io.*;
 import java.util.Vector;
 
-import net.benhui.btgallery.bluelet.BLUElet;
 import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
@@ -23,14 +19,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static MainMenu mainMenu;
 	public static Form mainForm;
 	private static StringItem si;
-	
-	private static BLUElet bluelet;
-	public static GpsParser gpsParser;
-	private static final int GPS_OFF = 0;
-	private static final int GPS_SEARCHING = 1;
-	private static final int GPS_LOCKING = 2;
-	private static final int GPS_ON = 3;
-	private static int gpsStatus = 0;
 	
 	private static List baseMenu = new List("menu", List.IMPLICIT);
 	private static final int MNU_START = 0;
@@ -51,6 +39,12 @@ public class Midlet extends MIDlet implements CommandListener {
 	private static Vector screens = new Vector();
 	private static Displayable currentScreen = null;
 	
+	public static double latitude, longitude, altitude;
+	
+	/////////////////////////////////////
+	//
+	//    Midlet maintenance
+	
 	public void startApp() {
 		instance = this;
 		display = Display.getDisplay(this);
@@ -61,6 +55,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		baseMenu.setSelectCommand(CMD_SELECT);
 		baseMenu.setCommandListener(this);
 		
+		coordinates = new Coordinates();
 		push(baseMenu);
 	}
 
@@ -77,10 +72,6 @@ public class Midlet extends MIDlet implements CommandListener {
 			if (cmd == CMD_SELECT) {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
-						if (gpsStatus != GPS_ON) {
-							display.setCurrent(new Alert("gps","poèkej až budeš mít funkèní gpsku", null, AlertType.ERROR), baseMenu);
-							break;
-						}
 						mainForm = new Form("splash");
 						si = new StringItem(null, "Loading LUA...");
 						mainForm.append(si);
@@ -91,53 +82,25 @@ public class Midlet extends MIDlet implements CommandListener {
 						InputStream luacode = getClass().getResourceAsStream("/openwig/luac.out");
 						Thread t = new Thread(new Engine(luacode));
 						t.start();
-
 						break;
+						
 					case MNU_GPS:
-						if (gpsStatus == GPS_OFF) {
-							bluelet = new BLUElet(this, this);
-							bluelet.startApp();
-							push(bluelet.getUI());
-							bluelet.startInquiry(DiscoveryAgent.GIAC, new UUID[]{new UUID(0x1101)});
-						// launch gps selector, or not.
-						}
+						push(coordinates);
 						break;
+						
 					case MNU_END:
 						destroyApp(false);
 						break;
 				}
-			}
-		} else if (bluelet != null && disp == bluelet.getUI()) {
-			if (cmd == BLUElet.COMPLETED) {
-				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
-				pop(bluelet.getUI());
-				bluelet = null;
-				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
-				gpsStatus = GPS_SEARCHING;
-				gpsParser = new GpsParser(url, GpsParser.BLUETOOTH);
-				gpsParser.open();
-				baseMenu.set(MNU_GPS, "pøipojuji...", null);
-			} else if (cmd == BLUElet.BACK) {
-				pop(bluelet.getUI());
-				bluelet = null;
 			}
 		} else if (cmd.getCommandType() == Command.EXIT) {
 			destroyApp(false);
 		}
 	}
 	
-	public static void gpsConnected () {
-		gpsStatus = GPS_LOCKING;
-		baseMenu.set(MNU_GPS, "hledám polohu...", null);
-	}
-	
-	public static void gpsFixChanged(boolean fix) {
-		if (!fix) gpsConnected();
-		else {
-			gpsStatus = GPS_ON;
-			baseMenu.set(MNU_GPS, "Souøadnice", null);
-		}
-	}
+	////////////////////////////////////////////
+	//
+	//   functions for other components to use
 	
 	public static void state (String text) {
 		si.setText(text);
@@ -153,8 +116,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	synchronized public static void pushDialog(String[] texts) {
 		Dialog d = new Dialog(texts);
 
-		//display.flashBacklight(500);
-		//display.vibrate(500);
+//		display.flashBacklight(500);
+//		display.vibrate(500);
 		
 		if (currentDialog != null) pop(currentDialog);
 		currentDialog = d;
@@ -188,15 +151,20 @@ public class Midlet extends MIDlet implements CommandListener {
 			ss = 1;
 		}
 		
-		display.setCurrent(currentScreen = (Displayable)screens.elementAt(ss-1));
+		currentScreen = (Displayable)screens.elementAt(ss-1);
+		if (currentScreen instanceof Pushable) ((Pushable)currentScreen).prepare();
+		display.setCurrent(currentScreen);
 	}
+	
+	/////////////////
+	//
+	//   ????
 	
 	public static void start () {
 		mainMenu = new MainMenu();
-		coordinates = new Coordinates();
 		zones = new Zones();
 		inventory = new Things("Inventáø", Engine.instance.player);
-		Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
+		//Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 		push(mainMenu);
 	}
 	

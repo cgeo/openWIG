@@ -48,10 +48,11 @@ public class Engine implements Runnable {
 			closure = null;
 			
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
-			
-			/*Coordinates c = new Coordinates();
-			Midlet.push(c);*/
-			
+			if (player.position == null) {
+				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
+			}
+			origPos = new ZonePoint(player.position);
+					
 			Midlet.start();
 			cartridge.callEvent("OnStart", null);
 			
@@ -66,8 +67,16 @@ public class Engine implements Runnable {
 					player.position = (ZonePoint)queue.elementAt(0);
 					queue.removeElementAt(0);
 				}*/
-				player.position = new ZonePoint(Midlet.gpsParser.getLatitude(), Midlet.gpsParser.getLongitude(), Midlet.gpsParser.getAltitude());
-				cartridge.newPosition(player.position);
+				if (Midlet.latitude != player.position.latitude
+					|| Midlet.longitude != player.position.longitude
+					|| Midlet.altitude != player.position.altitude) {
+					
+					player.position.latitude = Midlet.latitude;
+					player.position.longitude = Midlet.longitude;
+					player.position.altitude = Midlet.altitude;
+					
+					cartridge.newPosition(player.position);
+				}
 			} 
 			
 		} catch (RuntimeException e) {
@@ -108,11 +117,15 @@ public class Engine implements Runnable {
 		ec.start();
 	}
 	
+	private static ZonePoint origPos;
 	public static ZonePoint diff;
+	public static boolean shifted = false;
 	
 	public static void reposition(double lat, double lon, double alt) {
-		ZonePoint p = instance.player.position;
-		diff = new ZonePoint(p.latitude - lat, p.longitude - lon, 0);
+		if (origPos == null) return;
+		if (shifted) return;
+		shifted = true;
+		diff = new ZonePoint(origPos.latitude - lat, origPos.longitude - lon, 0);
 		instance.cartridge.reposition(diff);
 	}
 }

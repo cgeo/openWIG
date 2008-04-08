@@ -76,7 +76,6 @@ public class EventTable {
 				LuaClosure event = (LuaClosure) o;
 				Engine.state.call(event, this, param, null);
 			}
-			gui.Midlet.refresh();
 		}
 	}	
 }

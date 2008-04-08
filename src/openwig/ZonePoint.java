@@ -3,13 +3,19 @@ package openwig;
 public class ZonePoint {
 	public double latitude;
 	public double longitude;
-	public double height;
+	public double altitude;
 	
-	public ZonePoint (double lat, double lon, double h)
+	public ZonePoint (ZonePoint z) {
+		latitude = z.latitude;
+		longitude = z.longitude;
+		altitude = z.altitude;
+	}
+	
+	public ZonePoint (double lat, double lon, double alt)
 	{
 		latitude = lat;
 		longitude = lon;
-		height = h;
+		altitude = alt;
 	}
 	
 	public void diff (ZonePoint z) {
