@@ -16,14 +16,18 @@ public class Thing extends EventTable {
 		public int call(LuaCallFrame callFrame, int nArguments) {
 			Thing t = (Thing)callFrame.get(0);
 			Container c = (Container)callFrame.get(1);
-			if (t.location != null) t.location.things().removeElement(t);
-			c.things().addElement(t);
-			t.location = c;
+			t.moveTo(c);
 			return 0;
 		}
 		
 	}
 	private static MovetoMethod moveTo = new MovetoMethod();
+	
+	public void moveTo (Container c) {
+		if (location != null) location.things().removeElement(this);
+		c.things().addElement(this);
+		location = c;
+	}
 	
 	public Thing(boolean character) {
 		this.character = character;
