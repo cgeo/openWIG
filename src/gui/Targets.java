@@ -35,7 +35,7 @@ public class Targets extends List implements CommandListener, Pushable {
 	}
 
 	private void addTargets(Container c) {
-		Vector v = c.things();
+		Vector v = c.things;
 		for (int i = 0; i < v.size(); i++) {
 			Thing t = (Thing)v.elementAt(i);
 			if (t.isVisible() && action.isTarget(t)) {

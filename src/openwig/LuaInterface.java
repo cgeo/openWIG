@@ -21,8 +21,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int TASK = 13;
 	private static final int AUDIO = 14;
 	private static final int GETINPUT = 15;
+	private static final int NOCASEEQUALS = 16;
 	
-	private static final int NUM_FUNCTIONS = 16;
+	private static final int NUM_FUNCTIONS = 17;
 	
 	private static final String[] names;
 	static {
@@ -43,6 +44,7 @@ public class LuaInterface implements JavaFunction {
 		names[TASK] = "ZTask";
 		names[AUDIO] = "PlayAudio";
 		names[GETINPUT] = "GetInput";
+		names[NOCASEEQUALS] = "NoCaseEquals";
 	}
 
 	private int index;
@@ -101,6 +103,8 @@ public class LuaInterface implements JavaFunction {
 				callFrame.push(new LuaTable());
 				return 1;
 			case TASK: return task(callFrame, nArguments);
+			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
+			case GETINPUT: return getinput(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -192,6 +196,21 @@ public class LuaInterface implements JavaFunction {
 		Task t = new Task();
 		c.tasks.addElement(t);
 		callFrame.push(t);
+		return 1;
+	}
+	
+	private int nocaseequals (LuaCallFrame callFrame, int nArguments) {
+		Object a = callFrame.get(0); Object b = callFrame.get(1);
+		String aa = a == null ? null : a.toString();
+		String bb = b == null ? null : b.toString();
+		boolean result = (aa == bb || (aa != null && aa.equalsIgnoreCase(bb)));
+		callFrame.push(LuaState.toBoolean(result));
+		return 1;
+	}
+	
+	private int getinput (LuaCallFrame callFrame, int nArguments) {
+		LuaTable lt = (LuaTable)callFrame.get(0);
+		Engine.input(lt);
 		return 1;
 	}
 }

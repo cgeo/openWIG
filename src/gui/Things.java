@@ -37,7 +37,7 @@ public class Things extends List implements CommandListener, Pushable {
 		int index = getSelectedIndex();
 		deleteAll();
 		things.removeAllElements();
-		Vector v = container.things();
+		Vector v = container.things;
 		for (int i = 0; i < v.size(); i++) {
 			Thing t = (Thing)v.elementAt(i);
 			if (t.isVisible()) {

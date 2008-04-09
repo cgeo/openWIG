@@ -4,14 +4,14 @@ import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.*;
 import java.util.Vector;
 
-public class Zone extends EventTable implements Container {
+public class Zone extends Container {
 
 	public boolean isActive() {
 		return active;
 	}
 	
 	private Vector points = new Vector();
-	private Vector things = new Vector();
+
 	private double atop = -500,  aleft = 500,  abottom = 500,  aright = -500;
 	private boolean active = false;
 	
@@ -58,8 +58,6 @@ public class Zone extends EventTable implements Container {
 			z.longitude < aright);
 	}
 
-	public Vector things() { return things; }
-	
 	public int visibleThings() {
 		int count = 0;
 		for (int i = 0; i < things.size(); i++) {

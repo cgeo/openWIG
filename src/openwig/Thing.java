@@ -3,35 +3,16 @@ package openwig;
 import se.krka.kahlua.vm.*;
 import java.util.Vector;
 
-public class Thing extends EventTable {
+public class Thing extends Container {
 	
 	private boolean character = false;
-	private Container location = null;
-
+	
 	public Vector actions = new Vector();
 	
 	public Vector foreignActions = new Vector();
 	
-	private static class MovetoMethod implements JavaFunction {
-		public int call(LuaCallFrame callFrame, int nArguments) {
-			Thing t = (Thing)callFrame.get(0);
-			Container c = (Container)callFrame.get(1);
-			t.moveTo(c);
-			return 0;
-		}
-		
-	}
-	private static MovetoMethod moveTo = new MovetoMethod();
-	
-	public void moveTo (Container c) {
-		if (location != null) location.things().removeElement(this);
-		c.things().addElement(this);
-		location = c;
-	}
-	
 	public Thing(boolean character) {
 		this.character = character;
-		this.table.rawset("MoveTo", moveTo);
 	}
 	
 	public static void register (LuaState state) {

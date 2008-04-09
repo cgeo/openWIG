@@ -56,8 +56,8 @@ public class Action extends EventTable {
 	
 	public int visibleTargets(Container where) {
 		int count = 0;
-		for (int i = 0; i < where.things().size(); i++) {
-			Thing t = (Thing)where.things().elementAt(i);
+		for (int i = 0; i < where.things.size(); i++) {
+			Thing t = (Thing)where.things.elementAt(i);
 			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
 		}
 		return count;

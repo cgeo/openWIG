@@ -112,6 +112,10 @@ public class Engine implements Runnable {
 		Midlet.pushDialog(texts);
 	}
 	
+	public static void input(LuaTable input) {
+		Midlet.pushInput(input);
+	}
+	
 	public static void callEvent(EventTable subject, String name, Object param) {
 		EventCaller ec = new EventCaller(subject, name, param);
 		ec.start();

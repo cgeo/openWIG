@@ -81,6 +81,16 @@ public class EventTable {
 		}
 	}
 	
+	public static void callEvent(LuaTable table, String name, Object param) {
+		synchronized (Engine.state) {
+			Object o = table.rawget(name.intern());
+			if (o != null && o instanceof LuaClosure) {
+				LuaClosure event = (LuaClosure) o;
+				Engine.state.call(event, table, param, null);
+			}
+		}
+	}
+	
 	public void callEvent(String name, Object param) {
 		synchronized (Engine.state) {
 			Object o = table.rawget(name.intern());

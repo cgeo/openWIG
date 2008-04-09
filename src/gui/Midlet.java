@@ -36,7 +36,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Midlet instance;
 	public static Display display;
 	
-	private static Dialog currentDialog = null;
+	private static Displayable currentDialog = null;
 	private static Vector screens = new Vector();
 	private static Displayable currentScreen = null;
 	
@@ -120,12 +120,19 @@ public class Midlet extends MIDlet implements CommandListener {
 //		display.flashBacklight(500);
 //		display.vibrate(500);
 		
-		if (currentDialog != null) pop(currentDialog);
+		if (currentDialog != null) popDialog(currentDialog);
 		currentDialog = d;
 		push(d);
 	}
 	
-	synchronized public static void popDialog(Dialog d) {
+	synchronized public static void pushInput(LuaTable input) {
+		Input i = new Input(input);
+		if (currentDialog != null) popDialog(currentDialog);
+		currentDialog = i;
+		push(i);
+	}
+	
+	synchronized public static void popDialog(Displayable d) {
 		pop(d);
 		if (currentDialog == d) currentDialog = null;
 	}
