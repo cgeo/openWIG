@@ -87,12 +87,14 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	private boolean running = false;
 	
-	public void start () {
-		running = true;
-		Thread t = new Thread(this);
-		t.start();
+	synchronized public void start () {
+		if (!running) {
+			running = true;
+			Thread t = new Thread(this);
+			t.start();
+		}
 	}
-	public void stop () {
+	synchronized public void stop () {
 		running = false;
 	}
 	
@@ -186,6 +188,6 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	public void fixChanged (boolean fix) {
 		if (fix) gpsStatus = GPS_ON;
 		else gpsStatus = GPS_LOCKING;
-		updateScreen();
+		prepare();
 	}
 }
