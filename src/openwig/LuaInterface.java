@@ -141,7 +141,7 @@ public class LuaInterface implements JavaFunction {
 	
 	private int messageBox (LuaCallFrame callFrame, int nArguments) {
 		LuaTable lt = (LuaTable)callFrame.get(0);
-		Engine.message((String)lt.rawget("Text"));
+		Engine.message(lt);
 		return 0;
 	}
 	

@@ -28,15 +28,13 @@ public class Midlet extends MIDlet implements CommandListener {
 	
 	public static final Command CMD_EXIT = new Command("Konec", Command.EXIT, 10);
 	public static final Command CMD_SELECT = new Command("Vybrat", Command.ITEM, 0);
-	public static final Command CMD_NEXT = new Command("Další", Command.OK, 1);
-	public static final Command CMD_OK = new Command("OK", Command.OK, 1);
 	public static final Command CMD_CANCEL = new Command("Zrušit", Command.BACK, 2);
 	public static final Command CMD_BACK = new Command("Zpìt", Command.BACK, 2);
 	
 	public static Midlet instance;
 	public static Display display;
 	
-	private static Displayable currentDialog = null;
+	private static Cancellable currentDialog = null;
 	private static Vector screens = new Vector();
 	private static Displayable currentScreen = null;
 	
@@ -114,8 +112,8 @@ public class Midlet extends MIDlet implements CommandListener {
 		display.setCurrent(a, display.getCurrent());
 	}
 	
-	synchronized public static void pushDialog(String[] texts) {
-		Dialog d = new Dialog(texts);
+	synchronized public static void pushDialog(String[] texts, String button1, String button2, LuaClosure callback) {
+		Dialog d = new Dialog(texts, button1, button2, callback);
 
 //		display.flashBacklight(500);
 //		display.vibrate(500);
@@ -132,8 +130,9 @@ public class Midlet extends MIDlet implements CommandListener {
 		push(i);
 	}
 	
-	synchronized public static void popDialog(Displayable d) {
-		pop(d);
+	synchronized public static void popDialog(Cancellable d) {
+		d.cancel();
+		pop((Displayable)d);
 		if (currentDialog == d) currentDialog = null;
 	}
 	

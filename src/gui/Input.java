@@ -4,7 +4,7 @@ import javax.microedition.lcdui.*;
 import openwig.EventTable;
 import se.krka.kahlua.vm.LuaTable;
 
-public class Input extends Form implements CommandListener {
+public class Input extends Form implements CommandListener, Cancellable {
 	
 	private static Command CMD_ANSWER = new Command("Odpovìdìt", Command.SCREEN, 0);
 	
@@ -31,5 +31,7 @@ public class Input extends Form implements CommandListener {
 		}
 		Midlet.popDialog(this);
 	}
+
+	public void cancel() {}
 	
 }

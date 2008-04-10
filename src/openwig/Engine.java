@@ -103,13 +103,20 @@ public class Engine implements Runnable {
 		}
 	}
 		
-	public static void message(String text) {
-		String[] texts = {text};
-		dialog(texts);
+	public static void message(LuaTable message) {
+		String[] texts = {(String)message.rawget("Text")};
+		String button1 = null, button2 = null;
+		LuaTable buttons = (LuaTable)message.rawget("Buttons");
+		if (buttons != null) {
+			button1 = (String)buttons.rawget(new Double(1));
+			button2 = (String)buttons.rawget(new Double(2));
+		}
+		LuaClosure callback = (LuaClosure)message.rawget("Callback");
+		Midlet.pushDialog(texts, button1, button2, callback);
 	}
 	
 	public static void dialog(String[] texts) {
-		Midlet.pushDialog(texts);
+		Midlet.pushDialog(texts, null, null, null);
 	}
 	
 	public static void input(LuaTable input) {
@@ -119,6 +126,11 @@ public class Engine implements Runnable {
 	public static void callEvent(EventTable subject, String name, Object param) {
 		EventCaller ec = new EventCaller(subject, name, param);
 		ec.start();
+	}
+	
+	public static void invokeCallback(LuaClosure callback, Object value) {
+		CallbackCaller cc = new CallbackCaller(callback, value);
+		cc.start();
 	}
 	
 	private static ZonePoint origPos;
