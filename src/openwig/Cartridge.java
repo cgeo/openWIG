@@ -12,10 +12,21 @@ public class Cartridge extends EventTable {
 	
 	public Vector tasks = new Vector();
 	
+	private static class Method implements JavaFunction {
+		public int call (LuaCallFrame frame, int n) {
+			return 0;
+		}
+	}
+	private static Method m = new Method();
+	
 	public static void register(LuaState state) {
 		EventTable.register(state);
 		state.setUserdataMetatable(Cartridge.class, metatable);
-	}	
+	}
+	
+	public Cartridge () {
+		table.rawset("RequestSync", m);
+	}
 		
 	public void newPosition (ZonePoint zp) {
 		if (currentZone != null && !currentZone.contains(zp)) {
