@@ -26,6 +26,7 @@ public class Thing extends Container {
 			Object i = null;
 			while ((i = lt.next(i)) != null) {
 				Action a = (Action)lt.rawget(i);
+				a.name = (String)i;
 				a.setActor(this);
 				actions.addElement(a);
 				if (a.hasParameter()) {

@@ -13,6 +13,8 @@ public class Action extends EventTable {
 	private Vector targets = new Vector();
 	private boolean universal;
 	
+	public String text;
+	
 	public static void register (LuaState state) {
 		EventTable.register(state);
 		state.setUserdataMetatable(Action.class, metatable);
@@ -28,7 +30,7 @@ public class Action extends EventTable {
 	
 	protected void setItem (String key, Object value) {
 		if (key == "Text") {
-			name = (String)value;
+			text = (String)value;
 		} else if (key == "CmdWith") {
 			parameter = LuaState.boolEval(value);
 		} else if (key == "Enabled") {

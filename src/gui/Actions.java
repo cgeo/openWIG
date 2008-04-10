@@ -28,7 +28,7 @@ public class Actions extends List implements CommandListener, Pushable {
 				
 				if (z.getActor() == thing) {
 					if (z.hasParameter()) {
-						Midlet.push(new Targets(thing.name+": "+z.getName(), z));
+						Midlet.push(new Targets(thing.name+": "+z.text, z));
 					} else {
 						Engine.callEvent(thing, eventName, null);
 					}
@@ -47,14 +47,14 @@ public class Actions extends List implements CommandListener, Pushable {
 			if (a.isEnabled()) {
 				String name;
 				if (a.getActor() == thing) {
-					name = a.getName();
+					name = a.text;
 					if (a.hasParameter()) {
 						int targets = a.visibleTargets(Engine.instance.cartridge.currentZone)
 							+ a.visibleTargets(Engine.instance.player);
 						if (targets < 1) continue;
 					}
 				} else {
-					name = a.getActor().name + ": " + a.getName();
+					name = a.getActor().name + ": " + a.text;
 				}
 				append(name, null);
 				actions.addElement(a);
