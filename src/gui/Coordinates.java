@@ -88,6 +88,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private boolean running = false;
 	
 	synchronized public void start () {
+		if (Midlet.getCurrentScreen() != this) return;
 		if (!running) {
 			running = true;
 			Thread t = new Thread(this);
@@ -105,6 +106,20 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		}
 	}
 	
+	private String shortenNokiaDecimal(double d) {
+		// Nokia Series40 can't handle TextField.setString with more than
+		// 8 places after decimal point (when said TextField is in DECIMAL
+		// mode. This should shorten it to 7 places.
+		String num = String.valueOf(d);
+		int len = num.length();
+		int dot = num.indexOf('.');
+		if (len > dot + 8) {
+			return num.substring(0,dot+8);
+		} else {
+			return num;
+		}
+	}
+	
 	private void updateScreen () {
 		lblGps.setText(states[gpsStatus]);
 		if (gpsStatus == GPS_ON) {
@@ -112,8 +127,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 			lblLon.setText(gpsParser.getFriendlyLongitude());
 			lblAlt.setText(String.valueOf(gpsParser.getAltitude()));
 			
-			latitude.setString(String.valueOf(gpsParser.getLatitude()));
-			longitude.setString(String.valueOf(gpsParser.getLongitude()));
+			latitude.setString(shortenNokiaDecimal(gpsParser.getLatitude()));
+			longitude.setString(shortenNokiaDecimal(gpsParser.getLongitude()));
 		} else {
 			lblLat.setText(null);
 			lblLon.setText(null);

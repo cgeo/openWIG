@@ -38,6 +38,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	private static Vector screens = new Vector();
 	private static Displayable currentScreen = null;
 	
+	public static Displayable getCurrentScreen () { return currentScreen; }
+	
 	public static double latitude, longitude, altitude;
 	
 	/////////////////////////////////////
@@ -137,9 +139,9 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	synchronized public static void push (Displayable d) {
-		if (d instanceof Pushable) ((Pushable)d).prepare();
 		screens.addElement(d);
 		currentScreen = d;
+		if (d instanceof Pushable) ((Pushable)d).prepare();
 		display.setCurrent(d);
 	}
 	
