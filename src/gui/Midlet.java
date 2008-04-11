@@ -18,8 +18,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Things inventory;
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
-	public static Form mainForm;
-	private static StringItem si;
 	
 	private static List baseMenu = new List("menu", List.IMPLICIT);
 	private static final int MNU_START = 0;
@@ -73,12 +71,11 @@ public class Midlet extends MIDlet implements CommandListener {
 			if (cmd == CMD_SELECT) {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
-						mainForm = new Form("splash");
-						si = new StringItem(null, "Loading LUA...");
-						mainForm.append(si);
-						mainForm.addCommand(CMD_EXIT);
-						mainForm.setCommandListener(this);
-						Display.getDisplay(this).setCurrent(mainForm);
+						Form f = new Form("splash");
+						f.append(new StringItem(null, "Loading LUA..."));
+						f.addCommand(CMD_EXIT);
+						f.setCommandListener(this);
+						Display.getDisplay(this).setCurrent(f);
 
 						InputStream luacode = getClass().getResourceAsStream("/openwig/luac.out");
 						Thread t = new Thread(new Engine(luacode));
@@ -102,11 +99,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	////////////////////////////////////////////
 	//
 	//   functions for other components to use
-	
-	public static void state (String text) {
-		si.setText(text);
-		display.setCurrent(mainForm);
-	}
 	
 	synchronized public static void error (String text) {
 		Alert a = new Alert("chyba",text,null,AlertType.ERROR);

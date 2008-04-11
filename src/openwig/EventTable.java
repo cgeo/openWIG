@@ -2,6 +2,7 @@ package openwig;
 
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
+import gui.Midlet;
 
 public class EventTable {
 
@@ -93,10 +94,14 @@ public class EventTable {
 	
 	public void callEvent(String name, Object param) {
 		synchronized (Engine.state) {
-			Object o = table.rawget(name.intern());
-			if (o != null && o instanceof LuaClosure) {
-				LuaClosure event = (LuaClosure) o;
-				Engine.state.call(event, this, param, null);
+			try {
+				Object o = table.rawget(name.intern());
+				if (o != null && o instanceof LuaClosure) {
+					LuaClosure event = (LuaClosure) o;
+					Engine.state.call(event, this, param, null);
+				}
+			} catch (Exception e) {
+				Midlet.error(e.toString());
 			}
 		}
 	}	

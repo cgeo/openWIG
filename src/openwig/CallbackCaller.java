@@ -1,6 +1,7 @@
 package openwig;
 
 import se.krka.kahlua.vm.*;
+import gui.Midlet;
 
 public class CallbackCaller extends Thread {
 	
@@ -14,7 +15,11 @@ public class CallbackCaller extends Thread {
 
 	public void run() {
 		synchronized (Engine.state) {
-			Engine.state.call(callback, value, null, null);
+			try {
+				Engine.state.call(callback, value, null, null);
+			} catch (Exception e) {
+				Midlet.error(e.toString());
+			}
 		}
 	}
 
