@@ -18,4 +18,8 @@ public class Player extends Container {
 		}
 		return count;
 	}
+	
+	public void setCompletionCode (String code) {
+		table.rawset("CompletionCode", code);
+	}
 }

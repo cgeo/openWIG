@@ -47,6 +47,7 @@ public class Engine implements Runnable {
 			code.close(); code = null;
 			closure = null;
 			
+			player.setCompletionCode("<nic>");
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
 			if (player.position == null) {
 				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
