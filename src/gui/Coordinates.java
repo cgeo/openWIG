@@ -8,8 +8,8 @@ import openwig.Engine;
 
 public class Coordinates extends Form implements CommandListener, Pushable, Runnable {
 	
-	private TextField latitude = new TextField("latitude", "47.6666", 99, TextField.DECIMAL);
-	private TextField longitude = new TextField("longitude", "-122.351", 99, TextField.DECIMAL);
+	private TextField latitude = new TextField("latitude", null, 99, TextField.DECIMAL);
+	private TextField longitude = new TextField("longitude", null, 99, TextField.DECIMAL);
 	
 	private StringItem lblGps = new StringItem("GPS: ", null);
 	private StringItem lblLat = new StringItem("\nLatitude: ", null);
