@@ -49,7 +49,7 @@ public class Actions extends List implements CommandListener, Pushable {
 				if (a.getActor() == thing) {
 					name = a.text;
 					if (a.hasParameter()) {
-						int targets = a.visibleTargets(Engine.instance.cartridge.currentZone)
+						int targets = a.targetsInside(Engine.instance.cartridge.currentThings())
 							+ a.visibleTargets(Engine.instance.player);
 						if (targets < 1) continue;
 					}

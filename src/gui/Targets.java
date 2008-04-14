@@ -34,8 +34,7 @@ public class Targets extends List implements CommandListener, Pushable {
 		}
 	}
 
-	private void addTargets(Container c) {
-		Vector v = c.things;
+	private void addTargets(Vector v) {
 		for (int i = 0; i < v.size(); i++) {
 			Thing t = (Thing)v.elementAt(i);
 			if (t.isVisible() && action.isTarget(t)) {
@@ -49,8 +48,8 @@ public class Targets extends List implements CommandListener, Pushable {
 		int index = getSelectedIndex();
 		deleteAll();
 		targets.removeAllElements();
-		addTargets(Engine.instance.cartridge.currentZone);
-		addTargets(Engine.instance.player);
+		addTargets(Engine.instance.cartridge.currentThings());
+		addTargets(Engine.instance.player.things);
 
 		int s = size();
 		if (s > 0) {

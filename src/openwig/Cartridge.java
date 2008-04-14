@@ -5,7 +5,6 @@ import se.krka.kahlua.vm.*;
 
 public class Cartridge extends EventTable {
 	public Vector zones = new Vector();
-	public Zone currentZone = null;
 	
 	public Vector things = new Vector();
 	public Vector universalActions = new Vector();
@@ -28,21 +27,18 @@ public class Cartridge extends EventTable {
 		table.rawset("RequestSync", m);
 	}
 		
-	public void newPosition (ZonePoint zp) {
-		if (currentZone != null && !currentZone.contains(zp)) {
-			Engine.callEvent(currentZone, "OnExit", null);
-			currentZone = null;
-		}
-		
+	public void newPosition (ZonePoint zp) {		
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
-			if (z == currentZone) continue;
-			if (z.contains(zp)) {
-				if (currentZone != null) Engine.callEvent(currentZone, "OnExit", null);
-				currentZone = z;
-				Engine.callEvent(z, "OnEnter", null);
-			}
+			z.walk(zp);
 		}
+	}
+	
+	public void tick () {
+		for (int i = 0; i < zones.size(); i++) {
+			Zone z = (Zone)zones.elementAt(i);
+			z.tick();
+		}		
 	}
 	
 	public int visibleZones () {
@@ -55,8 +51,21 @@ public class Cartridge extends EventTable {
 	}
 	
 	public int visibleThings () {
-		if (currentZone == null) return 0;
-		return currentZone.visibleThings();
+		int count = 0;
+		for (int i = 0; i < zones.size(); i++) {
+			Zone z = (Zone)zones.elementAt(i);
+			count += z.visibleThings();
+		}
+		return count;
+	}
+	
+	public Vector currentThings () {
+		Vector ret = new Vector();
+		for (int i = 0; i < zones.size(); i++) {
+			Zone z = (Zone)zones.elementAt(i);
+			z.collectThings(ret);
+		}
+		return ret;
 	}
 	
 	public int visibleUniversalActions () {

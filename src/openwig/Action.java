@@ -65,6 +65,16 @@ public class Action extends EventTable {
 		return count;
 	}
 	
+	public int targetsInside(Vector v) {
+		int count = 0;
+		for (int i = 0; i < v.size(); i++) {
+			Thing t = (Thing)v.elementAt(i);
+			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
+		}
+		return count;
+
+	}
+	
 	public boolean isTarget(Thing t) {
 		return targets.contains(t) || isUniversal();
 	}

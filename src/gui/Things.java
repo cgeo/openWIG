@@ -7,10 +7,10 @@ import openwig.Thing;
 
 public class Things extends List implements CommandListener, Pushable {
 	
-	private Container container;
+	private Vector container;
 	private Vector things = new Vector();
 	
-	public Things (String title, Container what) {
+	public Things (String title, Vector what) {
 		super(title, IMPLICIT);
 		container = what;		
 		addCommand(Midlet.CMD_BACK);
@@ -37,9 +37,8 @@ public class Things extends List implements CommandListener, Pushable {
 		int index = getSelectedIndex();
 		deleteAll();
 		things.removeAllElements();
-		Vector v = container.things;
-		for (int i = 0; i < v.size(); i++) {
-			Thing t = (Thing)v.elementAt(i);
+		for (int i = 0; i < container.size(); i++) {
+			Thing t = (Thing)container.elementAt(i);
 			if (t.isVisible()) {
 				things.addElement(t);
 				append(t.name, null);

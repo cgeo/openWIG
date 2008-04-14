@@ -1,5 +1,6 @@
 package openwig;
 
+import java.util.Vector;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.*;
 
@@ -11,11 +12,19 @@ public class Zone extends Container {
 	
 	private ZonePoint[] points;
 
-	private double atop = -500,  aleft = 500,  abottom = 500,  aright = -500;
 	private boolean active = false;
 	
-	public boolean contains = false;
-	public double distance = Double.MAX_VALUE;
+	public static final int INSIDE = 2;
+	public static final int PROXIMITY = 1;
+	public static final int DISTANT = 0;
+	public static final int NOWHERE = -1;
+	
+	public int contain = NOWHERE;
+	private int ncontain = NOWHERE;
+	private int ticks = 0;
+	
+	public double distance = Double.MAX_VALUE; // distance in metres
+	public double nearestX, nearestY;
 	
 	private static final double LATITUDE_COEF = 110940.00000395167;
 	private static final double PI_180 = Math.PI / 180;
@@ -23,19 +32,6 @@ public class Zone extends Container {
 	public static void register(LuaState state) {
 		EventTable.register(state);
 		state.setUserdataMetatable(Zone.class, metatable);
-	}
-
-	private void approximate() {
-		// XXX my idea will probably be broken somewhere in the Pacific,
-		// and possibly on the poles too.
-		// i doubt that Wherigo Player will be better off, though
-		for (int i = 0; i < points.length; i++) {
-			ZonePoint zp = points[i];
-			atop = Math.max(atop, zp.latitude);
-			abottom = Math.min(abottom, zp.latitude);
-			aleft = Math.min(aleft, zp.longitude);
-			aright = Math.max(aright, zp.longitude);
-		}
 	}
 	
 	protected void setItem (String key, Object value) {
@@ -47,15 +43,38 @@ public class Zone extends Container {
 				ZonePoint zp = (ZonePoint) lt.rawget(new Double(i));
 				points[i-1] = zp;
 			}
-			approximate();
 		} else if (key == "Active") {
 			active = LuaState.boolEval(value);
 		} else super.setItem(key, value);
 	}
-
-	public boolean contains(ZonePoint z) {
+	
+	public void tick () {
+		if (ncontain == contain) ticks = 0;
+		else {
+			ticks ++;
+			if (ticks % 15 == 0) setcontain();
+		}
+	}
+	
+	private void setcontain () {
+		if (contain == ncontain) return;
+		contain = ncontain;
+		switch (contain) {
+			case INSIDE:
+				callEvent("OnEnter", null);
+				break;
+			case PROXIMITY:
+				callEvent("OnProximity", null);
+				break;
+			case DISTANT:
+				callEvent("OnDistant", null);
+				break;
+		}
+	}
+	
+	public void walk (ZonePoint z) {
 		if (!active || points.length == 0) {
-			return false;
+			return;
 		}
 		// TODO full polygon intersection
 		
@@ -100,18 +119,18 @@ public class Zone extends Container {
 			}
 			ax = bx; ay = by;
 		}
-		
+		nearestX = nx; nearestY = ny;
 		double mx = Math.abs(nx - z.latitude) * LATITUDE_COEF;
-		double my = Math.abs(ny - z.longitude);
+		double my = Math.abs(ny - z.longitude) * PI_180 * Math.cos(z.latitude * PI_180) * 6367449;
+		distance = Math.sqrt(mx * mx + my * my);
 
-		return (qtotal % 4 == 0);
-		/*return (z.latitude > abottom &&
-			z.latitude < atop &&
-			z.longitude > aleft &&
-			z.longitude < aright);*/
+		if (qtotal % 4 == 0) ncontain = INSIDE;
+		tick();
 	}
 
 	public int visibleThings() {
+		if (contain != INSIDE) return 0;
+		// TODO ShowThings = "OnProximity" or wossname
 		int count = 0;
 		for (int i = 0; i < things.size(); i++) {
 			Thing z = (Thing)things.elementAt(i);
@@ -120,10 +139,17 @@ public class Zone extends Container {
 		return count;
 	}
 	
+	public void collectThings (Vector c) {
+		if (contain != INSIDE) return;
+		for (int i = 0; i < things.size(); i++) {
+			Thing z = (Thing)things.elementAt(i);
+			if (z.isVisible()) c.addElement(z);
+		}
+	}
+	
 	public void reposition(ZonePoint diff) {
 		for (int i = 0; i < points.length; i++) {
 			points[i].diff(diff);
 		}
-		approximate();
 	}
 }

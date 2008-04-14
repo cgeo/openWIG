@@ -164,7 +164,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void start () {
 		mainMenu = new MainMenu();
 		zones = new Zones();
-		inventory = new Things("Inventáø", Engine.instance.player);
+		inventory = new Things("Inventáø", Engine.instance.player.things);
 		tasks = new Tasks();
 		//Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 		push(mainMenu);

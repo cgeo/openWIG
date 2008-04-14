@@ -1,5 +1,6 @@
 package gui;
 
+import java.util.Vector;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.Zone;
@@ -32,9 +33,9 @@ public class MainMenu extends List implements CommandListener, Pushable {
 						Midlet.push(Midlet.inventory);
 						break;
 					case LOCATION:
-						Zone z = Engine.instance.cartridge.currentZone;
-						if (z != null) {
-							Midlet.push(new Things("Okolí", z));
+						Vector v = Engine.instance.cartridge.currentThings();
+						if (!v.isEmpty()) {
+							Midlet.push(new Things("Okolí", v));
 						} else {
 							Midlet.display.setCurrent(new Alert("Okolí", "nic tu není", null, AlertType.INFO));
 						}

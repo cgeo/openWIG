@@ -77,6 +77,8 @@ public class Engine implements Runnable {
 					player.position.altitude = Midlet.altitude;
 					
 					cartridge.newPosition(player.position);
+				} else {
+					cartridge.tick();
 				}
 			} 
 			
