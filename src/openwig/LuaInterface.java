@@ -131,11 +131,11 @@ public class LuaInterface implements JavaFunction {
 	
 	private int distance (LuaCallFrame callFrame, int nArguments) {
 		LuaTable lt = new LuaTable();
-		double a = LuaState.fromDouble(callFrame.get(0));
+/*		double a = LuaState.fromDouble(callFrame.get(0));
 		String b = (String)callFrame.get(1);
 		lt.rawset("dist", new Double(a));
-		lt.rawset("unit", b.intern());
-		callFrame.push(lt);
+		lt.rawset("unit", b.intern());*/
+		callFrame.push(callFrame.get(0));
 		return 1;
 	}
 	

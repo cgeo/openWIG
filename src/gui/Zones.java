@@ -40,7 +40,7 @@ public class Zones extends List implements CommandListener, Pushable {
 		Vector v = Engine.instance.cartridge.zones;
 		for (int i = 0; i < v.size(); i++) {
 			Zone z = (Zone)v.elementAt(i);
-			if (z.isActive() && z.isVisible()) {
+			if (z.isVisible()) {
 				zones.addElement(z);
 				append((String)z.table.rawget("Name"), null);
 			}

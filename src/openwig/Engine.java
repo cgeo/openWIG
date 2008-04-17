@@ -51,6 +51,10 @@ public class Engine implements Runnable {
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
 			if (player.position == null) {
 				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
+			} else {
+				Midlet.latitude = player.position.latitude;
+				Midlet.longitude = player.position.longitude;
+				Midlet.altitude = player.position.altitude;
 			}
 			origPos = new ZonePoint(player.position);
 					

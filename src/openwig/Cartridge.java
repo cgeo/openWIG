@@ -45,7 +45,7 @@ public class Cartridge extends EventTable {
 		int count = 0;
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
-			if (z.isActive() && z.isVisible()) count++;
+			if (z.isVisible()) count++;
 		}
 		return count;
 	}

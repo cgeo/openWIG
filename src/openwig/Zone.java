@@ -6,8 +6,8 @@ import se.krka.kahlua.stdlib.*;
 
 public class Zone extends Container {
 
-	public boolean isActive() {
-		return active;
+	public boolean isVisible () {
+		return active && visible && contain > NOWHERE;
 	}
 	
 	private ZonePoint[] points;
@@ -22,9 +22,17 @@ public class Zone extends Container {
 	public int contain = NOWHERE;
 	private int ncontain = NOWHERE;
 	private int ticks = 0;
+
+	public static final int S_ALWAYS = 0;
+	public static final int S_ONENTER = 1;
+	public static final int S_ONPROXIMITY = 2;
+	public static final int S_NEVER = 3;
+	
+	private int showObjects = S_ONENTER;
 	
 	public double distance = Double.MAX_VALUE; // distance in metres
 	public double nearestX, nearestY;
+	private double distanceRange = -1, proximityRange = -1;
 	
 	private static final double LATITUDE_COEF = 110940.00000395167;
 	private static final double PI_180 = Math.PI / 180;
@@ -44,7 +52,20 @@ public class Zone extends Container {
 				points[i-1] = zp;
 			}
 		} else if (key == "Active") {
-			active = LuaState.boolEval(value);
+			boolean a = LuaState.boolEval(value);
+			if (a != active) callEvent("OnZoneState", null);
+			active = a;
+		} else if (key == "Visible") {
+			boolean a = LuaState.boolEval(value);
+			if (a != visible) callEvent("OnZoneState", null);
+			visible = a;
+		} else if (key == "DistanceRange") {
+			distanceRange = LuaState.fromDouble(value);
+			if (distanceRange == -1 && contain == NOWHERE) {
+				contain = ncontain = DISTANT;
+			}
+		} else if (key == "ProximityRange") {
+			proximityRange = LuaState.fromDouble(value);
 		} else super.setItem(key, value);
 	}
 	
@@ -52,7 +73,7 @@ public class Zone extends Container {
 		if (ncontain == contain) ticks = 0;
 		else {
 			ticks ++;
-			if (ticks % 15 == 0) setcontain();
+			if (ticks % 5 == 0) setcontain();
 		}
 	}
 	
@@ -73,7 +94,7 @@ public class Zone extends Container {
 	}
 	
 	public void walk (ZonePoint z) {
-		if (!active || points.length == 0) {
+		if (!active || points.length == 0 || z == null) {
 			return;
 		}
 		// TODO full polygon intersection
@@ -82,8 +103,8 @@ public class Zone extends Container {
 		double ax = points[0].latitude, ay = points[0].longitude;
 		double nx = ax, ny = ay;
 		int qtotal = 0, quad = ((ax > z.latitude) ? ((ay > z.longitude) ? 1 : 4) : ((ay > z.longitude) ? 2 : 3));
-		for (int i = 1; i < points.length; i++) {
-			double bx = points[i].latitude, by = points[i].longitude;
+		for (int i = 1; i <= points.length; i++) {
+			double bx = points[i % points.length].latitude, by = points[i % points.length].longitude;
 			int nextquad = ((bx > z.latitude) ? ((by > z.longitude) ? 1 : 4) : ((by > z.longitude) ? 2 : 3));
 			int qdif = nextquad - quad;
 			switch (qdif) {
@@ -124,7 +145,9 @@ public class Zone extends Container {
 		double my = Math.abs(ny - z.longitude) * PI_180 * Math.cos(z.latitude * PI_180) * 6367449;
 		distance = Math.sqrt(mx * mx + my * my);
 
-		if (qtotal % 4 == 0) ncontain = INSIDE;
+		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;
+		else if (distance < proximityRange) ncontain = PROXIMITY;
+		else if (distance < distanceRange || distanceRange == -1) ncontain = DISTANT;
 		tick();
 	}
 
