@@ -14,44 +14,60 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	
 	private static Command CMD_GPS = new Command("Poloha", Command.SCREEN, 5);
 	
+	private static Alert reallyexit = new Alert("dotaz","opravdu ukonèit?",null,AlertType.CONFIRMATION);
+	
 	public MainMenu () {
 		super("menu", IMPLICIT);
 		addCommand(CMD_GPS);
 		addCommand(Midlet.CMD_EXIT);
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
+		
+		reallyexit.addCommand(Midlet.CMD_SELECT);
+		reallyexit.addCommand(Midlet.CMD_CANCEL);
+		reallyexit.setCommandListener(this);
+		reallyexit.setTimeout(Alert.FOREVER);
 	}
 	
 	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.ITEM:
-				switch (getSelectedIndex()) {
-					case ZONES:
-						Midlet.push(Midlet.zones);
-						break;
-					case INVENTORY:
-						Midlet.push(Midlet.inventory);
-						break;
-					case LOCATION:
-						Vector v = Engine.instance.cartridge.currentThings();
-						if (!v.isEmpty()) {
-							Midlet.push(new Things("Okolí", v));
-						} else {
-							Midlet.display.setCurrent(new Alert("Okolí", "nic tu není", null, AlertType.INFO));
-						}
-						break;
-					case TASKS:
-						Midlet.push(Midlet.tasks);
-				}
-				break;
-			case Command.SCREEN:
-				if (cmd == CMD_GPS) {
-					Midlet.push(Midlet.coordinates);
-				}
-				break;
-			case Command.EXIT:
+		if (disp == this) {
+			switch (cmd.getCommandType()) {
+				case Command.ITEM:
+					switch (getSelectedIndex()) {
+						case ZONES:
+							Midlet.push(Midlet.zones);
+							break;
+						case INVENTORY:
+							Midlet.push(Midlet.inventory);
+							break;
+						case LOCATION:
+							Vector v = Engine.instance.cartridge.currentThings();
+							if (!v.isEmpty()) {
+								Midlet.push(new Things("Okolí", v));
+							} else {
+								Midlet.display.setCurrent(new Alert("Okolí", "nic tu není", null, AlertType.INFO));
+							}
+							break;
+						case TASKS:
+							Midlet.push(Midlet.tasks);
+					}
+					break;
+				case Command.SCREEN:
+					if (cmd == CMD_GPS) {
+						Midlet.push(Midlet.coordinates);
+					}
+					break;
+				case Command.EXIT:
+					//Midlet.instance.destroyApp(false);
+					Midlet.display.setCurrent(reallyexit,this);
+					break;
+			}
+		} else if (disp == reallyexit) {
+			if (cmd == Midlet.CMD_SELECT) {
 				Midlet.instance.destroyApp(false);
-				break;
+			} else if (cmd == Midlet.CMD_CANCEL) {
+				Midlet.display.setCurrent(this);
+			}
 		}
 	}
 
