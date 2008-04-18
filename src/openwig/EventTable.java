@@ -102,6 +102,7 @@ public class EventTable {
 				}
 			} catch (Exception e) {
 				Midlet.error(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}	

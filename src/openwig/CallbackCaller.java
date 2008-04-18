@@ -19,6 +19,7 @@ public class CallbackCaller extends Thread {
 				Engine.state.call(callback, value, null, null);
 			} catch (Exception e) {
 				Midlet.error(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
