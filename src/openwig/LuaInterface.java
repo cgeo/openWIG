@@ -76,6 +76,10 @@ public class LuaInterface implements JavaFunction {
 		
 		state.environment.rawset("require", functions[0]);
 		
+		LuaTable env = new LuaTable();
+		env.rawset("Device", "Windows PPC");
+		state.environment.rawset("Env", env);
+		
 		Zone.register(state);
 		Cartridge.register(state);
 		Thing.register(state);
