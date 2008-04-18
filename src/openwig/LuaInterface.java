@@ -22,8 +22,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int AUDIO = 14;
 	private static final int GETINPUT = 15;
 	private static final int NOCASEEQUALS = 16;
+	private static final int SHOWSCREEN = 17;
 	
-	private static final int NUM_FUNCTIONS = 17;
+	private static final int NUM_FUNCTIONS = 18;
 	
 	private static final String[] names;
 	static {
@@ -45,6 +46,7 @@ public class LuaInterface implements JavaFunction {
 		names[AUDIO] = "PlayAudio";
 		names[GETINPUT] = "GetInput";
 		names[NOCASEEQUALS] = "NoCaseEquals";
+		names[SHOWSCREEN] = "ShowScreen";
 	}
 
 	private int index;
