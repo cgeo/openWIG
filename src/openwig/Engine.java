@@ -52,7 +52,7 @@ public class Engine implements Runnable {
 			if (player.position == null) {
 				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
 			} else {
-				Midlet.latitude = player.position.latitude;
+				Midlet.latitude = player.position.latitude + 0.0001;
 				Midlet.longitude = player.position.longitude;
 				Midlet.altitude = player.position.altitude;
 			}
