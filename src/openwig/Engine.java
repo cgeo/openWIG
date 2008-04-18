@@ -86,13 +86,15 @@ public class Engine implements Runnable {
 				}
 			} 
 			
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			Midlet.error("Runtime Exception... "+e.toString());
-			System.out.println(state.currentThread.stackTrace);
-		} catch (IOException e) {
-			Midlet.error("IOException... "+e.getMessage());
+		} catch (Exception e) {
+			stacktrace(e);
 		}
+	}
+	
+	public static void stacktrace (Exception e) {
+		e.printStackTrace();
+		System.out.println(state.currentThread.stackTrace);
+		Midlet.error(e.toString()+"\n\nstack trace: " + state.currentThread.stackTrace);
 	}
 
 	public static void newPosition (ZonePoint z) {

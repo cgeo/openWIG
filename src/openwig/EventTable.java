@@ -91,9 +91,7 @@ public class EventTable {
 					Engine.state.call(event, table, param, null);
 				}
 			} catch (Exception e) {
-				Midlet.error(e.toString());
-				e.printStackTrace();
-				System.out.println(Engine.state.currentThread.stackTrace);
+				Engine.stacktrace(e);
 			}
 		}
 	}
@@ -107,9 +105,7 @@ public class EventTable {
 					Engine.state.call(event, this, param, null);
 				}
 			} catch (Exception e) {
-				Midlet.error(e.toString());
-				e.printStackTrace();
-				System.out.println(Engine.state.currentThread.stackTrace);
+				Engine.stacktrace(e);
 			}
 		}
 	}	
