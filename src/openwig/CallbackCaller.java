@@ -20,6 +20,7 @@ public class CallbackCaller extends Thread {
 			} catch (Exception e) {
 				Midlet.error(e.toString());
 				e.printStackTrace();
+				System.out.println(Engine.state.currentThread.stackTrace);
 			}
 		}
 	}
