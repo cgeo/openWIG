@@ -22,9 +22,10 @@ public class Zones extends List implements CommandListener, Pushable {
 				int index = getSelectedIndex();
 				if (index >= 0 && index < zones.size()) {
 					Zone z = (Zone)zones.elementAt(index);
-					String name = (String)z.table.rawget("Name");
+					/*String name = (String)z.table.rawget("Name");
 					String description = (String)z.table.rawget("Description");
-					Midlet.display.setCurrent(new Alert(name, description, null, AlertType.INFO), disp);
+					Midlet.display.setCurrent(new Alert(name, description, null, AlertType.INFO), disp);*/
+					Midlet.push(new Details(z));
 				}
 				break;
 			case Command.BACK:
