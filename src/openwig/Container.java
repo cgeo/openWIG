@@ -51,7 +51,7 @@ public class Container extends EventTable {
 	
 	public void moveTo (Container c) {
 		if (location != null) location.things.removeElement(this);
-		c.things.addElement(this);
+		if (c != null) c.things.addElement(this);
 		location = c;
 	}
 }
