@@ -134,7 +134,7 @@ public class Zone extends Container {
 					y = ay + ((by - ay) * dot_ta) / (dot_ta + dot_tb);
 				}
 			}
-			dist = x*x + y*y;
+			dist = (x-z.latitude)*(x-z.latitude) + (y-z.longitude)*(y-z.longitude);
 			if (dist < ndist) {
 				nx = x; ny = y; ndist = dist;
 			}
