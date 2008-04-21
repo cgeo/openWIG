@@ -52,7 +52,7 @@ public class Engine implements Runnable {
 				byte[] code = new byte[10];
 				int len = is.read(code);
 				String c = new String(code, 0, len);
-				player.setCompletionCode(c);
+				player.setCompletionCode(c.trim());
 			} catch (Exception e) {
 				player.setCompletionCode("<nic>");
 			}
