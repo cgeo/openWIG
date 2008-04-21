@@ -10,12 +10,13 @@ import java.util.Vector;
 import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
+import openwig.Media;
 
 public class Midlet extends MIDlet implements CommandListener {
 	
 	public static Coordinates coordinates;
 	public static Zones zones;
-	public static Things inventory;
+	public static Things inventory, surroundings;
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
 	
@@ -106,8 +107,8 @@ public class Midlet extends MIDlet implements CommandListener {
 		display.setCurrent(a, display.getCurrent());
 	}
 	
-	synchronized public static void pushDialog(String[] texts, String button1, String button2, LuaClosure callback) {
-		Dialog d = new Dialog(texts, button1, button2, callback);
+	synchronized public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
+		Dialog d = new Dialog(texts, media, button1, button2, callback);
 
 //		display.flashBacklight(500);
 //		display.vibrate(500);
@@ -153,7 +154,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 		
 		currentScreen = (Displayable)screens.elementAt(ss-1);
-		if (currentScreen instanceof Pushable) ((Pushable)currentScreen).prepare();
+		//if (currentScreen instanceof Pushable) ((Pushable)currentScreen).prepare();
 		display.setCurrent(currentScreen);
 	}
 	
@@ -164,7 +165,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void start () {
 		mainMenu = new MainMenu();
 		zones = new Zones();
-		inventory = new Things("Inventáø", Engine.instance.player.things);
+		inventory = new Things("Inventáø", Things.INVENTORY);
+		surroundings = new Things("Okolí", Things.SURROUNDINGS);
 		tasks = new Tasks();
 		//Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 		push(mainMenu);
@@ -174,7 +176,14 @@ public class Midlet extends MIDlet implements CommandListener {
 		int ss = screens.size();
 		for (int i = 0; i < ss; i++) {
 			Object d = screens.elementAt(i);
-			if (d instanceof Pushable) ((Pushable)d).prepare();
+			if (d instanceof Pushable) {
+				((Pushable)d).prepare();
+				if (screens.size() < ss) { // suppose the prepare() just popped the screen
+					// also suppose that nothing worse happened ;e)
+					ss = screens.size();
+					i--;
+				}
+			}
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package gui;
 
 import javax.microedition.lcdui.*;
-import openwig.EventTable;
+import openwig.Engine;
 import se.krka.kahlua.vm.LuaTable;
 
 public class Input extends Form implements CommandListener, Cancellable {
@@ -46,11 +46,11 @@ public class Input extends Form implements CommandListener, Cancellable {
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_ANSWER) {
 			if (mode == TEXT) {
-				EventTable.callEvent(input, "OnGetInput", answer.getString());
+				Engine.callEvent(input, "OnGetInput", answer.getString().intern());
 			} else if (mode == MULTI) {
-				EventTable.callEvent(input, "OnGetInput", choice.getString(choice.getSelectedIndex()));
+				Engine.callEvent(input, "OnGetInput", choice.getString(choice.getSelectedIndex()).intern());
 			} else {
-				EventTable.callEvent(input, "OnGetInput", null);
+				Engine.callEvent(input, "OnGetInput", null);
 			}
 		}
 		Midlet.popDialog(this);

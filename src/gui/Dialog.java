@@ -1,13 +1,17 @@
 package gui;
 
+import java.io.InputStream;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
+import openwig.Media;
 import se.krka.kahlua.vm.*;
 
 public class Dialog extends Form implements CommandListener, Cancellable {
 
 	private StringItem content = new StringItem(null, null);
+	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
 	private String[] texts;
+	private Media[] media;
 	private int page = -1;
 	
 	private static Command CMD_OK = new Command("OK", Command.SCREEN, 1);
@@ -15,8 +19,9 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	
 	private LuaClosure callback;
 
-	public Dialog(String[] texts, String button1, String button2, LuaClosure callback) {
+	public Dialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
 		super("dialog");
+		append(image);
 		append(content);
 		setCommandListener(this);
 		if (button1 != null) {
@@ -30,6 +35,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 			addCommand(CMD_CANCEL);
 		}
 		this.texts = texts;
+		this.media = media;
 		this.callback = callback;
 		nextPage();
 	}
@@ -43,6 +49,13 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 			return;
 		}
 		content.setText(texts[page]);
+		Media m = media[page];
+		if (m != null) try {
+			InputStream is = Engine.mediaFile(m);
+			image.setImage(Image.createImage(is));
+		} catch (Exception e) {
+			image.setAltText(m.altText);
+		}
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {

@@ -97,16 +97,6 @@ public class EventTable {
 	}
 	
 	public void callEvent(String name, Object param) {
-		synchronized (Engine.state) {
-			try {
-				Object o = table.rawget(name.intern());
-				if (o != null && o instanceof LuaClosure) {
-					LuaClosure event = (LuaClosure) o;
-					Engine.state.call(event, this, param, null);
-				}
-			} catch (Exception e) {
-				Engine.stacktrace(e);
-			}
-		}
+		callEvent(table, name, param);
 	}	
 }

@@ -2,7 +2,7 @@ package openwig;
 
 import se.krka.kahlua.vm.*;
 
-public class Player extends Container {
+public class Player extends Thing {
 	public ZonePoint position;
 	
 	private static class Method implements JavaFunction {
@@ -20,6 +20,7 @@ public class Player extends Container {
 	}
 	
 	public Player() {
+		super(true);
 		table.rawset("PositionAccuracy",this);
 		table.rawset("GetValue", positionAccuracy_GetValue);
 	}

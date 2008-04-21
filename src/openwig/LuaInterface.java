@@ -86,6 +86,7 @@ public class LuaInterface implements JavaFunction {
 		Action.register(state);
 		Player.register(state);
 		Task.register(state);
+		Media.register(state);
 	}
 
 	public String toString() {
@@ -105,7 +106,8 @@ public class LuaInterface implements JavaFunction {
 			case ITEM: return item(callFrame, nArguments, false);
 			case CHARACTER: return item(callFrame, nArguments, true);
 			case COMMAND: return command(callFrame, nArguments);
-			case MEDIA: case INPUT: case TIMER:
+			case MEDIA: return media(callFrame, nArguments);
+			case INPUT: case TIMER:
 				callFrame.push(new LuaTable());
 				return 1;
 			case TASK: return task(callFrame, nArguments);
@@ -155,11 +157,13 @@ public class LuaInterface implements JavaFunction {
 		LuaTable lt = (LuaTable)callFrame.get(0);
 		int n = lt.len();
 		String[] texts = new String[n];
+		Media[] media = new Media[n];
 		for (int i = 1; i <= n; i++) {
 			LuaTable item = (LuaTable)lt.rawget(new Double(i));
 			texts[i-1] = (String)item.rawget("Text");
+			media[i-1] = (Media)item.rawget("Media");
 		}
-		Engine.dialog(texts);
+		Engine.dialog(texts, media);
 		return 0;
 	}
 	
@@ -168,6 +172,11 @@ public class LuaInterface implements JavaFunction {
 		Zone z = new Zone();
 		c.zones.addElement(z);
 		callFrame.push(z);
+		return 1;
+	}
+	
+	private int media (LuaCallFrame callFrame, int nArguments) {
+		callFrame.push(new Media());
 		return 1;
 	}
 	

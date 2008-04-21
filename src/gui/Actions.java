@@ -9,11 +9,13 @@ import openwig.Action;
 public class Actions extends List implements CommandListener, Pushable {
 
 	private Thing thing;
+	private Things parent;
 	private Vector actions = new Vector();
 
-	public Actions(String title, Thing what) {
+	public Actions(String title, Thing what, Things where) {
 		super(title, IMPLICIT);
 		thing = what;
+		parent = where;
 		addCommand(Midlet.CMD_BACK);
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
@@ -64,7 +66,7 @@ public class Actions extends List implements CommandListener, Pushable {
 	}
 
 	public void prepare() {
-		if (!thing.isVisible()) {
+		if (/*!thing.isVisible()*/!parent.isPresent(thing)) {
 			Midlet.pop(this);
 			return;
 		}

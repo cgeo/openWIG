@@ -53,5 +53,6 @@ public class Container extends EventTable {
 		if (location != null) location.things.removeElement(this);
 		if (c != null) c.things.addElement(this);
 		location = c;
+		table.rawset("Container", c);
 	}
 }

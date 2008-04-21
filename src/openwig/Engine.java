@@ -47,7 +47,16 @@ public class Engine implements Runnable {
 			code.close(); code = null;
 			closure = null;
 			
-			player.setCompletionCode("<nic>");
+			try {
+				InputStream is = getClass().getResourceAsStream("/media/code.txt");
+				byte[] code = new byte[10];
+				int len = is.read(code);
+				String c = new String(code, 0, len);
+				player.setCompletionCode(c);
+			} catch (Exception e) {
+				player.setCompletionCode("<nic>");
+			}
+			
 			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
 			if (player.position == null) {
 				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
@@ -59,7 +68,7 @@ public class Engine implements Runnable {
 			origPos = new ZonePoint(player.position);
 					
 			Midlet.start();
-			cartridge.callEvent("OnStart", null);
+			callEvent(cartridge, "OnStart", null);
 			
 			while (! end ) {
 				try { Thread.sleep(1000); } catch (Exception e) {}
@@ -114,6 +123,7 @@ public class Engine implements Runnable {
 		
 	public static void message(LuaTable message) {
 		String[] texts = {(String)message.rawget("Text")};
+		Media[] media = {(Media)message.rawget("Media")};
 		String button1 = null, button2 = null;
 		LuaTable buttons = (LuaTable)message.rawget("Buttons");
 		if (buttons != null) {
@@ -121,11 +131,11 @@ public class Engine implements Runnable {
 			button2 = (String)buttons.rawget(new Double(2));
 		}
 		LuaClosure callback = (LuaClosure)message.rawget("Callback");
-		Midlet.pushDialog(texts, button1, button2, callback);
+		Midlet.pushDialog(texts, media, button1, button2, callback);
 	}
 	
-	public static void dialog(String[] texts) {
-		Midlet.pushDialog(texts, null, null, null);
+	public static void dialog(String[] texts, Media[] media) {
+		Midlet.pushDialog(texts, media, null, null, null);
 	}
 	
 	public static void input(LuaTable input) {
@@ -133,6 +143,10 @@ public class Engine implements Runnable {
 	}
 	
 	public static void callEvent(EventTable subject, String name, Object param) {
+		callEvent(subject.table, name, param);
+	}
+	
+	public static void callEvent(LuaTable subject, String name, Object param) {
 		EventCaller ec = new EventCaller(subject, name, param);
 		ec.start();
 	}
@@ -152,5 +166,10 @@ public class Engine implements Runnable {
 		shifted = true;
 		diff = new ZonePoint(origPos.latitude - lat, origPos.longitude - lon, 0);
 		instance.cartridge.reposition(diff);
+	}
+	
+	public static InputStream mediaFile (Media media) {
+		String filename = media.jarFilename();
+		return media.getClass().getResourceAsStream("/media/"+filename);
 	}
 }

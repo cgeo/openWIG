@@ -1,8 +1,10 @@
 package gui;
 
+import java.io.InputStream;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.EventTable;
+import openwig.Media;
 import openwig.Thing;
 import openwig.Task;
 import openwig.Zone;
@@ -15,24 +17,39 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private StringItem state = new StringItem(null, null);
 	private StringItem distance = new StringItem(null, null);
 	private StringItem direction = new StringItem(null, null);
+	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
+	//private Image media = null;
 	
 	static String[] taskStates = { "nesplnìno", "hotovo", "neúspìch" };
 	
 	private EventTable thing;
+	private Things parent;
 	
-	public Details (EventTable t) {
+	public Details (EventTable t, Things where) {
 		super(null);
 		thing = t;
+		parent = where;
+		append(image);
 		append(description);
 		append(state);
 		append(distance); append(direction);
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
+		
+		Media m = (Media)t.table.rawget("Media");
+		if (m != null) {
+			image.setAltText(m.altText);
+			try {
+				InputStream is = Engine.mediaFile(m);
+				Image i = Image.createImage(is);
+				image.setImage(i);
+			} catch (Exception e) { }
+		}
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_ACTIONS) {
-			Midlet.push(new Actions(thing.name, (Thing)thing));
+			Midlet.push(new Actions(thing.name, (Thing)thing, parent));
 		} else if (cmd == Midlet.CMD_BACK) {
 			stop();
 			Midlet.pop(this);
@@ -40,7 +57,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	}
 
 	public void prepare() {
-		if (!thing.isVisible()) {
+		if (!thing.isVisible() || (thing instanceof Thing && !parent.isPresent((Thing)thing))) {
 			stop();
 			Midlet.pop(this);
 			return;

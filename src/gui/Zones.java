@@ -25,7 +25,7 @@ public class Zones extends List implements CommandListener, Pushable {
 					/*String name = (String)z.table.rawget("Name");
 					String description = (String)z.table.rawget("Description");
 					Midlet.display.setCurrent(new Alert(name, description, null, AlertType.INFO), disp);*/
-					Midlet.push(new Details(z));
+					Midlet.push(new Details(z, null));
 				}
 				break;
 			case Command.BACK:

@@ -33,7 +33,7 @@ public class Tasks extends List implements CommandListener, Pushable {
 				int index = getSelectedIndex();
 				if (index >= 0 && index < things.size()) {
 					Task z = (Task)things.elementAt(index);
-					Midlet.push(new Details(z));
+					Midlet.push(new Details(z, null));
 				}
 				break;
 			case Command.BACK:

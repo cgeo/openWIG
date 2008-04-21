@@ -41,12 +41,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 							Midlet.push(Midlet.inventory);
 							break;
 						case LOCATION:
-							Vector v = Engine.instance.cartridge.currentThings();
-							if (!v.isEmpty()) {
-								Midlet.push(new Things("Okolí", v));
-							} else {
-								Midlet.display.setCurrent(new Alert("Okolí", "nic tu není", null, AlertType.INFO));
-							}
+							Midlet.push(Midlet.surroundings);
 							break;
 						case TASKS:
 							Midlet.push(Midlet.tasks);

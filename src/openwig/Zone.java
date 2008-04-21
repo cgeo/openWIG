@@ -1,5 +1,6 @@
 package openwig;
 
+import gui.Midlet;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.*;
@@ -82,6 +83,7 @@ public class Zone extends Container {
 		contain = ncontain;
 		switch (contain) {
 			case INSIDE:
+				Engine.instance.player.moveTo(this);
 				callEvent("OnEnter", null);
 				break;
 			case PROXIMITY:
@@ -91,6 +93,7 @@ public class Zone extends Container {
 				callEvent("OnDistant", null);
 				break;
 		}
+		Midlet.refresh();
 	}
 	
 	public void walk (ZonePoint z) {
@@ -156,6 +159,7 @@ public class Zone extends Container {
 		// TODO ShowThings = "OnProximity" or wossname
 		int count = 0;
 		for (int i = 0; i < things.size(); i++) {
+			if (things.elementAt(i) instanceof Player) continue;
 			Thing z = (Thing)things.elementAt(i);
 			if (z.isVisible()) count++;
 		}
