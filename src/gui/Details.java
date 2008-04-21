@@ -57,7 +57,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	}
 
 	public void prepare() {
-		if (!thing.isVisible() || (thing instanceof Thing && !parent.isPresent((Thing)thing))) {
+		if (!thing.isVisible() || (thing instanceof Thing && parent != null && !parent.isPresent((Thing)thing))) {
 			stop();
 			Midlet.pop(this);
 			return;

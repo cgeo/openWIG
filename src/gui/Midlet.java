@@ -10,6 +10,7 @@ import java.util.Vector;
 import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
+import openwig.EventTable;
 import openwig.Media;
 
 public class Midlet extends MIDlet implements CommandListener {
@@ -24,6 +25,13 @@ public class Midlet extends MIDlet implements CommandListener {
 	private static final int MNU_START = 0;
 	private static final int MNU_GPS = 1;
 	private static final int MNU_END = 2;
+	
+	public static final int MAINSCREEN = 0;
+	public static final int DETAILSCREEN = 1;
+	public static final int INVENTORYSCREEN = 2;
+	public static final int ITEMSCREEN = 3;
+	public static final int LOCATIONSCREEN = 4;
+	public static final int TASKSCREEN = 5;	
 	
 	public static final Command CMD_EXIT = new Command("Konec", Command.EXIT, 10);
 	public static final Command CMD_SELECT = new Command("Vybrat", Command.ITEM, 0);
@@ -184,6 +192,30 @@ public class Midlet extends MIDlet implements CommandListener {
 					i--;
 				}
 			}
+		}
+	}
+	
+	synchronized public static void showScreen (int which, EventTable details) {
+		if (currentDialog != null) popDialog(currentDialog);
+		while (currentScreen != mainMenu) pop(currentScreen);
+		switch (which) {
+			case MAINSCREEN:
+				return;
+			case DETAILSCREEN:
+				push(new Details(details, null));
+				return;
+			case INVENTORYSCREEN:
+				push(inventory);
+				return;
+			case ITEMSCREEN:
+				push(surroundings);
+				return;
+			case LOCATIONSCREEN:
+				push(zones);
+				return;
+			case TASKSCREEN:
+				push(tasks);
+				return;
 		}
 	}
 }

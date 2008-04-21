@@ -1,6 +1,7 @@
 
 package openwig;
 
+import gui.Midlet;
 import se.krka.kahlua.vm.*;
 
 public class LuaInterface implements JavaFunction {
@@ -74,6 +75,14 @@ public class LuaInterface implements JavaFunction {
 		wig.rawset("Player", Engine.instance.player);
 		wig.rawset("INVALID_ZONEPOINT", null);
 		
+		// screen constants
+		wig.rawset("MAINSCREEN", new Double(Midlet.MAINSCREEN));
+		wig.rawset("DETAILSCREEN", new Double(Midlet.DETAILSCREEN));
+		wig.rawset("ITEMSCREEN", new Double(Midlet.ITEMSCREEN));
+		wig.rawset("INVENTORYSCREEN", new Double(Midlet.INVENTORYSCREEN));
+		wig.rawset("LOCATIONSCREEN", new Double(Midlet.LOCATIONSCREEN));
+		wig.rawset("TASKSCREEN", new Double(Midlet.TASKSCREEN));
+		
 		state.environment.rawset("require", functions[0]);
 		
 		LuaTable env = new LuaTable();
@@ -113,6 +122,7 @@ public class LuaInterface implements JavaFunction {
 			case TASK: return task(callFrame, nArguments);
 			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
 			case GETINPUT: return getinput(callFrame, nArguments);
+			case SHOWSCREEN: return showscreen(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -227,5 +237,16 @@ public class LuaInterface implements JavaFunction {
 		LuaTable lt = (LuaTable)callFrame.get(0);
 		Engine.input(lt);
 		return 1;
+	}
+	
+	private int showscreen (LuaCallFrame callFrame, int nArguments) {
+		int screen = (int)LuaState.fromDouble(callFrame.get(0));
+		EventTable et = null;
+		if (nArguments > 1) {
+			Object o = callFrame.get(1);
+			if (o instanceof EventTable) et = (EventTable)o;
+		}
+		Midlet.showScreen(screen, et);
+		return 0;
 	}
 }
