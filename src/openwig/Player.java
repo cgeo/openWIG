@@ -35,6 +35,6 @@ public class Player extends Thing {
 	}
 	
 	public void setCompletionCode (String code) {
-		table.rawset("CompletionCode", code);
+		table.rawset("CompletionCode", code.intern());
 	}
 }
