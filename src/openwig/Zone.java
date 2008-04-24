@@ -35,9 +35,6 @@ public class Zone extends Container {
 	public double nearestX, nearestY;
 	private double distanceRange = -1, proximityRange = -1;
 	
-	private static final double LATITUDE_COEF = 110940.00000395167;
-	private static final double PI_180 = Math.PI / 180;
-	
 	public static void register(LuaState state) {
 		EventTable.register(state);
 		state.setUserdataMetatable(Zone.class, metatable);
@@ -164,8 +161,8 @@ public class Zone extends Container {
 			ax = bx; ay = by;
 		}
 		nearestX = nx; nearestY = ny;
-		double mx = Math.abs(nx - z.latitude) * LATITUDE_COEF;
-		double my = Math.abs(ny - z.longitude) * PI_180 * Math.cos(z.latitude * PI_180) * 6367449;
+		double mx = Math.abs(ZonePoint.lat2m(nx - z.latitude));
+		double my = Math.abs(ZonePoint.lon2m(z.latitude, ny - z.longitude));
 		distance = Math.sqrt(mx * mx + my * my);
 
 		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;

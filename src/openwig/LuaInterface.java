@@ -2,6 +2,7 @@
 package openwig;
 
 import gui.Midlet;
+import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
 public class LuaInterface implements JavaFunction {
@@ -24,8 +25,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int GETINPUT = 15;
 	private static final int NOCASEEQUALS = 16;
 	private static final int SHOWSCREEN = 17;
+	private static final int TRANSLATEPOINT = 18;
 	
-	private static final int NUM_FUNCTIONS = 18;
+	private static final int NUM_FUNCTIONS = 19;
 	
 	private static final String[] names;
 	static {
@@ -48,6 +50,7 @@ public class LuaInterface implements JavaFunction {
 		names[GETINPUT] = "GetInput";
 		names[NOCASEEQUALS] = "NoCaseEquals";
 		names[SHOWSCREEN] = "ShowScreen";
+		names[TRANSLATEPOINT] = "TranslatePoint";
 	}
 
 	private int index;
@@ -125,6 +128,7 @@ public class LuaInterface implements JavaFunction {
 			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
 			case GETINPUT: return getinput(callFrame, nArguments);
 			case SHOWSCREEN: return showscreen(callFrame, nArguments);
+			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -255,5 +259,14 @@ public class LuaInterface implements JavaFunction {
 		}
 		Midlet.showScreen(screen, et);
 		return 0;
+	}
+	
+	private int translatePoint (LuaCallFrame callFrame, int nArguments) {
+		BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for TranslatePoint");
+		ZonePoint z = (ZonePoint)callFrame.get(0);
+		double dist = LuaState.fromDouble(callFrame.get(1));
+		double angle = LuaState.fromDouble(callFrame.get(2));
+		callFrame.push(z.translate(angle, dist));
+		return 1;
 	}
 }
