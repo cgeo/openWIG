@@ -19,7 +19,7 @@ public class Media extends EventTable {
 		id = media_no++;
 	}
 	
-	public void setItem (String key, Object value) {	
+	protected void setItem (String key, Object value) {	
 		if (key == "AltText") {
 			altText = (String)value;
 		} else if (key == "Resources") {
