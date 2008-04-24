@@ -76,6 +76,9 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			state.setLabel("\nStav: ");
 			state.setText(taskStates[t.state()]);
 		} else if (thing instanceof Zone) {
+			state.setLabel("\nStav: ");
+			distance.setLabel("\nVzdál.: ");
+			direction.setLabel("\nSmìr: ");
 			updateNavi();
 			start();
 			//updateNavi();
@@ -84,7 +87,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	private void updateNavi () {
 		Zone z = (Zone)thing;
-		state.setLabel("\nStav: ");
 		String ss = "(nic)";
 		switch (z.contain) {
 			case Zone.DISTANT: ss = "distant"; break;
@@ -93,11 +95,14 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		}
 		state.setText(ss);
 		
-		distance.setLabel("\nVzdál.: ");
-		long part = (long)(z.distance * 1000);
-		double d = part/1000.0;
-		distance.setText(Double.toString(d)+" m");
-		direction.setLabel("\nSmìr: ");
+		if (z.ncontain == Zone.INSIDE) { 
+			distance.setText("0 m");
+		} else {
+			long part = (long)(z.distance * 1000);
+			double d = part/1000.0;
+			distance.setText(Double.toString(d)+" m");
+		}
+		
 		// uhodnuti smeru
 		double x = z.nearestX - Midlet.latitude;
 		double y = z.nearestY - Midlet.longitude;

@@ -21,7 +21,7 @@ public class Zone extends Container {
 	public static final int NOWHERE = -1;
 	
 	public int contain = NOWHERE;
-	private int ncontain = NOWHERE;
+	public int ncontain = NOWHERE;
 	private int ticks = 0;
 
 	public static final int S_ALWAYS = 0;
