@@ -52,9 +52,17 @@ public class Zone extends Container {
 				ZonePoint zp = (ZonePoint) lt.rawget(new Double(i));
 				points[i-1] = zp;
 			}
+			if (active) {
+				walk(Engine.instance.player.position);
+				setcontain();
+			}
 		} else if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
+			if (active) {
+				walk(Engine.instance.player.position);
+				setcontain();
+			}
 			active = a;
 		} else if (key == "Visible") {
 			boolean a = LuaState.boolEval(value);
@@ -67,6 +75,17 @@ public class Zone extends Container {
 			}
 		} else if (key == "ProximityRange") {
 			proximityRange = LuaState.fromDouble(value);
+		} else if (key == "ShowObjects") {
+			String v = (String)value;
+			if (v == "Always") {
+				showObjects = S_ALWAYS;
+			} else if (v == "OnProximity") {
+				showObjects = S_ONPROXIMITY;
+			} else if (v == "OnEnter") {
+				showObjects = S_ONENTER;
+			} else if (v == "Never") {
+				showObjects = S_NEVER;
+			}
 		} else super.setItem(key, value);
 	}
 	
@@ -92,6 +111,8 @@ public class Zone extends Container {
 			case DISTANT:
 				callEvent("OnDistant", null);
 				break;
+			default:
+				return;
 		}
 		Midlet.refresh();
 	}
@@ -100,7 +121,6 @@ public class Zone extends Container {
 		if (!active || points.length == 0 || z == null) {
 			return;
 		}
-		// TODO full polygon intersection
 		
 		double x, y, dist, ndist = Double.MAX_VALUE;
 		double ax = points[0].latitude, ay = points[0].longitude;
@@ -154,8 +174,18 @@ public class Zone extends Container {
 		tick();
 	}
 
+	private boolean showThings () {
+		switch (showObjects) {
+			case S_ALWAYS: return true;
+			case S_ONPROXIMITY: return contain >= PROXIMITY;
+			case S_ONENTER: return contain == INSIDE;
+			case S_NEVER: return false;
+			default: return false;
+		}
+	}
+	
 	public int visibleThings() {
-		if (contain != INSIDE) return 0;
+		if (!showThings()) return 0;
 		// TODO ShowThings = "OnProximity" or wossname
 		int count = 0;
 		for (int i = 0; i < things.size(); i++) {
@@ -167,7 +197,7 @@ public class Zone extends Container {
 	}
 	
 	public void collectThings (Vector c) {
-		if (contain != INSIDE) return;
+		if (showThings()) return;
 		for (int i = 0; i < things.size(); i++) {
 			Thing z = (Thing)things.elementAt(i);
 			if (z.isVisible()) c.addElement(z);

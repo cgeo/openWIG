@@ -57,14 +57,6 @@ public class Engine implements Runnable {
 				player.setCompletionCode("<nic>");
 			}
 			
-			player.position = (ZonePoint)cartridge.table.rawget("StartingLocation");
-			if (player.position == null) {
-				player.position = new ZonePoint(Midlet.latitude, Midlet.longitude, Midlet.altitude);
-			} else {
-				Midlet.latitude = player.position.latitude + 0.0001;
-				Midlet.longitude = player.position.longitude;
-				Midlet.altitude = player.position.altitude;
-			}
 			origPos = new ZonePoint(player.position);
 					
 			Midlet.start();
@@ -72,15 +64,7 @@ public class Engine implements Runnable {
 			
 			while (! end ) {
 				try { Thread.sleep(1000); } catch (Exception e) {}
-/*				synchronized (queue) {
-					if (queue.isEmpty()) {
-						try { queue.wait(); } catch (InterruptedException e) { e.printStackTrace(); }
-						continue;
-					}
 
-					player.position = (ZonePoint)queue.elementAt(0);
-					queue.removeElementAt(0);
-				}*/
 				if (Midlet.latitude != player.position.latitude
 					|| Midlet.longitude != player.position.longitude
 					|| Midlet.altitude != player.position.altitude) {
@@ -89,7 +73,7 @@ public class Engine implements Runnable {
 					player.position.longitude = Midlet.longitude;
 					player.position.altitude = Midlet.altitude;
 					
-					cartridge.newPosition(player.position);
+					cartridge.walk(player.position);
 				} else {
 					cartridge.tick();
 				}
@@ -104,13 +88,6 @@ public class Engine implements Runnable {
 		e.printStackTrace();
 		System.out.println(state.currentThread.stackTrace);
 		Midlet.error(e.toString()+"\n\nstack trace: " + state.currentThread.stackTrace);
-	}
-
-	public static void newPosition (ZonePoint z) {
-		synchronized (instance.queue) {
-			instance.queue.addElement(z);
-			instance.queue.notify();
-		}
 	}
 	
 	public static void kill () {

@@ -26,8 +26,16 @@ public class Cartridge extends EventTable {
 	public Cartridge () {
 		table.rawset("RequestSync", m);
 	}
+	
+	private boolean locationSet = false;
+	public void setItem (String key, Object value) {
+		if (key == "StartingLocation" && value != null && !locationSet) { // i.e. set only once
+			Engine.instance.player.position = (ZonePoint)value;
+			locationSet = true;
+		} else super.setItem(key, value);
+	}
 		
-	public void newPosition (ZonePoint zp) {		
+	public void walk (ZonePoint zp) {		
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
 			z.walk(zp);

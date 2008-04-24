@@ -2,7 +2,6 @@ package openwig;
 
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
-import gui.Midlet;
 
 public class EventTable {
 
