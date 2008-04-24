@@ -56,11 +56,11 @@ public class Zone extends Container {
 		} else if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
+			active = a;			
 			if (active) {
 				walk(Engine.instance.player.position);
 				setcontain();
 			}
-			active = a;
 		} else if (key == "Visible") {
 			boolean a = LuaState.boolEval(value);
 			if (a != visible) callEvent("OnZoneState", null);
@@ -97,9 +97,13 @@ public class Zone extends Container {
 	private void setcontain () {
 		if (contain == ncontain) return;
 		contain = ncontain;
+		if (contain == INSIDE) {
+			Engine.instance.player.moveTo(this);
+		} else if (Engine.instance.player.location == this) {
+			Engine.instance.player.moveTo(null);
+		}
 		switch (contain) {
 			case INSIDE:
-				Engine.instance.player.moveTo(this);
 				callEvent("OnEnter", null);
 				break;
 			case PROXIMITY:
@@ -108,6 +112,9 @@ public class Zone extends Container {
 			case DISTANT:
 				callEvent("OnDistant", null);
 				break;
+			case NOWHERE:
+				callEvent("OnNotInRange", null);
+				break;
 			default:
 				return;
 		}
@@ -115,7 +122,7 @@ public class Zone extends Container {
 	}
 	
 	public void walk (ZonePoint z) {
-		if (!active || points.length == 0 || z == null) {
+		if (!active || points == null || points.length == 0 || z == null) {
 			return;
 		}
 		
@@ -168,6 +175,7 @@ public class Zone extends Container {
 		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;
 		else if (distance < proximityRange) ncontain = PROXIMITY;
 		else if (distance < distanceRange || distanceRange == -1) ncontain = DISTANT;
+		else ncontain = NOWHERE;
 		tick();
 	}
 
@@ -194,7 +202,7 @@ public class Zone extends Container {
 	}
 	
 	public void collectThings (Vector c) {
-		if (showThings()) return;
+		if (!showThings()) return;
 		for (int i = 0; i < things.size(); i++) {
 			Thing z = (Thing)things.elementAt(i);
 			if (z.isVisible()) c.addElement(z);

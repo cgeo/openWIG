@@ -43,12 +43,11 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	private void nextPage() {
 		page++;
 		if (page >= texts.length) {
-			if (callback != null) Engine.invokeCallback(callback, Boolean.TRUE);
+			if (callback != null) Engine.invokeCallback(callback, "Button1");
 			callback = null;
 			Midlet.popDialog(this);
 			return;
 		}
-		content.setText(texts[page]);
 		Media m = media[page];
 		if (m != null) try {
 			InputStream is = Engine.mediaFile(m);
@@ -56,6 +55,10 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 		} catch (Exception e) {
 			image.setAltText(m.altText);
 		}
+		deleteAll();
+		content.setText(texts[page]);
+		append(image);
+		append(content);
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
@@ -71,6 +74,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	}
 
 	public void cancel() {
-		if (callback != null) Engine.invokeCallback(callback, null);
+		if (callback != null) Engine.invokeCallback(callback, "Button2");
+							// XXX always Button2 on Cancel? or can it be nil?
 	}
 }

@@ -66,7 +66,7 @@ public class Actions extends List implements CommandListener, Pushable {
 	}
 
 	public void prepare() {
-		if (/*!thing.isVisible()*/!parent.isPresent(thing)) {
+		if (/*!thing.isVisible()*/parent != null && !parent.isPresent(thing)) {
 			Midlet.pop(this);
 			return;
 		}

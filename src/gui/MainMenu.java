@@ -23,8 +23,8 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
 		
-		reallyexit.addCommand(Midlet.CMD_SELECT);
-		reallyexit.addCommand(Midlet.CMD_CANCEL);
+		reallyexit.addCommand(new Command("Ano", Command.OK, 1));
+		reallyexit.addCommand(new Command("Ne", Command.CANCEL, 2));
 		reallyexit.setCommandListener(this);
 		reallyexit.setTimeout(Alert.FOREVER);
 	}
@@ -58,9 +58,9 @@ public class MainMenu extends List implements CommandListener, Pushable {
 					break;
 			}
 		} else if (disp == reallyexit) {
-			if (cmd == Midlet.CMD_SELECT) {
+			if (cmd.getCommandType() == Command.OK) {
 				Midlet.instance.destroyApp(false);
-			} else if (cmd == Midlet.CMD_CANCEL) {
+			} else if (cmd.getCommandType() == Command.CANCEL) {
 				Midlet.display.setCurrent(this);
 			}
 		}

@@ -81,6 +81,15 @@ public class EventTable {
 		}
 	}
 	
+	public void setTable (LuaTable table) {
+		Object n = null;
+		while ((n = table.next(n)) != null) {
+			Object val = table.rawget(n);
+			this.table.rawset(n, val);
+			if (n instanceof String) setItem((String)n, val);
+		}
+	}
+	
 	public static void callEvent(LuaTable table, String name, Object param) {
 		synchronized (Engine.state) {
 			try {

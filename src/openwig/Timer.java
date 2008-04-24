@@ -37,7 +37,7 @@ public class Timer extends EventTable {
 		}
 		
 		private int stop (LuaCallFrame frame, int n) {
-			Timer t = (Timer)frame.get(1);
+			Timer t = (Timer)frame.get(0);
 			t.stop();
 			return 0;
 		}
@@ -55,6 +55,7 @@ public class Timer extends EventTable {
 
 		public void run() {
 			parent.callEvent("OnTick", null);
+			Midlet.refresh();
 		}	
 	}
 	

@@ -1,18 +1,44 @@
 package openwig;
 
+import gui.Midlet;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
 	public ZonePoint position = new ZonePoint(360,360,360);
 	
 	private static class Method implements JavaFunction {
+		public static final int GETVALUE_NOP = 0;
+		public static final int REFRESHLOCATION = 1;
+		
+		private int index;
+		public Method (int index) {
+			this.index = index;
+		}
+		
 		public int call(LuaCallFrame callFrame, int nArguments) {
-			callFrame.push(new Double(1));
-			return 1;
+			switch (index) {
+				case GETVALUE_NOP:
+					callFrame.push(new Double(1));
+					return 1;
+				case REFRESHLOCATION:
+					return refreshLocation();
+				default:
+					return 0;
+			}
+		}
+		
+		private int refreshLocation () {
+			ZonePoint z = Engine.instance.player.position;
+			z.latitude = Midlet.latitude;
+			z.longitude = Midlet.longitude;
+			z.altitude = Midlet.altitude;
+			Engine.instance.cartridge.walk(z);
+			return 0;
 		}
 	}
 	
-	private static Method positionAccuracy_GetValue = new Method();
+	private static Method positionAccuracy_GetValue = new Method(Method.GETVALUE_NOP);
+	private static Method refreshLocation = new Method(Method.REFRESHLOCATION);
 	
 	public static void register (LuaState state) {
 		EventTable.register(state);
@@ -23,6 +49,9 @@ public class Player extends Thing {
 		super(true);
 		table.rawset("PositionAccuracy",this);
 		table.rawset("GetValue", positionAccuracy_GetValue);
+		table.rawset("RefreshLocation", refreshLocation);
+		// XXX will objects have this all by themselves?
+		table.rawset("ObjectLocation", position);
 	}
 	
 	public int visibleThings() {

@@ -184,9 +184,10 @@ public class LuaInterface implements JavaFunction {
 	}
 	
 	private int zone (LuaCallFrame callFrame, int nArguments) {
-		Cartridge c = (Cartridge)callFrame.get(0);
+		Object param = callFrame.get(0);
 		Zone z = new Zone();
-		c.zones.addElement(z);
+		Engine.instance.cartridge.zones.addElement(z);
+		if (param instanceof LuaTable) z.setTable((LuaTable)param);
 		callFrame.push(z);
 		return 1;
 	}
