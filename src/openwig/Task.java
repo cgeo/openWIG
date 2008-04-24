@@ -10,12 +10,13 @@ public class Task extends EventTable {
 	public static final int PENDING = 0;
 	public static final int DONE = 1;
 	public static final int FAILED = 2;
+	private int state = DONE;
 	
 	public boolean isVisible () { return visible && active; }
 	public boolean isComplete () { return complete; }
 	public int state () {
 		if (!complete) return PENDING;
-		else return DONE;
+		else return state;
 	}
 	
 	public static void register (LuaState state) {
@@ -30,6 +31,10 @@ public class Task extends EventTable {
 			active = LuaState.boolEval(value);
 		} else if (key == "Complete") {
 			complete = LuaState.boolEval(value);
+		} else if (key == "CorrectState" && value instanceof String) {
+			String v = (String)value;
+			if (v == "correct") state = DONE;
+			else if (v == "incorrect") state = FAILED;
 		} else super.setItem(key, value);
 	}
 }
