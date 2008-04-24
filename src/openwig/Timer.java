@@ -58,7 +58,7 @@ public class Timer extends EventTable {
 		}	
 	}
 	
-	private TimerTask task = new TimerTask(this);
+	private TimerTask task = null;
 	
 	private static final int COUNTDOWN = 0;
 	private static final int INTERVAL = 1;
@@ -91,6 +91,7 @@ public class Timer extends EventTable {
 		stop();
 		running = true;
 		callEvent("OnStart", null);
+		task = new TimerTask(this);
 		switch (type) {
 			case COUNTDOWN:
 				globalTimer.schedule(task, duration);
@@ -102,8 +103,11 @@ public class Timer extends EventTable {
 	}
 	
 	synchronized public void stop () {
-		callEvent("OnStop", null);
-		task.cancel();
+		if (running) {
+			callEvent("OnStop", null);
+			task.cancel();
+			task = null;
+		}
 		running = false;
 	}
 }
