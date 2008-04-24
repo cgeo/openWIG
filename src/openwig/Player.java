@@ -3,7 +3,7 @@ package openwig;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
-	public ZonePoint position;
+	public ZonePoint position = new ZonePoint(360,360,360);
 	
 	private static class Method implements JavaFunction {
 		public int call(LuaCallFrame callFrame, int nArguments) {
