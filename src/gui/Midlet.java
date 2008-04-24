@@ -126,7 +126,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		push(d);
 	}
 	
-	synchronized public static void pushInput(LuaTable input) {
+	synchronized public static void pushInput(EventTable input) {
 		Input i = new Input(input);
 		if (currentDialog != null) popDialog(currentDialog);
 		currentDialog = i;

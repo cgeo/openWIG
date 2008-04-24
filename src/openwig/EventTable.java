@@ -90,21 +90,17 @@ public class EventTable {
 		}
 	}
 	
-	public static void callEvent(LuaTable table, String name, Object param) {
+	public void callEvent(String name, Object param) {
 		synchronized (Engine.state) {
 			try {
 				Object o = table.rawget(name.intern());
 				if (o != null && o instanceof LuaClosure) {
 					LuaClosure event = (LuaClosure) o;
-					Engine.state.call(event, table, param, null);
+					Engine.state.call(event, this, param, null);
 				}
 			} catch (Exception e) {
 				Engine.stacktrace(e);
 			}
 		}
-	}
-	
-	public void callEvent(String name, Object param) {
-		callEvent(table, name, param);
 	}	
 }

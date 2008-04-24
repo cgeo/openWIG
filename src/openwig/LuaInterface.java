@@ -121,7 +121,7 @@ public class LuaInterface implements JavaFunction {
 			case COMMAND: return command(callFrame, nArguments);
 			case MEDIA: return media(callFrame, nArguments);
 			case INPUT:
-				callFrame.push(new LuaTable());
+				callFrame.push(new EventTable());
 				return 1;
 			case TIMER: return timer(callFrame, nArguments);
 			case TASK: return task(callFrame, nArguments);
@@ -246,7 +246,7 @@ public class LuaInterface implements JavaFunction {
 	}
 	
 	private int getinput (LuaCallFrame callFrame, int nArguments) {
-		LuaTable lt = (LuaTable)callFrame.get(0);
+		EventTable lt = (EventTable)callFrame.get(0);
 		Engine.input(lt);
 		return 1;
 	}

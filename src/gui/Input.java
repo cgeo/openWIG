@@ -2,6 +2,7 @@ package gui;
 
 import javax.microedition.lcdui.*;
 import openwig.Engine;
+import openwig.EventTable;
 import se.krka.kahlua.vm.LuaTable;
 
 public class Input extends Form implements CommandListener, Cancellable {
@@ -16,21 +17,22 @@ public class Input extends Form implements CommandListener, Cancellable {
 	private static final int MULTI = 1;
 	private int mode = TEXT;
 	
-	private LuaTable input;
+	private EventTable input;
 	
-	public Input (LuaTable input) {
-		super((String)input.rawget("Name"));
+	public Input (EventTable input) {
+		super(input.name);
 		this.input = input;
-		question = new StringItem(null, (String)input.rawget("Text"));
+		question = new StringItem(null, (String)input.table.rawget("Text"));
 		append(question);
-		String type = (String)input.rawget("InputType");
+		String type = (String)input.table.rawget("InputType");
 		if (type == "Text") {
 			answer = new TextField("Odpovìï:", null, 500, TextField.ANY);
 			append(answer);
 			mode = TEXT;
 		} else if (type == "MultipleChoice") {
 			choice = new ChoiceGroup("Odpovìï:", ChoiceGroup.EXCLUSIVE);
-			LuaTable choices = (LuaTable)input.rawget("Choices");
+			// XXX class Input with this in interface would be more appropriate?
+			LuaTable choices = (LuaTable)input.table.rawget("Choices");
 			int n = choices.len();
 			for (int i = 1; i <= n; i++) {
 				choice.append((String)choices.rawget(new Double(i)), null);
