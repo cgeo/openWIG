@@ -8,6 +8,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 
 import gui.Midlet;
+import javax.bluetooth.BluetoothConnectionException;
 
 /**
  * Tato trida se stara o zpracovani NMEA zprav zasilanych od GPS
@@ -215,6 +216,10 @@ public class GpsParser implements Runnable {
 				byteArrayOutputStream.close();
 				if (prevfix != fix) Midlet.coordinates.fixChanged(fix);
 				prevfix = fix;
+			} catch (BluetoothConnectionException e) {
+				close();
+				//Midlet.coordinates.gpsDisconnected();
+				Midlet.coordinates.gpsError(e.getMessage());
 			} catch (Exception ex) {
 				Midlet.error(ex.toString());
 			}

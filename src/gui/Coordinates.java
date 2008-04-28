@@ -33,6 +33,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private BLUElet bluelet;
 	private static GpsParser gpsParser;
 	
+	private Alert gpsError;
+	
 	private static int gpsStatus = 0;
 	
 	private static final int GPS_OFF = 0;
@@ -186,6 +188,10 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				Midlet.pop(bluelet.getUI());
 				bluelet = null;
 			}
+		} else if (disp == gpsError) {
+			if (cmd.getCommandType() == Command.OK) {
+				gpsParser.open();
+			}
 		}
 	}
 	
@@ -204,5 +210,14 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		if (fix) gpsStatus = GPS_ON;
 		else gpsStatus = GPS_LOCKING;
 		prepare();
+	}
+	
+	public void gpsError (String error) {
+		gpsError = new Alert("chyba bluetooth", "došlo k chybì v bluetooth spojení:\n"+error+"\nobnovit spojení?",
+			null, AlertType.ERROR);
+		gpsError.setTimeout(Alert.FOREVER);
+		gpsError.addCommand(new Command("Ano", Command.OK, 1));
+		gpsError.addCommand(new Command("Ne", Command.CANCEL, 2));
+		Midlet.display.setCurrent(gpsError, Midlet.display.getCurrent());
 	}
 }

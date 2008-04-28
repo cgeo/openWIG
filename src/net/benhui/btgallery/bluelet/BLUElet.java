@@ -288,7 +288,7 @@ public class BLUElet  implements CommandListener
       } else
       {
         remotedeviceui.showui();
-        display.setCurrent( remotedeviceui );
+        //display.setCurrent( remotedeviceui );
       }
 
     }
