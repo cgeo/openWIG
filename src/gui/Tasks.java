@@ -5,9 +5,7 @@ import java.util.Vector;
 import openwig.Engine;
 import openwig.Task;
 
-public class Tasks extends List implements CommandListener, Pushable {
-	
-	private Vector things = new Vector();
+public class Tasks extends ListOfStuff {
 	
 	private static Image[] stateIcons;
 	
@@ -21,45 +19,32 @@ public class Tasks extends List implements CommandListener, Pushable {
 	}
 	
 	public Tasks () {
-		super("Úkoly", IMPLICIT);
-		addCommand(Midlet.CMD_BACK);
-		setSelectCommand(Midlet.CMD_SELECT);
-		setCommandListener(this);
-	}
-	
-	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.ITEM:
-				int index = getSelectedIndex();
-				if (index >= 0 && index < things.size()) {
-					Task z = (Task)things.elementAt(index);
-					Midlet.push(new Details(z, null));
-				}
-				break;
-			case Command.BACK:
-				Midlet.pop(this);
-				break;
-		}
+		super("Úkoly");
 	}
 
-	public void prepare() {
-		int index = getSelectedIndex();
-		deleteAll();
-		things.removeAllElements();
-		Vector v = Engine.instance.cartridge.tasks;
-		for (int i = 0; i < v.size(); i++) {
-			Task t = (Task)v.elementAt(i);
-			if (t.isVisible()) {
-				things.addElement(t);
-				append(t.name, stateIcons[t.state()]);
-			}
+	protected void callStuff(Object what) {
+		Task z = (Task)what;
+		Midlet.push(new Details(z, null));
+	}
+
+	protected boolean stillValid() {
+		return true;
+	}
+
+	protected Vector getValidStuff() {
+		Vector newtasks = new Vector(Engine.instance.cartridge.tasks.size());
+		for (int i = 0; i < Engine.instance.cartridge.tasks.size(); i++) {
+			Task t = (Task)Engine.instance.cartridge.tasks.elementAt(i);
+			if (t.isVisible()) newtasks.addElement(t);
 		}
-		int s = size();
-		if (s > 0) {
-			if (index >= s) index = s-1;
-			if (index < 0) index = 0;
-			setSelectedIndex(index, true);
-		}
+		return newtasks;
+	}
+
+	protected String getStuffName(Object what) {
+		return ((Task)what).name;
 	}
 	
+	protected Image getStuffIcon(Object what) {
+		return stateIcons[((Task)what).state()];
+	}	
 }

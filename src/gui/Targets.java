@@ -5,61 +5,48 @@ import java.util.Vector;
 import openwig.Engine;
 import openwig.Thing;
 import openwig.Action;
-import openwig.Container;
 
-public class Targets extends List implements CommandListener, Pushable {
+public class Targets extends ListOfStuff {
 
 	private Action action;
-	private Vector targets = new Vector();
+	private Things parent;
 
-	public Targets(String title, Action what) {
-		super(title, IMPLICIT);
+	public Targets(String title, Action what, Things parent) {
+		super(title);
 		action = what;
-		addCommand(Midlet.CMD_BACK);
-		setSelectCommand(Midlet.CMD_SELECT);
-		setCommandListener(this);
+		this.parent = parent;
 	}
 
-	public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == Midlet.CMD_SELECT) {
-			int index = getSelectedIndex();
-			if (index >= 0 && index < targets.size()) {
-				Midlet.pop(this);
-				Thing t = (Thing) targets.elementAt(index);
-				String eventName = "On"+action.getName();
-				Engine.callEvent(action.getActor(), eventName, t);
-			}
-		} else if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop(this);
-		}
+	protected void callStuff(Object what) {
+		Midlet.pop(this);
+		Thing t = (Thing) what;
+		String eventName = "On"+action.getName();
+		Engine.callEvent(action.getActor(), eventName, t);
 	}
 
-	private void addTargets(Vector v) {
-		for (int i = 0; i < v.size(); i++) {
-			Thing t = (Thing)v.elementAt(i);
-			if (t.isVisible() && action.isTarget(t)) {
-				append(t.name, null);
-				targets.addElement(t);
-			}
-		}
+	protected boolean stillValid() {
+		return parent == null || parent.isPresent(action.getActor());
 	}
 
-	public void prepare() {
-		int index = getSelectedIndex();
-		deleteAll();
-		targets.removeAllElements();
-		addTargets(Engine.instance.cartridge.currentThings());
-		addTargets(Engine.instance.player.things);
-
-		int s = size();
-		if (s > 0) {
-			if (index >= s) {
-				index = s - 1;
+	protected Vector getValidStuff() {
+		Vector current = Engine.instance.cartridge.currentThings();
+		int size = current.size() + Engine.instance.player.things.size();
+		Vector newtargets = new Vector(size);
+		for (int i = 0; i < current.size(); i++) newtargets.addElement(current.elementAt(i));
+		for (int i = 0; i < Engine.instance.player.things.size(); i++) newtargets.addElement(Engine.instance.player.things.elementAt(i));
+		
+		for (int i = 0; i < newtargets.size(); i++) {
+			Thing t = (Thing)newtargets.elementAt(i);
+			if (! t.isVisible() || ! action.isTarget(t)) {
+				newtargets.removeElementAt(i--);
 			}
-			if (index < 0) {
-				index = 0;
-			}
-			setSelectedIndex(index, true);
 		}
+		
+		return newtargets;
+	}
+
+	protected String getStuffName(Object what) {
+		Thing t = (Thing)what;
+		return t.name;
 	}
 }

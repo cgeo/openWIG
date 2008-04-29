@@ -14,10 +14,11 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private static final Command CMD_ACTIONS = new Command("Actions", Command.SCREEN, 0);
 	
 	private StringItem description = new StringItem(null, null);
-	private StringItem state = new StringItem(null, null);
-	private StringItem distance = new StringItem(null, null);
-	private StringItem direction = new StringItem(null, null);
+	private StringItem state = new StringItem("Stav: ", null);
+	private StringItem distance = new StringItem("Vzdál.: ", null);
+	private StringItem direction = new StringItem("Smìr: ", null);
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
+	private ImageItem compass = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
 	//private Image media = null;
 	
 	static String[] taskStates = { "nesplnìno", "hotovo", "neúspìch" };
@@ -31,8 +32,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		parent = where;
 		append(image);
 		append(description);
-		append(state);
-		append(distance); append(direction);
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
 		
@@ -44,6 +43,15 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 				Image i = Image.createImage(is);
 				image.setImage(i);
 			} catch (Exception e) { }
+		}
+		
+		if (t instanceof Task) {
+			append(state);
+		} else if (t instanceof Zone) {
+			append(state);
+			append(distance);
+			append(direction);
+			append(compass);
 		}
 	}
 
@@ -63,7 +71,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			return;
 		}
 		
-		removeCommand(CMD_ACTIONS);		
 		setTitle(thing.name);
 		description.setText(thing.description);
 		
@@ -71,14 +78,11 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			Thing t = (Thing)thing;
 			int actions = t.visibleActions() + Engine.instance.cartridge.visibleUniversalActions();
 			if (actions > 0) addCommand(CMD_ACTIONS);
+			else removeCommand(CMD_ACTIONS);
 		} else if (thing instanceof Task) {
 			Task t = (Task)thing;
-			state.setLabel("\nStav: ");
 			state.setText(taskStates[t.state()]);
 		} else if (thing instanceof Zone) {
-			state.setLabel("\nStav: ");
-			distance.setLabel("\nVzdál.: ");
-			direction.setLabel("\nSmìr: ");
 			updateNavi();
 			start();
 			//updateNavi();

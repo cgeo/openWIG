@@ -23,6 +23,11 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
 		
+		append("zones", null);
+		append("inventory", null);
+		append("you see", null);
+		append("tasks", null);
+		
 		reallyexit.addCommand(new Command("Ano", Command.OK, 1));
 		reallyexit.addCommand(new Command("Ne", Command.CANCEL, 2));
 		reallyexit.setCommandListener(this);
@@ -67,17 +72,14 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	}
 
 	public void prepare() {
-		int i = getSelectedIndex();
-		deleteAll();
 		int zones = Engine.instance.cartridge.visibleZones();
 		int items = Engine.instance.player.visibleThings();
 		int things = Engine.instance.cartridge.visibleThings();
 		int tasks = Engine.instance.cartridge.visibleTasks();
-		append("Zóny ("+zones+")", null);
-		append("Inventáø ("+items+")", null);
-		append("Okolí ("+things+")", null);
-		append("Úkoly ("+tasks+")", null);
-		if (i >= 0 && i < 4) setSelectedIndex(i, true);
+		set(ZONES, "Zóny ("+zones+")", null);
+		set(INVENTORY, "Inventáø ("+items+")", null);
+		set(LOCATION, "Okolí ("+things+")", null);
+		set(TASKS, "Úkoly ("+tasks+")", null);
 	}
 	
 }

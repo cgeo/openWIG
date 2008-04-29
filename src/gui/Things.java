@@ -5,60 +5,43 @@ import java.util.Vector;
 import openwig.Engine;
 import openwig.Thing;
 
-public class Things extends List implements CommandListener, Pushable {
-	
-	private Vector things = new Vector();
+public class Things extends ListOfStuff {
 	
 	public static final int INVENTORY = 0;
 	public static final int SURROUNDINGS = 1;
 	private int mode;
 	
 	public Things (String title, int mode) {
-		super(title, IMPLICIT);
+		super(title);
 		this.mode = mode;
-		addCommand(Midlet.CMD_BACK);
-		setSelectCommand(Midlet.CMD_SELECT);
-		setCommandListener(this);
 	}
 	
-	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.ITEM:
-				int index = getSelectedIndex();
-				if (index >= 0 && index < things.size()) {
-					Thing z = (Thing)things.elementAt(index);
-					Midlet.push(new Details(z, this));
-				}
-				break;
-			case Command.BACK:
-				Midlet.pop(this);
-				break;
-		}
+	synchronized public boolean isPresent (Thing t) {
+		return stuff.contains(t);
 	}
 
-	public void prepare() {
-		int index = getSelectedIndex();
-		deleteAll();
-		things.removeAllElements();
+	protected void callStuff(Object what) {
+		Thing t = (Thing)what;
+		Midlet.push(new Details(t, this));
+	}
+
+	protected boolean stillValid() {
+		return true;
+	}
+
+	protected Vector getValidStuff() {
 		Vector container;
 		if (mode == INVENTORY) container = Engine.instance.player.things;
 		else container = Engine.instance.cartridge.currentThings();
+		Vector newthings = new Vector(container.size());
 		for (int i = 0; i < container.size(); i++) {
 			Thing t = (Thing)container.elementAt(i);
-			if (t.isVisible()) {
-				things.addElement(t);
-				append(t.name, null);
-			}
+			if (t.isVisible()) newthings.addElement(t);
 		}
-		int s = size();
-		if (s > 0) {
-			if (index >= s) index = s-1;
-			if (index < 0) index = 0;
-			setSelectedIndex(index, true);
-		}
+		return newthings;
 	}
-	
-	public boolean isPresent (Thing t) {
-		return things.contains(t);
+
+	protected String getStuffName(Object what) {
+		return ((Thing)what).name;
 	}
 }
