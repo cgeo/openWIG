@@ -86,8 +86,8 @@ public class Midlet extends MIDlet implements CommandListener {
 						f.setCommandListener(this);
 						Display.getDisplay(this).setCurrent(f);
 
-						InputStream luacode = getClass().getResourceAsStream("/openwig/luac.out");
-						Thread t = new Thread(new Engine(luacode));
+						InputStream cart = getClass().getResourceAsStream("/openwig/cartridge.gwc");
+						Thread t = new Thread(new Engine(cart));
 						t.start();
 						break;
 						

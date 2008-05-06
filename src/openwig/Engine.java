@@ -1,6 +1,7 @@
 package openwig;
 
 import gui.Midlet;
+import gwc.CartridgeFile;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.*;
 
@@ -15,6 +16,7 @@ public class Engine implements Runnable {
 	public Player player = new Player();
 	
 	private InputStream code;
+	private CartridgeFile gwcfile;
 	
 	public static Engine instance;
 	public static LuaState state;
@@ -42,21 +44,17 @@ public class Engine implements Runnable {
 			state.call(closure, null, null, null);
 			stdlib.close(); stdlib = null;
 			
-			closure = LuaPrototype.loadByteCode(code, state.environment);
+			gwcfile = CartridgeFile.read(code);
+			if (gwcfile == null) throw new Exception("invalid cartridge file");
+			InputStream lbc = gwcfile.getBytecode();
+			
+			closure = LuaPrototype.loadByteCode(lbc, state.environment);
 			state.call(closure, null, null, null);
-			code.close(); code = null;
+			lbc.close(); lbc = null;
 			closure = null;
 			
-			try {
-				InputStream is = getClass().getResourceAsStream("/media/code.txt");
-				byte[] code = new byte[10];
-				int len = is.read(code);
-				String c = new String(code, 0, len);
-				player.setCompletionCode(c.trim());
-			} catch (Exception e) {
-				player.setCompletionCode("<nic>");
-			}
-			
+			player.setCompletionCode(gwcfile.code);
+						
 			origPos = new ZonePoint(player.position);
 					
 			Midlet.start();
@@ -141,8 +139,9 @@ public class Engine implements Runnable {
 		instance.cartridge.reposition(diff);
 	}
 	
-	public static InputStream mediaFile (Media media) {
-		String filename = media.jarFilename();
-		return media.getClass().getResourceAsStream("/media/"+filename);
+	public static InputStream mediaFile (Media media) throws IOException {
+		/*String filename = media.jarFilename();
+		return media.getClass().getResourceAsStream("/media/"+filename);*/
+		return instance.gwcfile.getFile(media.id);
 	}
 }
