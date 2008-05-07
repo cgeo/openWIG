@@ -11,9 +11,11 @@ public class CartridgeFile {
 	
 	private int files;
 	private int[] offsets;
+	private int[] ids;
 	
 	public double latitude, longitude;
 	public String type, member, name, description, startdesc, version, author, url, device, code;
+	public int iconId, splashId;
 	
 	private CartridgeFile() { }
 	
@@ -27,13 +29,12 @@ public class CartridgeFile {
 		cf.source.stream.read(buf);
 		for (int i = 0; i < buf.length; i++) if (buf[i]!=CART_ID[i]) return null;
 		
-		cf.files = cf.source.readUnsignedShort();
+		cf.files = cf.source.readShort();
 		cf.offsets = new int[cf.files];
+		cf.ids = new int[cf.files];
 		for (int i = 0; i < cf.files; i++) {
-			int id = cf.source.readUnsignedShort();
-			int ofs = cf.source.readInt();
-			if (ofs < 0) throw new IOException("matejciku jsi debil");
-			cf.offsets[i] = (int)ofs;
+			cf.ids[i] = cf.source.readShort();
+			cf.offsets[i] = cf.source.readInt();
 		}
 		
 		int headerlen = cf.source.readInt();
@@ -42,10 +43,13 @@ public class CartridgeFile {
 		GwcInput dis = new GwcInput(new ByteArrayInputStream(header));
 		cf.latitude = dis.readDouble();
 		cf.longitude = dis.readDouble();
-		dis.stream.skip(8 /*zeroes*/ + 4+4+2+2 /* weird values */);
+		dis.stream.skip(8); // zeroes
+		dis.stream.skip(4+4); // unknown long values
+		cf.iconId = dis.readShort();
+		cf.splashId = dis.readShort();
 		cf.type = dis.readString();
 		cf.member = dis.readString();
-		dis.stream.skip(4+4); // weird values
+		dis.stream.skip(4+4); // unknown long values
 		cf.name = dis.readString();
 		dis.readString(); // GUID
 		cf.description = dis.readString();
@@ -54,7 +58,7 @@ public class CartridgeFile {
 		cf.author = dis.readString();
 		cf.url = dis.readString();
 		cf.device = dis.readString();
-		dis.stream.skip(4); // weird value
+		dis.stream.skip(4); // unknown long value
 		cf.code = dis.readString();
 		
 		return cf;
@@ -72,8 +76,14 @@ public class CartridgeFile {
 	}
 	
 	public InputStream getFile (int id) throws IOException {
-		if (id < 1 || id >= offsets.length) // that's either invalid or MY FREAKIN BYTECODE, HANDS OFF!!
+		if (id < 1) // hands off my bytecode!
 			return null;
+		
+		for (int i = 0; i < ids.length; i++)
+			if (ids[i] == id) {
+				id = i;
+				break;
+			}
 		
 		source.stream.reset();
 		source.stream.skip(offsets[id]);

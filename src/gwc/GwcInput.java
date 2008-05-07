@@ -9,10 +9,10 @@ public class GwcInput {
 		stream = is;
 	}
 	
-	public int readUnsignedShort() throws IOException {
+	public short readShort() throws IOException {
 		byte[] r = new byte[2];
 		stream.read(r);
-		return (((r[1] & 0xff) << 8) | (r[0] & 0xff));
+		return (short)((r[1] << 8) | (r[0] & 0xff));
 	}
 	
 	public int readInt() throws IOException {
