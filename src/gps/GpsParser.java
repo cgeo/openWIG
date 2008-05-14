@@ -358,7 +358,7 @@ public class GpsParser implements Runnable {
 					speed = 0;
 				}
 				if (param[8].length() > 0) {
-					heading = Double.parseDouble(param[8]);
+					Midlet.heading = heading = Double.parseDouble(param[8]);
 				}
 			}
 		} else if (param[0].equals("$GPGGA")) {

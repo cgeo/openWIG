@@ -48,6 +48,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Displayable getCurrentScreen () { return currentScreen; }
 	
 	public static double latitude, longitude, altitude;
+	public static double heading = 0;
 	
 	/////////////////////////////////////
 	//
