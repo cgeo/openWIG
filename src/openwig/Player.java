@@ -4,8 +4,7 @@ import gui.Midlet;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
-	public ZonePoint position = new ZonePoint(360,360,360);
-	
+
 	private static class Method implements JavaFunction {
 		public static final int GETVALUE_NOP = 0;
 		public static final int REFRESHLOCATION = 1;
@@ -50,8 +49,7 @@ public class Player extends Thing {
 		table.rawset("PositionAccuracy",this);
 		table.rawset("GetValue", positionAccuracy_GetValue);
 		table.rawset("RefreshLocation", refreshLocation);
-		// XXX will objects have this all by themselves?
-		table.rawset("ObjectLocation", position);
+		setPosition(new ZonePoint(360,360,360));
 	}
 	
 	public int visibleThings() {

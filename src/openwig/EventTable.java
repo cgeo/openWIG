@@ -8,9 +8,19 @@ public class EventTable {
 	public LuaTable table = new LuaTable();
 	
 	public String name, description;
+	public ZonePoint position = null;
 	protected boolean visible = false;
 	
 	public boolean isVisible() { return visible; }
+
+	public void setPosition(ZonePoint location) {
+		position = location;
+		table.rawset("ObjectLocation", location);
+	}
+	
+	public boolean isLocated() {
+		return position != null;
+	}
 
 	private static class Method implements JavaFunction {
 
@@ -78,6 +88,8 @@ public class EventTable {
 			description = (String)value;
 		} else if (key == "Visible") {
 			visible = LuaState.boolEval(value);
+		} else if (key == "ObjectLocation") {
+			position = (ZonePoint)value;
 		}
 	}
 	

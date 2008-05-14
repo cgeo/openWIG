@@ -11,6 +11,10 @@ public class Zone extends Container {
 		return active && visible && contain > NOWHERE;
 	}
 	
+	public boolean isLocated () {
+		return true;
+	}
+	
 	private ZonePoint[] points;
 
 	private boolean active = false;
@@ -168,9 +172,7 @@ public class Zone extends Container {
 			ax = bx; ay = by;
 		}
 		nearestX = nx; nearestY = ny;
-		double mx = Math.abs(ZonePoint.lat2m(nx - z.latitude));
-		double my = Math.abs(ZonePoint.lon2m(z.latitude, ny - z.longitude));
-		distance = Math.sqrt(mx * mx + my * my);
+		distance = z.distance(nx, ny);
 
 		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;
 		else if (distance < proximityRange) ncontain = PROXIMITY;

@@ -12,6 +12,7 @@ import openwig.Zone;
 public class Details extends Form implements CommandListener, Pushable, Runnable {
 	
 	private static final Command CMD_ACTIONS = new Command("Actions", Command.SCREEN, 0);
+	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 1);
 	
 	private StringItem description = new StringItem(null, null);
 	private StringItem state = new StringItem("Stav: ", null);
@@ -58,6 +59,9 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_ACTIONS) {
 			Midlet.push(new Actions(thing.name, (Thing)thing, parent));
+		} else if (cmd == CMD_NAVIGATE) {
+			if (thing instanceof Zone) Midlet.push(new Navigation((Zone)thing));
+			else if (thing.isLocated()) Midlet.push(new Navigation(thing.position));
 		} else if (cmd == Midlet.CMD_BACK) {
 			stop();
 			Midlet.pop(this);
@@ -87,6 +91,9 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			start();
 			//updateNavi();
 		}
+		
+		if (thing.isLocated()) addCommand(CMD_NAVIGATE);
+		else removeCommand(CMD_NAVIGATE);
 	}
 	
 	private void updateNavi () {
