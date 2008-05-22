@@ -89,7 +89,7 @@ public class EventTable {
 		} else if (key == "Visible") {
 			visible = LuaState.boolEval(value);
 		} else if (key == "ObjectLocation") {
-			position = (ZonePoint)value;
+			position = ZonePoint.copy((ZonePoint)value);
 		}
 	}
 	

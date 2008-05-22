@@ -13,6 +13,11 @@ public class ZonePoint {
 	public static final double DEG_PI = 180 / Math.PI;
 	public static final double PI_2 = Math.PI / 2;
 	
+	public static ZonePoint copy (ZonePoint z) {
+		if (z == null) return null;
+		else return new ZonePoint (z);
+	}
+	
 	public ZonePoint (ZonePoint z) {
 		latitude = z.latitude;
 		longitude = z.longitude;

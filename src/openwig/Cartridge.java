@@ -30,7 +30,7 @@ public class Cartridge extends EventTable {
 	private boolean locationSet = false;
 	protected void setItem (String key, Object value) {
 		if (key == "StartingLocation" && value != null && !locationSet) { // i.e. set only once
-			Engine.instance.player.position = (ZonePoint)value;
+			Engine.instance.player.setPosition((ZonePoint)value);
 			locationSet = true;
 		} else super.setItem(key, value);
 	}
