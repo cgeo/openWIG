@@ -1,22 +1,20 @@
 package gwc;
 
+import gui.Midlet;
 import java.io.*;
-import javax.microedition.rms.*;
+import javax.microedition.io.*;
 
 public class CartridgeFile {
 	
 	private static final byte[] CART_ID = { 0x02, 0x0a, 0x43, 0x41, 0x52, 0x54, 0x00 };
 			// 02 0a CART 00
 	
-	private static final String STORENAME = "_gwc_cache";
-	
 	private GwcInput source;
-	private RecordStore store;
+	private String connectionUrl;
 	
 	private int files;
 	private int[] offsets;
 	private int[] ids;
-	private int[] records;
 	
 	public byte[] bytecode;
 	
@@ -24,8 +22,15 @@ public class CartridgeFile {
 	public String type, member, name, description, startdesc, version, author, url, device, code;
 	public int iconId, splashId;
 	
-	private CartridgeFile(InputStream src) {
-		source = new GwcInput(src);
+	private CartridgeFile(String connection) {
+		connectionUrl = connection;
+	}
+	
+	private void resetSource()
+	throws Exception {
+		System.out.println("resetting source");
+		if (source != null) source.close();
+		source = new GwcInput(Midlet.connect(connectionUrl));
 	}
 	
 	private boolean fileOk () throws IOException {
@@ -35,31 +40,15 @@ public class CartridgeFile {
 		return true;
 	}
 	
-	public static CartridgeFile read(InputStream what)
-	throws IOException, RecordStoreException {
+	public static CartridgeFile read(String what)
+	throws Exception {
 		CartridgeFile cf = new CartridgeFile(what);
+		cf.resetSource();
 		if (!cf.fileOk()) return null;
 		
 		cf.scanOffsets();
 		cf.scanHeader();
-		
-		try { RecordStore.deleteRecordStore(STORENAME); } catch (RecordStoreException e) { }
-		cf.store = RecordStore.openRecordStore(STORENAME, true);
-		
-		cf.loadBytecode();
-		
-		for (int i = 1; i < cf.files; i++) {
-			int mo = Integer.MAX_VALUE;
-			int id = 0;
-			for (int j = 1; j < cf.files; j++) {
-				if (cf.records[j] == 0 && cf.offsets[j] < mo) {
-					mo = cf.offsets[j];
-					id = j;
-				}
-			}
-			cf.loadFile(id);
-		}
-		
+			
 		return cf;
 	}
 	
@@ -67,7 +56,6 @@ public class CartridgeFile {
 		files = source.readShort();
 		offsets = new int[files];
 		ids = new int[files];
-		records = new int[files];
 		for (int i = 0; i < files; i++) {
 			ids[i] = source.readShort();
 			offsets[i] = source.readInt();
@@ -101,46 +89,21 @@ public class CartridgeFile {
 		code = dis.readString();
 	}
 	
-	private void loadBytecode () throws IOException {
+	public byte[] getBytecode () throws Exception {
+		if (source.position() > offsets[0]) resetSource();
 		source.pseudoSeek(offsets[0]);
 		int len = source.readInt();
 		byte[] file = new byte[len];
 		source.read(file);
-		try {
-			int recno = store.addRecord(file, 0, len);
-			records[0] = recno;
-		} catch (RecordStoreFullException e) {
-			gui.Midlet.error("Record Store full. Sorry, you can't load this cartridge :/");
-		} catch (RecordStoreException e) { /* mor a cholera na tebe! */ }
+		return file;
 	}
+
+	private int lastId = -1;
+	private byte[] lastFile = null;
 	
-	private void loadFile (int id) throws IOException {
-		source.pseudoSeek(offsets[id]);
-		int a = source.read();
-		if (a != 1) { // deleted object 
-			records[id] = -1;
-			return;
-		}
-		int type = source.readInt(); // we don't need this?
-		int len = source.readInt();
-		byte[] file = new byte[len];
-		source.read(file);
-		try {
-			int recno = store.addRecord(file, 0, len);
-			records[id] = recno;
-		} catch (RecordStoreFullException e) {
-			gui.Midlet.error("Record Store full. Sorry, you can't load this cartridge :/");
-		} catch (RecordStoreException e) { /* mor a cholera na tebe! */
-			gui.Midlet.error("Weird thing happened: "+e.getMessage());
-		}
-	}
-	
-	public byte[] getBytecode () throws IOException {
-		return getFile(0);
-	}
-	
-	public byte[] getFile (int id) throws IOException {
-		if (id < 0) // invalid, apparently
+	public byte[] getFile (int id) throws Exception {
+		if (id == lastId) return lastFile;
+		if (id < 1) // invalid, apparently. or bytecode - lookie no touchie
 			return null;
 		
 		for (int i = 0; i < ids.length; i++)
@@ -148,11 +111,20 @@ public class CartridgeFile {
 				id = i;
 				break;
 			}
-		try {
-			return store.getRecord(records[id]);
-		} catch (RecordStoreException e) {
-			gui.Midlet.error("Weird thing happened: "+e.getMessage());
+		
+		if (source.position() > offsets[id]) resetSource();
+		source.pseudoSeek(offsets[id]);
+		int a = source.read();
+		if (a != 1) { // deleted object 
 			return null;
 		}
+		int type = source.readInt(); // we don't need this?
+		int len = source.readInt();
+		byte[] file = new byte[len];
+		source.read(file);
+		
+		lastId = id;
+		lastFile = file;
+		return file;
 	}
 }

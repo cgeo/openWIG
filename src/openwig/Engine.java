@@ -15,7 +15,7 @@ public class Engine implements Runnable {
 	public Cartridge cartridge;
 	public Player player = new Player();
 	
-	private InputStream code;
+	private String codeUrl;
 	private CartridgeFile gwcfile;
 	
 	public static Engine instance;
@@ -23,9 +23,9 @@ public class Engine implements Runnable {
 	
 	private boolean end = false;
 
-	public Engine (InputStream code) {
+	public Engine (String codeUrl) {
 		instance = this;
-		this.code = code;
+		this.codeUrl = codeUrl;
 	}
 	
 	public void run() {
@@ -44,7 +44,7 @@ public class Engine implements Runnable {
 			state.call(closure, null, null, null);
 			stdlib.close(); stdlib = null;
 			
-			gwcfile = CartridgeFile.read(code);
+			gwcfile = CartridgeFile.read(codeUrl);
 			if (gwcfile == null) throw new Exception("invalid cartridge file");
 			byte[] lbc = gwcfile.getBytecode();
 			
@@ -139,7 +139,7 @@ public class Engine implements Runnable {
 		instance.cartridge.reposition(diff);
 	}
 	
-	public static byte[] mediaFile (Media media) throws IOException {
+	public static byte[] mediaFile (Media media) throws Exception {
 		/*String filename = media.jarFilename();
 		return media.getClass().getResourceAsStream("/media/"+filename);*/
 		return instance.gwcfile.getFile(media.id);

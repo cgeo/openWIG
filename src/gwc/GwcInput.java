@@ -67,10 +67,17 @@ public class GwcInput {
 		return re;
 	}
 	
+	public void close () throws IOException {
+		stream.close();
+	}
+	
 	public long position() { return pos; }
 	
 	public void pseudoSeek (long position) throws IOException {
 		if (position < pos) throw new IOException("can't seek backwards, sorry :e(");
-		if (position > pos) stream.skip(position - pos);
+		if (position > pos) {
+			long skip = stream.skip(position - pos);
+			pos += skip;
+		}
 	}
 }

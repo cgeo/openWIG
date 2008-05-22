@@ -3,6 +3,7 @@ package gui;
 import openwig.Engine;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
+import javax.microedition.io.*;
 
 import java.io.*;
 import java.util.Vector;
@@ -21,10 +22,14 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
 	
+	public static TextBox filename;
+	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
+	
 	private static List baseMenu = new List("menu", List.IMPLICIT);
 	private static final int MNU_START = 0;
 	private static final int MNU_GPS = 1;
-	private static final int MNU_END = 2;
+	private static final int MNU_FILE = 2;
+	private static final int MNU_END = 3;
 	
 	public static final int MAINSCREEN = 0;
 	public static final int DETAILSCREEN = 1;
@@ -60,11 +65,17 @@ public class Midlet extends MIDlet implements CommandListener {
 		
 		baseMenu.append("Start", null);
 		baseMenu.append("GPS", null);
+		baseMenu.append("Select file", null);
 		baseMenu.append("Konec", null);
 		baseMenu.setSelectCommand(CMD_SELECT);
 		baseMenu.setCommandListener(this);
 		
 		coordinates = new Coordinates();
+		filename = new TextBox("enter full resource path", "", 1000, TextField.URL);
+		filename.setCommandListener(this);
+		filename.addCommand(new Command("OK", Command.SCREEN, 1));
+		filename.addCommand(CMD_BACK);
+		
 		push(baseMenu);
 	}
 
@@ -87,8 +98,7 @@ public class Midlet extends MIDlet implements CommandListener {
 						f.setCommandListener(this);
 						Display.getDisplay(this).setCurrent(f);
 
-						InputStream cart = getClass().getResourceAsStream("/openwig/cartridge.gwc");
-						Thread t = new Thread(new Engine(cart));
+						Thread t = new Thread(new Engine(sourceUrl));
 						t.start();
 						break;
 						
@@ -96,11 +106,21 @@ public class Midlet extends MIDlet implements CommandListener {
 						push(coordinates);
 						break;
 						
+					case MNU_FILE:
+						filename.setString(sourceUrl);
+						push(filename);
+						break;
+						
 					case MNU_END:
 						destroyApp(false);
 						break;
 				}
 			}
+		} else if (disp == filename) {
+			if (cmd.getCommandType() == Command.SCREEN) {
+				sourceUrl = filename.getString();
+			}
+			pop(filename);
 		} else if (cmd.getCommandType() == Command.EXIT) {
 			destroyApp(false);
 		}
@@ -114,6 +134,14 @@ public class Midlet extends MIDlet implements CommandListener {
 		Alert a = new Alert("chyba",text,null,AlertType.ERROR);
 		a.setTimeout(Alert.FOREVER);
 		display.setCurrent(a, display.getCurrent());
+	}
+	
+	public static InputStream connect (String url) throws Exception {
+		if (url.startsWith("resource:")) {
+			return Midlet.class.getResourceAsStream(url.substring(9));
+		} else {
+			return Connector.openInputStream(url);
+		}
 	}
 	
 	synchronized public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
