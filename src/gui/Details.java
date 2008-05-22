@@ -17,10 +17,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private StringItem description = new StringItem(null, null);
 	private StringItem state = new StringItem("Stav: ", null);
 	private StringItem distance = new StringItem("Vzdál.: ", null);
-	private StringItem direction = new StringItem("Smìr: ", null);
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
-	private ImageItem compass = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
-	//private Image media = null;
 	
 	static String[] taskStates = { "nesplnìno", "hotovo", "neúspìch" };
 	
@@ -40,8 +37,8 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		if (m != null) {
 			image.setAltText(m.altText);
 			try {
-				InputStream is = Engine.mediaFile(m);
-				Image i = Image.createImage(is);
+				byte[] is = Engine.mediaFile(m);
+				Image i = Image.createImage(is, 0, is.length);
 				image.setImage(i);
 			} catch (Exception e) { }
 		}
@@ -51,8 +48,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		} else if (t instanceof Zone) {
 			append(state);
 			append(distance);
-			append(direction);
-			append(compass);
 		}
 	}
 
@@ -113,21 +108,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			double d = part/1000.0;
 			distance.setText(Double.toString(d)+" m");
 		}
-		
-		// uhodnuti smeru
-		double x = z.nearestX - Midlet.latitude;
-		double y = z.nearestY - Midlet.longitude;
-		double xx = x*2, yy = y*2;
-		String s;
-		if (x > 0 && x > Math.abs(yy)) s = "sever";
-		else if (y > 0 && x > 0 && x <= yy && y <= xx) s = "severovýchod";
-		else if (y > 0 && y > Math.abs(xx)) s = "východ";
-		else if (y > 0 && x < 0 && -x <= yy && y <= -xx) s = "jihovýchod";
-		else if (x < 0 && -x > Math.abs(yy)) s = "jih";
-		else if (y < 0 && x < 0 && x >= yy && y >= xx) s = "jihozápad";
-		else if (y < 0 && -y > Math.abs(xx)) s = "západ";
-		else s = "severozápad";
-		direction.setText(s+"\nnejbližší bod: "+z.nearestX+","+z.nearestY);
 	}
 	
 	private boolean running = false;
@@ -143,7 +123,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	public void run () {
 		while (running) {
-			try { Thread.sleep(1000); } catch (Exception e) { }
+			try { Thread.sleep(5000); } catch (Exception e) { }
 			updateNavi();
 		}
 	}

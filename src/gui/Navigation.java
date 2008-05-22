@@ -15,7 +15,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	private int[] pointY = {0, 0, 0, 0}; // 2 - centre; 3 - right wing
 	private int diameter, half, smaller;
 	private int centerX, centerY;
-	private int eastX, eastY;
+	private int northX, northY;
 	
 	public Navigation (ZonePoint point) {
 		target = point;
@@ -31,19 +31,21 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	synchronized protected void paint(Graphics screen) {
 		screen.setColor(0x00ffffff);
 		screen.fillRect(0, 0, getWidth(), getHeight());
-		screen.setColor(0x000000ff);
 		
+		screen.setColor(0x00ff0000);
 		// arrow:
 		for (int i = 0; i < pointX.length; i++) {
 			screen.drawLine(pointX[i], pointY[i], pointX[(i+1)%pointX.length], pointY[(i+1)%pointX.length]);
 		}
 		
+		screen.setColor(0x000000ff);
 		// NSEW:
-		screen.drawChar('E', centerX + eastX, centerY - eastY, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('W', centerX - eastX, centerY + eastY, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('S', centerX + eastY, centerY + eastX, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('N', centerX - eastY, centerY - eastX, screen.HCENTER | screen.BASELINE);
+		screen.drawChar('N', centerX + northX, centerY - northY, screen.HCENTER | screen.BASELINE);
+		screen.drawChar('S', centerX - northX, centerY + northY, screen.HCENTER | screen.BASELINE);
+		screen.drawChar('E', centerX + northY, centerY + northX, screen.HCENTER | screen.BASELINE);
+		screen.drawChar('W', centerX - northY, centerY - northX, screen.HCENTER | screen.BASELINE);
 		
+		screen.setColor(0x00000000);
 		// labels:
 		int h = screen.getFont().getHeight();
 		screen.drawString("Dist: "+distance, 5, getHeight() - (3*h), screen.LEFT | screen.TOP);
@@ -78,9 +80,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		}
 		
 		// now we have a point to navigate to. get our heading:
-		heading = Midlet.heading * ZonePoint.PI_180;
+		heading = ZonePoint.azimuth2angle(-Midlet.heading);
 		double bearing = target.bearing(Midlet.latitude, Midlet.longitude);
-		angle = heading + bearing;
+		angle = bearing + heading - ZonePoint.PI_2;
 		
 		double dist;
 		if (zone != null) {
@@ -92,7 +94,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		long part = (long)(dist * 1000);
 		double d = part/1000.0;
 		distance = Double.toString(d)+" m";
-		azimuth = Integer.toString((int)((bearing + Math.PI) * ZonePoint.DEG_PI));
+		part = (long)(ZonePoint.angle2azimuth(bearing) * 100);
+		d = part/100;
+		azimuth = Double.toString(d);
 		
 		double tsin = Math.sin(angle);
 		double tcos = Math.cos(angle);
@@ -109,8 +113,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		
 		pointX[2] = centerX; pointY[2] = centerY;
 		
-		eastX = (int)(Math.cos(heading) * diameter);
-		eastY = (int)(Math.sin(heading) * diameter);
+		northX = (int)(Math.cos(heading) * diameter);
+		northY = (int)(Math.sin(heading) * diameter);
 	}
 
 	private boolean running = false;

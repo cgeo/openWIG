@@ -46,11 +46,11 @@ public class Engine implements Runnable {
 			
 			gwcfile = CartridgeFile.read(code);
 			if (gwcfile == null) throw new Exception("invalid cartridge file");
-			InputStream lbc = gwcfile.getBytecode();
+			byte[] lbc = gwcfile.getBytecode();
 			
-			closure = LuaPrototype.loadByteCode(lbc, state.environment);
+			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.environment);
 			state.call(closure, null, null, null);
-			lbc.close(); lbc = null;
+			lbc = null;
 			closure = null;
 			
 			player.setCompletionCode(gwcfile.code);
@@ -139,7 +139,7 @@ public class Engine implements Runnable {
 		instance.cartridge.reposition(diff);
 	}
 	
-	public static InputStream mediaFile (Media media) throws IOException {
+	public static byte[] mediaFile (Media media) throws IOException {
 		/*String filename = media.jarFilename();
 		return media.getClass().getResourceAsStream("/media/"+filename);*/
 		return instance.gwcfile.getFile(media.id);

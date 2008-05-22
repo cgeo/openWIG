@@ -50,8 +50,8 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 		}
 		Media m = media[page];
 		if (m != null) try {
-			InputStream is = Engine.mediaFile(m);
-			image.setImage(Image.createImage(is));
+			byte[] is = Engine.mediaFile(m);
+			image.setImage(Image.createImage(is, 0, is.length));
 		} catch (Exception e) {
 			image.setAltText(m.altText);
 		}

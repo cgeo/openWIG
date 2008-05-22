@@ -65,14 +65,14 @@ public class ZonePoint {
 		return Float11.atan2(latitude - lat, longitude - lon);
 	}
 	
-	public double angle2azimuth (double angle) {
-		double degrees = -(angle * DEG_PI) + PI_2;
+	public static double angle2azimuth (double angle) {
+		double degrees = -((angle - PI_2) * DEG_PI);
 		while (degrees < 0) degrees += 360;
 		while (degrees > 360) degrees -= 360;
 		return degrees;
 	}
 	
-	public double azimuth2angle (double azim) {
-		return -(azim * PI_180) - PI_2;
+	public static double azimuth2angle (double azim) {
+		return -(azim * PI_180) + PI_2;
 	}
 }

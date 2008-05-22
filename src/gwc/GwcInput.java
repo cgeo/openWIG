@@ -3,7 +3,8 @@ package gwc;
 import java.io.*;
 
 public class GwcInput {
-	public InputStream stream;
+	private InputStream stream;
+	private long pos = 0;
 	
 	public GwcInput(InputStream is) {
 		stream = is;
@@ -11,30 +12,30 @@ public class GwcInput {
 	
 	public short readShort() throws IOException {
 		byte[] r = new byte[2];
-		stream.read(r);
+		pos += stream.read(r);
 		return (short)((r[1] << 8) | (r[0] & 0xff));
 	}
 	
 	public int readInt() throws IOException {
 		byte[] r = new byte[4];
-		stream.read(r);
+		pos += stream.read(r);
 		return (((r[3] & 0xff) << 24) | ((r[2] & 0xff) << 16) |
 			((r[1] & 0xff) << 8) | (r[0] & 0xff));
 	}
 	
 	public String readString() throws IOException {
 		StringBuffer sb = new StringBuffer();
-		int b = stream.read();
+		int b = stream.read(); pos++;
 		while (b > 0) {
 			sb.append((char)b);
-			b = stream.read();
+			b = stream.read(); pos++;
 		}
 		return sb.toString();
 	}
 	
 	public long readLong() throws IOException {
 		byte[] r = new byte[8];
-		stream.read(r);
+		pos += stream.read(r);
 		return (((long)(r[7] & 0xff) << 56) |
 			((long)(r[6] & 0xff) << 48) |
 			((long)(r[5] & 0xff) << 40) |
@@ -47,5 +48,29 @@ public class GwcInput {
 	
 	public double readDouble() throws IOException {
 		return Double.longBitsToDouble(readLong());
+	}
+	
+	public int read (byte[] b) throws IOException {
+		int re = stream.read(b);
+		pos += re;
+		return re;
+	}
+	
+	public int read () throws IOException {
+		pos++;
+		return stream.read();
+	}
+	
+	public long skip (long n) throws IOException {
+		long re = stream.skip(n);
+		pos += re;
+		return re;
+	}
+	
+	public long position() { return pos; }
+	
+	public void pseudoSeek (long position) throws IOException {
+		if (position < pos) throw new IOException("can't seek backwards, sorry :e(");
+		if (position > pos) stream.skip(position - pos);
 	}
 }
