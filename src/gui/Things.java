@@ -11,6 +11,13 @@ public class Things extends ListOfStuff {
 	public static final int SURROUNDINGS = 1;
 	private int mode;
 	
+	private static Image compass;
+	static {
+		try {
+			compass = Image.createImage(Things.class.getResourceAsStream("/icons/compass.png"));
+		} catch (Exception e) { }
+	}
+	
 	public Things (String title, int mode) {
 		super(title);
 		this.mode = mode;
@@ -43,5 +50,10 @@ public class Things extends ListOfStuff {
 
 	protected String getStuffName(Object what) {
 		return ((Thing)what).name;
+	}
+	
+	protected Image getStuffIcon(Object what) {
+		if (((Thing)what).isLocated()) return compass;
+		else return null;
 	}
 }
