@@ -20,8 +20,8 @@ public class CallbackCaller extends Thread {
 			} catch (Exception e) {
 				Engine.stacktrace(e);
 			}
-			Midlet.refresh();
 		}
+		Midlet.refresh();
 	}
 
 }

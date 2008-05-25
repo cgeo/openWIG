@@ -23,7 +23,7 @@ public class Things extends ListOfStuff {
 		this.mode = mode;
 	}
 	
-	synchronized public boolean isPresent (Thing t) {
+	public boolean isPresent (Thing t) {
 		return stuff.contains(t);
 	}
 

@@ -131,7 +131,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	//
 	//   functions for other components to use
 	
-	synchronized public static void error (String text) {
+	public static void error (String text) {
 		Alert a = new Alert("chyba",text,null,AlertType.ERROR);
 		a.setTimeout(Alert.FOREVER);
 		display.setCurrent(a, display.getCurrent());
@@ -149,35 +149,47 @@ public class Midlet extends MIDlet implements CommandListener {
 		} else return null;
 	}
 	
-	synchronized public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
+	public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
 		Dialog d = new Dialog(texts, media, button1, button2, callback);
 
 //		display.flashBacklight(500);
 //		display.vibrate(500);
-		
-		if (currentDialog != null) popDialog(currentDialog);
-		currentDialog = d;
-		push(d);
+	
+		Cancellable cd = null;
+		synchronized (Midlet.class) {
+			cd = currentDialog;
+			currentDialog = d;
+			push(d);
+		}
+		if (cd != null) popDialog(cd);
 	}
 	
-	synchronized public static void pushInput(EventTable input) {
+	public static void pushInput(EventTable input) {
 		Input i = new Input(input);
-		if (currentDialog != null) popDialog(currentDialog);
-		currentDialog = i;
-		push(i);
+		Cancellable cd = null;
+		synchronized (Midlet.class) {
+			cd = currentDialog;
+			currentDialog = i;
+			push(i);
+		}
+		if (cd != null) popDialog(cd);
 	}
 	
-	synchronized public static void popDialog(Cancellable d) {
+	public static void popDialog(Cancellable d) {
 		d.cancel();
 		pop((Displayable)d);
-		if (currentDialog == d) currentDialog = null;
+		synchronized (Midlet.class) {
+			if (currentDialog == d) currentDialog = null;
+		}
 	}
 	
-	synchronized public static void push (Displayable d) {
-		screens.addElement(d);
-		currentScreen = d;
+	public static void push (Displayable d) {
 		if (d instanceof Pushable) ((Pushable)d).prepare();
-		display.setCurrent(d);
+		synchronized (Midlet.class) {
+			screens.addElement(d);
+			currentScreen = d;
+			display.setCurrent(d);
+		}
 	}
 	
 	synchronized public static void pop (Displayable disp) {
@@ -214,24 +226,28 @@ public class Midlet extends MIDlet implements CommandListener {
 		push(mainMenu);
 	}
 	
-	synchronized public static void refresh () {
-		int ss = screens.size();
-		for (int i = 0; i < ss; i++) {
-			Object d = screens.elementAt(i);
-			if (d instanceof Pushable) {
-				((Pushable)d).prepare();
-				if (screens.size() < ss) { // suppose the prepare() just popped the screen
-					// also suppose that nothing worse happened ;e)
-					ss = screens.size();
-					i--;
-				}
+	public static void refresh () {
+		Vector p = new Vector();
+		synchronized (Midlet.class) {
+			int ss = screens.size();
+			for (int i = 0; i < ss; i++) {
+				Object d = screens.elementAt(i);
+				if (d instanceof Pushable) p.addElement(d);
 			}
+		}
+		for (int i = 0; i < p.size(); i++) {
+			Pushable pp = (Pushable)p.elementAt(i);
+			pp.prepare();
 		}
 	}
 	
-	synchronized public static void showScreen (int which, EventTable details) {
-		if (currentDialog != null) popDialog(currentDialog);
-		while (currentScreen != mainMenu) pop(currentScreen);
+	public static void showScreen (int which, EventTable details) {
+		Cancellable cd = null;
+		synchronized (Midlet.class) {
+			cd = currentDialog;
+			while (currentScreen != mainMenu) pop(currentScreen);
+		}
+		if (cd != null) popDialog(cd);
 		switch (which) {
 			case MAINSCREEN:
 				return;

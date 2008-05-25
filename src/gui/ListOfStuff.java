@@ -20,15 +20,19 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 	abstract protected String getStuffName (Object what);
 	protected Image getStuffIcon (Object what) { return null; }
 	
-	synchronized public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == Midlet.CMD_SELECT) {
-			int index = getSelectedIndex();
-			if (index >= 0 && index < stuff.size()) {
-				callStuff(stuff.elementAt(index));
+	public void commandAction(Command cmd, Displayable disp) {
+		Object s = null;
+		synchronized (this) {
+			if (cmd == Midlet.CMD_SELECT) {
+				int index = getSelectedIndex();
+				if (index >= 0 && index < stuff.size()) {
+					s = stuff.elementAt(index);
+				}
+			} else if (cmd == Midlet.CMD_BACK) {
+				Midlet.pop(this);
 			}
-		} else if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop(this);
 		}
+		if (s != null) callStuff(s);
 	}
 
 	synchronized public void prepare() {
@@ -60,48 +64,5 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 				stuff.addElement(s);
 			}
 		}
-		
-		// **** the old method - delete all, put it back
-		/*int index = getSelectedIndex();
-		deleteAll();
-		stuff = newstuff;
-		for (int i = 0; i < stuff.size(); i++) {
-			append(getStuffName(stuff.elementAt(i)),getStuffIcon(stuff.elementAt(i)));
-		}
-		if (index >= 0 && index < stuff.size()) setSelectedIndex(index, true);*/
-		
-		// **** the fancy new method - do it slowly & gracefully
-		/*int sp = 0;
-		while (sp < stuff.size() && sp < newstuff.size()) {
-			int i = newstuff.indexOf(stuff.elementAt(sp),sp);
-			if (i == -1) {
-				stuff.removeElementAt(sp);
-				delete(sp);
-			} else if (i == sp) {
-				Object s = newstuff.elementAt(sp);
-				set(sp, getStuffName(s), getStuffIcon(s));
-				sp++;
-			} else {
-				int index = getSelectedIndex();
-				if (index <= sp) index += (i - sp);
-				while (i > sp) {
-					Object s = newstuff.elementAt(sp);
-					stuff.insertElementAt(s, sp);
-					insert(sp, getStuffName(s), getStuffIcon(s));
-					sp++;
-				}
-				setSelectedIndex(index, true);
-			}
-		}
-		while (sp < stuff.size()) {
-			stuff.removeElementAt(sp);
-			delete(sp);
-		}
-		while (sp < newstuff.size()) {
-			Object s = newstuff.elementAt(sp);
-			stuff.addElement(s);
-			append(getStuffName(s), getStuffIcon(s));
-			sp++;
-		}*/
 	}
 }

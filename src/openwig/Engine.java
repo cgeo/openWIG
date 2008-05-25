@@ -10,8 +10,7 @@ import java.util.*;
 import javax.microedition.lcdui.*;
 
 public class Engine implements Runnable {
-	
-	private Vector queue = new Vector();
+
 	public Cartridge cartridge;
 	public Player player = new Player();
 	
@@ -90,10 +89,7 @@ public class Engine implements Runnable {
 	
 	public static void kill () {
 		if (instance == null) return;
-		synchronized (instance.queue) {
-			instance.end = true;
-			instance.queue.notify();
-		}
+		instance.end = true;
 	}
 		
 	public static void message(LuaTable message) {
