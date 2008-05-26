@@ -29,6 +29,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	}
 
 	synchronized protected void paint(Graphics screen) {
+		if (centerX == 0) sizeChanged(getWidth(), getHeight());
 		screen.setColor(0x00ffffff);
 		screen.fillRect(0, 0, getWidth(), getHeight());
 		
