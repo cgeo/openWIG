@@ -3,6 +3,7 @@ package gwc;
 import gui.Midlet;
 import java.io.*;
 import javax.microedition.io.*;
+import javax.microedition.io.file.FileConnection;
 
 public class CartridgeFile {
 	
@@ -11,6 +12,7 @@ public class CartridgeFile {
 	
 	private GwcInput source;
 	private String connectionUrl;
+	private FileConnection file;
 	
 	private int files;
 	private int[] offsets;
@@ -22,15 +24,15 @@ public class CartridgeFile {
 	public String type, member, name, description, startdesc, version, author, url, device, code;
 	public int iconId, splashId;
 	
-	private CartridgeFile(String connection) {
-		connectionUrl = connection;
-	}
+	private CartridgeFile() { }
 	
 	private void resetSource()
 	throws Exception {
-		System.out.println("resetting source");
 		if (source != null) source.close();
-		source = new GwcInput(Midlet.connect(connectionUrl));
+		if (file != null) 
+			source = new GwcInput(file.openInputStream());
+		else
+			source = new GwcInput(getClass().getResourceAsStream(connectionUrl));
 	}
 	
 	private boolean fileOk () throws IOException {
@@ -42,7 +44,12 @@ public class CartridgeFile {
 	
 	public static CartridgeFile read(String what)
 	throws Exception {
-		CartridgeFile cf = new CartridgeFile(what);
+		CartridgeFile cf = new CartridgeFile();
+		if (what.startsWith("resource:"))
+			cf.connectionUrl = what.substring(9);
+		else if (what.startsWith("file:"))
+			cf.file = (FileConnection)Connector.open(what);
+		
 		cf.resetSource();
 		if (!cf.fileOk()) return null;
 		

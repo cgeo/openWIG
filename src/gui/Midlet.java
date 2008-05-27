@@ -136,18 +136,6 @@ public class Midlet extends MIDlet implements CommandListener {
 		a.setTimeout(Alert.FOREVER);
 		display.setCurrent(a, display.getCurrent());
 	}
-
-	private static FileConnection lastCon;
-	public static InputStream connect (String url) throws Exception {
-		if (url.startsWith("resource:")) {
-			return Midlet.class.getResourceAsStream(url.substring(9));
-		} else if (url.startsWith("file:")) {
-			if (lastCon == null || !lastCon.getURL().equals(url)) {
-				lastCon = (FileConnection)Connector.open(url, Connector.READ);
-			}
-			return lastCon.openInputStream();
-		} else return null;
-	}
 	
 	public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
 		Dialog d = new Dialog(texts, media, button1, button2, callback);
