@@ -7,9 +7,8 @@ import se.krka.kahlua.vm.LuaTable;
 
 public class Input extends Form implements CommandListener, Cancellable {
 	
-	private static Command CMD_ANSWER = new Command("Odpovìdìt", Command.SCREEN, 0);
-	
-	private StringItem question;
+	private static Command CMD_ANSWER = new Command("Answer", Command.SCREEN, 0);
+
 	private TextField answer = null;
 	private ChoiceGroup choice = null;
 	
@@ -22,15 +21,18 @@ public class Input extends Form implements CommandListener, Cancellable {
 	public Input (EventTable input) {
 		super(input.name);
 		this.input = input;
-		question = new StringItem(null, (String)input.table.rawget("Text"));
-		append(question);
+		String text = (String)input.table.rawget("Text");
+		if (text != null && text.length() > 0) {
+			StringItem question = new StringItem(null, text);
+			append(question);
+		}
 		String type = (String)input.table.rawget("InputType");
 		if (type == "Text") {
-			answer = new TextField("Odpovìï:", null, 500, TextField.ANY);
+			answer = new TextField("Answer:", null, 500, TextField.ANY);
 			append(answer);
 			mode = TEXT;
 		} else if (type == "MultipleChoice") {
-			choice = new ChoiceGroup("Odpovìï:", ChoiceGroup.EXCLUSIVE);
+			choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
 			// XXX class Input with this in interface would be more appropriate?
 			LuaTable choices = (LuaTable)input.table.rawget("Choices");
 			int n = choices.len();
