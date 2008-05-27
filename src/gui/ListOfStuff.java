@@ -21,47 +21,48 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 	protected Image getStuffIcon (Object what) { return null; }
 	
 	public void commandAction(Command cmd, Displayable disp) {
-		Object s = null;
-		synchronized (this) {
-			if (cmd == Midlet.CMD_SELECT) {
+		if (cmd == Midlet.CMD_SELECT) {
+			Object s = null;
+			synchronized (this) {
 				int index = getSelectedIndex();
 				if (index >= 0 && index < stuff.size()) {
 					s = stuff.elementAt(index);
 				}
-			} else if (cmd == Midlet.CMD_BACK) {
-				Midlet.pop(this);
 			}
+			if (s != null) callStuff(s);
+		} else if (cmd == Midlet.CMD_BACK) {
+			Midlet.pop(this);
 		}
-		if (s != null) callStuff(s);
 	}
 
-	synchronized public void prepare() {
+	public void prepare() {
 		if (! stillValid()) {
 			Midlet.pop(this);
 			return;
 		}
 		
 		Vector newstuff = getValidStuff();
-		
-		// first, validate the stuff already in there
-		for (int i = 0; i < stuff.size(); i++) {
-			Object s = stuff.elementAt(i);
-			int in = newstuff.indexOf(s);
-			if (in == -1) {
-				stuff.removeElementAt(i);
-				delete(i);
-				i--;
-			} else {
-				set(i, getStuffName(s), getStuffIcon(s));
-				newstuff.setElementAt(null, in);
+		synchronized (this) {
+			// first, validate the stuff already in there
+			for (int i = 0; i < stuff.size(); i++) {
+				Object s = stuff.elementAt(i);
+				int in = newstuff.indexOf(s);
+				if (in == -1) {
+					stuff.removeElementAt(i);
+					delete(i);
+					i--;
+				} else {
+					set(i, getStuffName(s), getStuffIcon(s));
+					newstuff.setElementAt(null, in);
+				}
 			}
-		}
-		// then, add the rest
-		for (int i = 0; i < newstuff.size(); i++) {
-			Object s = newstuff.elementAt(i);
-			if (s != null) {
-				append(getStuffName(s), getStuffIcon(s));
-				stuff.addElement(s);
+			// then, add the rest
+			for (int i = 0; i < newstuff.size(); i++) {
+				Object s = newstuff.elementAt(i);
+				if (s != null) {
+					append(getStuffName(s), getStuffIcon(s));
+					stuff.addElement(s);
+				}
 			}
 		}
 	}
