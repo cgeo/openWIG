@@ -100,6 +100,9 @@ public class Zone extends Container {
 	
 	private void setcontain () {
 		if (contain == ncontain) return;
+		if (contain == INSIDE) {
+			callEvent("OnExit", null);
+		}
 		contain = ncontain;
 		if (contain == INSIDE) {
 			Engine.instance.player.moveTo(this);
