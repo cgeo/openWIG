@@ -8,7 +8,6 @@ import javax.microedition.io.*;
 import java.io.*;
 import java.util.Vector;
 
-import javax.microedition.io.file.FileConnection;
 import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
