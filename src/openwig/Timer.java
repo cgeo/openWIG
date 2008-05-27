@@ -18,6 +18,7 @@ public class Timer extends EventTable {
 		
 		public static final int START = 0;
 		public static final int STOP = 1;
+		public static final int TICK = 2;
 		
 		public Method(int index) {
 			this.index = index;
@@ -27,6 +28,7 @@ public class Timer extends EventTable {
 			switch (index) {
 				case START: return start(callFrame, nArguments);
 				case STOP: return stop(callFrame, nArguments);
+				case TICK: return tick(callFrame, nArguments);
 				default: return 0;
 			}
 		}
@@ -42,10 +44,17 @@ public class Timer extends EventTable {
 			t.stop();
 			return 0;
 		}
+		
+		private int tick (LuaCallFrame frame, int n) {
+			Timer t = (Timer)frame.get(0);
+			t.tick();
+			return 0;
+		}
 	}
 	
 	private static Method startMethod = new Method(Method.START);
 	private static Method stopMethod = new Method(Method.STOP);
+	private static Method tickMethod = new Method(Method.TICK);
 	
 	private static class TimerTask extends java.util.TimerTask {
 		
@@ -55,7 +64,7 @@ public class Timer extends EventTable {
 		}
 
 		public void run() {
-			parent.callEvent("OnTick", null);
+			parent.tick();
 			Midlet.refresh();
 		}	
 	}
@@ -71,8 +80,9 @@ public class Timer extends EventTable {
 	private boolean running = false;
 	
 	public Timer () {
-		this.table.rawset("Start", startMethod);
-		this.table.rawset("Stop", stopMethod);
+		table.rawset("Start", startMethod);
+		table.rawset("Stop", stopMethod);
+		table.rawset("Tick", tickMethod);
 	}
 	
 	protected void setItem (String key, Object value) {
@@ -111,6 +121,10 @@ public class Timer extends EventTable {
 			task = null;
 		}
 		running = false;
+	}
+	
+	public void tick () {
+		callEvent("OnTick", null);
 	}
 	
 	public static void kill() {
