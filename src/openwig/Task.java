@@ -28,13 +28,26 @@ public class Task extends EventTable {
 		if (key == "Visible") {
 			visible = LuaState.boolEval(value);
 		} else if (key == "Active") {
-			active = LuaState.boolEval(value);
+			boolean a = LuaState.boolEval(value);
+			if (a != active) {
+				active = a;
+				callEvent("OnSetActive", null);
+			}
 		} else if (key == "Complete") {
-			complete = LuaState.boolEval(value);
+			boolean c = LuaState.boolEval(value);
+			if (c != complete) {
+				complete = c;
+				callEvent("OnSetComplete", null);
+			}
 		} else if (key == "CorrectState" && value instanceof String) {
 			String v = (String)value;
-			if (v == "correct") state = DONE;
-			else if (v == "incorrect") state = FAILED;
+			int s = PENDING;
+			if (v == "correct") s = DONE;
+			else if (v == "incorrect") s = FAILED;
+			if (s != state) {
+				state = s;
+				callEvent("OnSetCorrectState", null);
+			}
 		} else super.setItem(key, value);
 	}
 }
