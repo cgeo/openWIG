@@ -47,10 +47,12 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		super("souøadnice");
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
+		setMode(mode);
 		prepare();
 	}
 	
-	public void prepare () {
+	private void setMode (int m) {
+		mode = m;
 		deleteAll();
 		append(lblGps);
 		switch (mode) {
@@ -72,6 +74,9 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				append(lblAlt);
 				break;
 		}
+	}
+	
+	public void prepare () {
 		if (Engine.shifted) {
 			removeCommand(CMD_REPOSITION);
 			append(lblRepos);
@@ -160,7 +165,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				startGPS();
 			} else if (cmd == CMD_GPS_OFF) {
 				stopGPS();
-				mode = MODE_MANUAL;
+				 setMode(MODE_MANUAL);
 				prepare();
 			} else if (cmd == CMD_SET) {
 				Midlet.latitude = Double.parseDouble(latitude.getString());
@@ -175,7 +180,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		} else if (bluelet != null && disp == bluelet.getUI()) {
 			if (cmd == BLUElet.SELECTED) {
 				Midlet.pop(bluelet.getUI());
-				mode = MODE_GPS;
+				setMode(MODE_GPS);
 				gpsStatus = GPS_SEARCHING;
 				prepare();
 			} else if (cmd == BLUElet.COMPLETED) {
@@ -202,7 +207,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void gpsDisconnected () {
 		gpsStatus = GPS_OFF;
-		mode = MODE_MANUAL;
+		setMode(MODE_MANUAL);
 		prepare();
 	}
 	
