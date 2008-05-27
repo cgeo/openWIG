@@ -10,7 +10,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	private static final int LOCATION = 2;
 	private static final int TASKS = 3;
 	
-	private static Command CMD_GPS = new Command("Position", Command.SCREEN, 5);
+	public static Command CMD_GPS = new Command("Position", Command.SCREEN, 5);
 	
 	private static Alert reallyexit = new Alert("question","Exit game?",null,AlertType.CONFIRMATION);
 	static {

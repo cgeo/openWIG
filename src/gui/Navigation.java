@@ -59,6 +59,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			return;
 		}
 		addCommand(Midlet.CMD_BACK);
+		addCommand(MainMenu.CMD_GPS);
 		setCommandListener(this);
 		updateNavi();
 	}
@@ -140,7 +141,11 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		}
 	}
 
-	public void commandAction(Command arg0, Displayable arg1) {
-		Midlet.pop(this);
+	public void commandAction(Command cmd, Displayable disp) {
+		if (cmd == Midlet.CMD_BACK) {
+			Midlet.pop(this);
+		} else if (cmd == MainMenu.CMD_GPS) {
+			Midlet.push(Midlet.coordinates);
+		}
 	}
 }
