@@ -21,11 +21,11 @@ THE SOFTWARE.
 */
 package se.krka.kahlua.vm;
 
-import java.io.PrintStream;
-import java.util.Random;
-
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.stdlib.MathLib;
+
+import java.io.PrintStream;
+import java.util.Random;
 
 public final class LuaState {
 	private static final int FIELDS_PER_FLUSH = 50;
@@ -1111,6 +1111,63 @@ public final class LuaState {
 			}
 		}
 		return metatable;
+	}
+
+	public Object[] pcall(Object fun, Object[] args) {
+		int nArgs = args == null ? 0 : args.length;
+
+		int oldTop = currentThread.getTop();
+
+		currentThread.setTop(oldTop + 1 + nArgs);
+		currentThread.objectStack[oldTop] = fun;
+		if (nArgs > 0) {
+			System.arraycopy(args, 0, currentThread.objectStack, oldTop + 1, nArgs);
+		}
+		int nRet = pcall(nArgs);
+		Object[] ret = new Object[nRet];
+		System.arraycopy(currentThread.objectStack, oldTop, ret, 0, nRet);
+		currentThread.setTop(oldTop);
+		return ret;
+	}
+	
+	public Object[] pcall(Object fun) {
+		return pcall(fun, null);
+	}	
+	
+	public int pcall(int nArguments) {
+		LuaCallFrame currentCallFrame = currentThread.currentCallFrame();
+		currentThread.stackTrace = "";
+		int oldBase = currentThread.getTop() - nArguments - 1;
+		
+		Object errorMessage;
+		Throwable exception;
+		try {
+			int nValues = call(nArguments);
+			int newTop = oldBase + nValues + 1;
+			currentThread.setTop(newTop);
+			currentThread.stackCopy(oldBase, oldBase + 1, nValues);
+			currentThread.objectStack[oldBase] = Boolean.TRUE;
+			
+			return 1 + nValues; 
+		} catch (LuaException e) {
+			exception = e;
+			errorMessage = e.errorMessage;
+		} catch (Throwable e) {
+			exception = e;
+			errorMessage = e.getMessage();
+		}
+		currentThread.cleanCallFrames(currentCallFrame);
+		if (errorMessage instanceof String) {
+			errorMessage = ((String) errorMessage).intern();
+		}
+		currentThread.setTop(oldBase + 4);
+		currentThread.objectStack[oldBase] = Boolean.FALSE;
+		currentThread.objectStack[oldBase + 1] = errorMessage;
+		currentThread.objectStack[oldBase + 2] = currentThread.stackTrace.intern();
+		currentThread.objectStack[oldBase + 3] = exception;
+		currentThread.stackTrace = "";
+		
+		return 4;
 	}
 
 	public static boolean luaEquals(Object a, Object b) {
