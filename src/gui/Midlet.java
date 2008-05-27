@@ -25,7 +25,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static TextBox filename;
 	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
 	
-	private static List baseMenu = new List("menu", List.IMPLICIT);
+	private static List baseMenu;
 	private static final int MNU_START = 0;
 	private static final int MNU_GPS = 1;
 	private static final int MNU_FILE = 2;
@@ -38,10 +38,10 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final int LOCATIONSCREEN = 4;
 	public static final int TASKSCREEN = 5;	
 	
-	public static final Command CMD_EXIT = new Command("Konec", Command.EXIT, 10);
-	public static final Command CMD_SELECT = new Command("Vybrat", Command.ITEM, 0);
-	public static final Command CMD_CANCEL = new Command("Zrušit", Command.BACK, 2);
-	public static final Command CMD_BACK = new Command("Zpìt", Command.BACK, 2);
+	public static final Command CMD_EXIT = new Command("Exit", Command.EXIT, 10);
+	public static final Command CMD_SELECT = new Command("Select", Command.ITEM, 0);
+	public static final Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
+	public static final Command CMD_BACK = new Command("Back", Command.BACK, 2);
 	
 	public static Midlet instance;
 	public static Display display;
@@ -63,10 +63,11 @@ public class Midlet extends MIDlet implements CommandListener {
 		instance = this;
 		display = Display.getDisplay(this);
 		
+		baseMenu = new List("menu", List.IMPLICIT);
 		baseMenu.append("Start", null);
 		baseMenu.append("GPS", null);
 		baseMenu.append("Select file", null);
-		baseMenu.append("Konec", null);
+		baseMenu.append("Quit", null);
 		baseMenu.setSelectCommand(CMD_SELECT);
 		baseMenu.setCommandListener(this);
 		
@@ -93,7 +94,7 @@ public class Midlet extends MIDlet implements CommandListener {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
 						Form f = new Form("splash");
-						f.append(new StringItem(null, "Loading LUA..."));
+						f.append(new StringItem(null, "Starting..."));
 						f.addCommand(CMD_EXIT);
 						f.setCommandListener(this);
 						Display.getDisplay(this).setCurrent(f);
@@ -131,7 +132,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	//   functions for other components to use
 	
 	public static void error (String text) {
-		Alert a = new Alert("chyba",text,null,AlertType.ERROR);
+		Alert a = new Alert("error",text,null,AlertType.ERROR);
 		a.setTimeout(Alert.FOREVER);
 		display.setCurrent(a, display.getCurrent());
 	}
@@ -142,24 +143,24 @@ public class Midlet extends MIDlet implements CommandListener {
 //		display.flashBacklight(500);
 //		display.vibrate(500);
 	
-		Cancellable cd = null;
 		synchronized (Midlet.class) {
-			cd = currentDialog;
+			popCurrentDialog();
 			currentDialog = d;
 			push(d);
 		}
-		if (cd != null) popDialog(cd);
 	}
 	
 	public static void pushInput(EventTable input) {
 		Input i = new Input(input);
-		Cancellable cd = null;
 		synchronized (Midlet.class) {
-			cd = currentDialog;
+			popCurrentDialog();
 			currentDialog = i;
 			push(i);
 		}
-		if (cd != null) popDialog(cd);
+	}
+	
+	synchronized public static void popCurrentDialog () {
+		if (currentDialog != null) popDialog(currentDialog);
 	}
 	
 	public static void popDialog(Cancellable d) {
@@ -195,7 +196,6 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 		
 		currentScreen = (Displayable)screens.elementAt(ss-1);
-		//if (currentScreen instanceof Pushable) ((Pushable)currentScreen).prepare();
 		display.setCurrent(currentScreen);
 	}
 	
@@ -206,11 +206,19 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void start () {
 		mainMenu = new MainMenu();
 		zones = new Zones();
-		inventory = new Things("Inventáø", Things.INVENTORY);
-		surroundings = new Things("Okolí", Things.SURROUNDINGS);
+		inventory = new Things("Inventory", Things.INVENTORY);
+		surroundings = new Things("You see", Things.SURROUNDINGS);
 		tasks = new Tasks();
-		//Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 		push(mainMenu);
+	}
+	
+	public static void end () {
+		Engine.kill();
+		mainMenu = null; zones = null; inventory = null; surroundings = null; tasks = null;
+		synchronized (Midlet.class) {
+			popCurrentDialog();
+			while (currentScreen != baseMenu) pop(currentScreen);
+		}
 	}
 	
 	public static void refresh () {
@@ -229,12 +237,10 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	public static void showScreen (int which, EventTable details) {
-		Cancellable cd = null;
 		synchronized (Midlet.class) {
-			cd = currentDialog;
+			popCurrentDialog();
 			while (currentScreen != mainMenu) pop(currentScreen);
 		}
-		if (cd != null) popDialog(cd);
 		switch (which) {
 			case MAINSCREEN:
 				return;

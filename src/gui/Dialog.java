@@ -1,6 +1,5 @@
 package gui;
 
-import java.io.InputStream;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.Media;
@@ -15,7 +14,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	private int page = -1;
 	
 	private static Command CMD_OK = new Command("OK", Command.SCREEN, 1);
-	private static Command CMD_CANCEL = new Command("Zrušit", Command.BACK, 2);
+	private static Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
 	
 	private LuaClosure callback;
 

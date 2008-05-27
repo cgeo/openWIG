@@ -4,9 +4,10 @@ import se.krka.kahlua.vm.*;
 
 public class Media extends EventTable {
 	
-	private static int media_no = 1;
+	private static int media_no;
 
 	public static void register (LuaState state) {
+		media_no = 1;
 		EventTable.register(state);
 		state.setUserdataMetatable(Media.class, metatable);
 	}

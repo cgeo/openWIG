@@ -27,6 +27,11 @@ public class Engine implements Runnable {
 		this.codeUrl = codeUrl;
 	}
 	
+	public Engine (CartridgeFile cf) {
+		instance = this;
+		gwcfile = cf;
+	}
+	
 	public void run() {
 		state = new LuaState(System.out);
 		
@@ -43,7 +48,7 @@ public class Engine implements Runnable {
 			state.call(closure, null, null, null);
 			stdlib.close(); stdlib = null;
 			
-			gwcfile = CartridgeFile.read(codeUrl);
+			if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
 			if (gwcfile == null) throw new Exception("invalid cartridge file");
 			byte[] lbc = gwcfile.getBytecode();
 			
@@ -57,28 +62,34 @@ public class Engine implements Runnable {
 			origPos = new ZonePoint(player.position);
 					
 			Midlet.start();
-			callEvent(cartridge, "OnStart", null);
-			
-			while (! end ) {
-				try { Thread.sleep(1000); } catch (Exception e) {}
 
+		} catch (Exception e) {
+			Midlet.end();
+			stacktrace(e);
+		}
+			
+		callEvent(cartridge, "OnStart", null);
+			
+		while (!end) {
+			try { Thread.sleep(1000); } catch (Exception e) { }
+
+			try {
 				if (Midlet.latitude != player.position.latitude
 					|| Midlet.longitude != player.position.longitude
 					|| Midlet.altitude != player.position.altitude) {
-					
+
 					player.position.latitude = Midlet.latitude;
 					player.position.longitude = Midlet.longitude;
 					player.position.altitude = Midlet.altitude;
-					
+
 					cartridge.walk(player.position);
 				} else {
 					cartridge.tick();
 				}
-			} 
-			
-		} catch (Exception e) {
-			stacktrace(e);
-		}
+			} catch (Exception e) {
+				stacktrace(e);
+			}
+		} 
 	}
 	
 	public static void stacktrace (Exception e) {
@@ -88,8 +99,11 @@ public class Engine implements Runnable {
 	}
 	
 	public static void kill () {
+		Timer.kill();
 		if (instance == null) return;
 		instance.end = true;
+		instance = null;
+		state = null;
 	}
 		
 	public static void message(LuaTable message) {

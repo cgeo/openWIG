@@ -1,6 +1,5 @@
 package gwc;
 
-import gui.Midlet;
 import java.io.*;
 import javax.microedition.io.*;
 import javax.microedition.io.file.FileConnection;
@@ -45,13 +44,19 @@ public class CartridgeFile {
 	public static CartridgeFile read(String what)
 	throws Exception {
 		CartridgeFile cf = new CartridgeFile();
-		if (what.startsWith("resource:"))
-			cf.connectionUrl = what.substring(9);
-		else if (what.startsWith("file:"))
+		if (what.startsWith("resource:")) {
+			String url = what.substring(9);
+			if (cf.getClass().getResourceAsStream(url) == null)
+				throw new Exception("resource not found");
+			cf.connectionUrl = url;
+		} else if (what.startsWith("file:")) {
 			cf.file = (FileConnection)Connector.open(what);
+		} else {
+			throw new IllegalArgumentException("invalid connection string");
+		}
 		
 		cf.resetSource();
-		if (!cf.fileOk()) return null;
+		if (!cf.fileOk()) throw new Exception("invalid cartridge file");
 		
 		cf.scanOffsets();
 		cf.scanHeader();

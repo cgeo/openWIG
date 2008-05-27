@@ -5,9 +5,10 @@ import gui.Midlet;
 
 public class Timer extends EventTable {
 	
-	private static java.util.Timer globalTimer = new java.util.Timer();
+	private static java.util.Timer globalTimer;
 	
 	public static void register (LuaState state) {
+		globalTimer = new java.util.Timer();
 		EventTable.register(state);
 		state.setUserdataMetatable(Timer.class, metatable);
 	}
@@ -110,5 +111,10 @@ public class Timer extends EventTable {
 			task = null;
 		}
 		running = false;
+	}
+	
+	public static void kill() {
+		if (globalTimer != null) globalTimer.cancel();
+		globalTimer = null;
 	}
 }
