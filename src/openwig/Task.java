@@ -41,9 +41,8 @@ public class Task extends EventTable {
 			}
 		} else if (key == "CorrectState" && value instanceof String) {
 			String v = (String)value;
-			int s = PENDING;
-			if (v == "correct") s = DONE;
-			else if (v == "incorrect") s = FAILED;
+			int s = DONE;
+			if (v == "incorrect") s = FAILED;
 			if (s != state) {
 				state = s;
 				callEvent("OnSetCorrectState", null);
