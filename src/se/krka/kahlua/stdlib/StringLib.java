@@ -117,6 +117,15 @@ public final class StringLib implements JavaFunction {
 		return Long.toString(number, base);
 	}
 	
+	private String padNumString(String num, int width, char pad) {
+		StringBuffer sb = new StringBuffer(num);
+		while (num.length() < width) {
+			width--;
+			sb.insert(0, pad);
+		}
+		return sb.toString();
+	}
+	
 	private int format(LuaCallFrame callFrame, int nArguments) {
 		//BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
 		String f = (String) BaseLib.getArg(callFrame, 1, "string", "format");
@@ -127,6 +136,76 @@ public final class StringLib implements JavaFunction {
 		for (int i = 0; i < len; i++) {
 			char c = f.charAt(i);
 			if (c == '%') {
+				boolean blockprocessed = false;
+				char pad = ' ';
+				int width = 0, precision = 1;
+				boolean leftAdjust = false;
+				boolean printSign = false;
+				boolean spaceForSign = false;
+				
+				// --------- flags
+				while (!blockprocessed) {
+				i++;
+				BaseLib.luaAssert(i < len, "invalid option '%' to 'format'");
+				c = f.charAt(i);
+				switch(c) {
+				case '#': // "alternate" repr
+					// unsupported
+					break;
+				case '0': // zero padding
+					if (!leftAdjust) pad = '0';
+					break;
+				case '-': // left adjustment
+					leftAdjust = true;
+					pad = ' ';
+					break;
+				case ' ': // space instead of sign for positive number
+					if (!printSign) spaceForSign = true;
+					break;
+				case '+': // print sign for positive number
+					printSign = true;
+					spaceForSign = false;
+					break;
+				default:
+					i--; blockprocessed = true;
+					break;
+				}
+				}
+				
+				// -------- width
+				while (true) {
+				i++;
+				BaseLib.luaAssert(i < len, "invalid option '%' to 'format'");
+				c = f.charAt(i);
+				if (Character.isDigit(c)) {
+					width = width * 10 + Character.digit(c, 10);
+				} else {
+					i--;
+					break;
+				}
+				}
+				
+				// -------- precision
+				i++;
+				BaseLib.luaAssert(i < len, "invalid option '%' to 'format'");
+				c = f.charAt(i);
+				if (c == '.') {
+					precision = 0;
+					while (true) {
+					i++;
+					BaseLib.luaAssert(i < len, "invalid option '%' to 'format'");
+					c = f.charAt(i);
+					if (Character.isDigit(c)) {
+						precision = precision * 10 + Character.digit(c, 10);
+					} else {
+						i--;
+						break;
+					}
+				}
+
+				}
+				
+				// -------- format itself
 				i++;
 				BaseLib.luaAssert(i < len, "invalid option '%' to 'format'");
 				c = f.charAt(i);
@@ -134,51 +213,51 @@ public final class StringLib implements JavaFunction {
 				case '%': 
 					result.append('%');
 					break;
-				case 'c':
+				case 'c': // character
 					result.append((char)((Double)BaseLib.getArg(callFrame, 
 						argc, "number", "format")).intValue());
 					break;
-				case 'o':
+				case 'o': // octal
 					result.append(formatNumberByBase(
 						(Double)BaseLib.getArg(callFrame, argc, "number", "format"), 8));
 					break;
-				case 'x':
+				case 'x': // hexa 0xaf
 					result.append(formatNumberByBase(
 						(Double)BaseLib.getArg(callFrame, argc, "number", "format"), 16));
 					break;
-				case 'X':
+				case 'X': // hexa 0XAF
 					result.append(formatNumberByBase(
 						(Double)BaseLib.getArg(callFrame, argc, "number", "format"), 16).toUpperCase());
 					break;
-				case 'u':
+				case 'u': // unsigned
 					result.append(Long.toString(unsigned(
 						(Double)BaseLib.getArg(callFrame, argc, "number", "format"))));
 					break;
-				case 'd':
+				case 'd': // signed
 				case 'i':
 					Double v = (Double)BaseLib.getArg(callFrame, argc, "number", 
 							"format");
-					result.append(Long.toString(v.longValue()));
+					result.append(padNumString(Long.toString(v.longValue()),Math.max(width,precision),pad));
 					break;
-				case 'e':
+				case 'e': // with exponent
 				case 'E':
-				case 'f':
+				case 'f': // without exponent
 					result.append(((Double)BaseLib.getArg(callFrame, argc, "number", 
 							"format")).toString());
 					break;
 				case 'G':
-				case 'g':
+				case 'g': // smart exponent
 					v = (Double)BaseLib.getArg(callFrame, argc, "number", 
 							"format");
 					result.append(BaseLib.numberToString(v));
 					break;
-				case 's': {
+				case 's': { // string
 					String s = (String) BaseLib.getArg(callFrame, argc, "string", "format");
 					result.append(s);
 					argc++;
 					break;
 				}
-				case 'q':
+				case 'q': // lua quoted
 					String q = BaseLib.rawTostring(
 							BaseLib.getArg(callFrame, argc, "string", "format"));
 					result.append('"');
@@ -341,20 +420,20 @@ public final class StringLib implements JavaFunction {
 			if (pc == '%') {
 				index++;
 				if (index < len && matchClass(p.charAt(index), c)) {
-					return sig ? p.indexOf(']', index) : -1;
+					return sig ? p.indexOf(']', index) + 1 : -1;
 				}
 			} else if (pc == ']') {
 				return -1;
 			} else if (index + 2 < len && p.charAt(index + 1) == '-') {
 				if (c >= pc && c <= p.charAt(index + 2)) {
-					return sig ? p.indexOf(']', index) : -1;
+					return sig ? p.indexOf(']', index) + 1 : -1;
 				}
 			} else if (c == pc) {
-					return sig ? p.indexOf(']', index) : -1;
+					return sig ? p.indexOf(']', index) + 1 : -1;
 			}
 			index++;
 		}
-		return sig ? -1 : p.indexOf(']', index);
+		return sig ? -1 : p.indexOf(']', index) + 1;
 	}
 
 	private int singleMatch(char sc, String pattern, int pIndex) {
@@ -367,7 +446,7 @@ public final class StringLib implements JavaFunction {
 				} else {
 					return -1;
 				}
-			case '[': return matchBracketClass(sc, pattern, pIndex);
+			case '[': return matchBracketClass(sc, pattern, pIndex + 1);
 			default: return (pc == sc) ? (pIndex + 1) : -1;
 		}
 	}
@@ -426,7 +505,7 @@ public final class StringLib implements JavaFunction {
 				int level = match(source, pattern, sIndex, pIndex, captures, 1);
 				if (level > -1) {
 					if (find) {
-						callFrame.push(new Double(captures[0] + 1), new Double(captures[0] + captures[1]));
+						callFrame.push(new Double(captures[0]), new Double(captures[1]));
 						// shift base right by 2, add the 2 later
 						pushCaptures(callFrame, source, captures, level);
 						return level + 2;
