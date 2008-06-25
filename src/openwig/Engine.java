@@ -39,6 +39,7 @@ public class Engine implements Runnable {
 		MathLib.register(state);
 		StringLib.register(state);
 		CoroutineLib.register(state);
+		OsLib.register(state);
 
 		LuaInterface.register(state);
 		

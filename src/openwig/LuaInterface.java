@@ -93,6 +93,7 @@ public class LuaInterface implements JavaFunction {
 		state.environment.rawset("Env", env);
 		
 		Zone.register(state);
+		ZonePoint.register(state);
 		Cartridge.register(state);
 		Thing.register(state);
 		Action.register(state);
