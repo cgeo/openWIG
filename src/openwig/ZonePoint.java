@@ -7,7 +7,8 @@ import se.krka.kahlua.stdlib.BaseLib;
 public class ZonePoint {
 	public double latitude;
 	public double longitude;
-	public double altitude;
+	//public double altitude;
+	public Distance altitude;
 	
 	private static class Method implements JavaFunction {
 
@@ -35,8 +36,8 @@ public class ZonePoint {
 			else if (name == "longitude")
 				ret = LuaState.toDouble(z.longitude);
 			else if (name == "altitude")
-				// ret = z.altitude;
-				ret = LuaState.toDouble(z.altitude);
+				ret = z.altitude;
+				// ret = LuaState.toDouble(z.altitude);
 			frame.push(ret);
 			return 1;
 		}
@@ -51,8 +52,9 @@ public class ZonePoint {
 			else if (name == "longitude")
 				z.longitude = LuaState.fromDouble(value);
 			else if (name == "altitude")
-				// z.altitude = value;
-				z.altitude = LuaState.fromDouble(value);
+				BaseLib.luaAssert(value.getClass() == Distance.class, "invalid value for altitude");
+				z.altitude = (Distance)value;
+				// z.altitude = LuaState.fromDouble(value);
 			return 0;
 		}
 
@@ -95,11 +97,17 @@ public class ZonePoint {
 		altitude = z.altitude;
 	}
 	
+	private ZonePoint (double lat, double lon, Distance alt) {
+		latitude = lat;
+		longitude = lon;
+		altitude = alt;
+	}
+	
 	public ZonePoint (double lat, double lon, double alt)
 	{
 		latitude = lat;
 		longitude = lon;
-		altitude = alt;
+		altitude = new Distance(alt,"metres");
 	}
 	
 	public ZonePoint translate (double angle, double distance) {

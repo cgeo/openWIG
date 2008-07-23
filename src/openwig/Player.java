@@ -6,8 +6,7 @@ import se.krka.kahlua.vm.*;
 public class Player extends Thing {
 
 	private static class Method implements JavaFunction {
-		public static final int GETVALUE_NOP = 0;
-		public static final int REFRESHLOCATION = 1;
+		public static final int REFRESHLOCATION = 0;
 		
 		private int index;
 		public Method (int index) {
@@ -16,9 +15,6 @@ public class Player extends Thing {
 		
 		public int call(LuaCallFrame callFrame, int nArguments) {
 			switch (index) {
-				case GETVALUE_NOP:
-					callFrame.push(new Double(1));
-					return 1;
 				case REFRESHLOCATION:
 					return refreshLocation();
 				default:
@@ -30,13 +26,12 @@ public class Player extends Thing {
 			ZonePoint z = Engine.instance.player.position;
 			z.latitude = Midlet.latitude;
 			z.longitude = Midlet.longitude;
-			z.altitude = Midlet.altitude;
+			z.altitude.setValue(Midlet.altitude, "metres");
 			Engine.instance.cartridge.walk(z);
 			return 0;
 		}
 	}
 	
-	private static Method positionAccuracy_GetValue = new Method(Method.GETVALUE_NOP);
 	private static Method refreshLocation = new Method(Method.REFRESHLOCATION);
 	
 	public static void register (LuaState state) {
@@ -46,10 +41,9 @@ public class Player extends Thing {
 	
 	public Player() {
 		super(true);
-		table.rawset("PositionAccuracy",this);
-		table.rawset("GetValue", positionAccuracy_GetValue);
+		table.rawset("PositionAccuracy", new Distance(1,"metres"));
 		table.rawset("RefreshLocation", refreshLocation);
-		setPosition(new ZonePoint(360,360,360));
+		setPosition(new ZonePoint(360,360,0));
 	}
 	
 	public int visibleThings() {

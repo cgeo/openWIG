@@ -77,11 +77,11 @@ public class Engine implements Runnable {
 			try {
 				if (Midlet.latitude != player.position.latitude
 					|| Midlet.longitude != player.position.longitude
-					|| Midlet.altitude != player.position.altitude) {
+					|| Midlet.altitude != player.position.altitude.getValue("metres")) {
 
 					player.position.latitude = Midlet.latitude;
 					player.position.longitude = Midlet.longitude;
-					player.position.altitude = Midlet.altitude;
+					player.position.altitude.setValue(Midlet.altitude, "metres");
 
 					cartridge.walk(player.position);
 				} else {
