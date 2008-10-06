@@ -106,7 +106,7 @@ public class EventTable {
 		synchronized (Engine.state) {
 			try {
 				Object o = table.rawget(name.intern());
-				if (o != null && o instanceof LuaClosure) {
+				if (o instanceof LuaClosure) {
 					LuaClosure event = (LuaClosure) o;
 					Engine.state.call(event, this, param, null);
 				}
@@ -114,5 +114,9 @@ public class EventTable {
 				Engine.stacktrace(e);
 			}
 		}
-	}	
+	}
+	
+	public boolean hasEvent(String name) {
+		return (table.rawget(name.intern())) instanceof LuaClosure;
+	}
 }

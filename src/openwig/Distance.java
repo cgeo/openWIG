@@ -6,13 +6,14 @@ import se.krka.kahlua.stdlib.BaseLib;
 
 public class Distance {
 	public double value; // value in metres
-	
-	public static final double METRE_TO_FEET = 2;
-	
+		
 	public static Hashtable conversions = new Hashtable(2);
 	static {
-		conversions.put("feet", new Double(0.3));
-		conversions.put("miles", new Double(1000));
+		conversions.put("feet", new Double(0.3048));
+		conversions.put("miles", new Double(1609.344));
+		conversions.put("meters", new Double(1));
+		conversions.put("kilometers", new Double(1000));
+		conversions.put("nauticalmiles", new Double(1000));
 	}
 	
 	private static class Method implements JavaFunction {
@@ -89,6 +90,11 @@ public class Distance {
 	}
 	
 	public double getValue (String unit) {
-		return value;
+		if (conversions.containsKey(unit)) {
+			return value / ((Double)conversions.get(unit)).doubleValue();
+		} else {
+			return value;
+			// XXX exception
+		}		
 	}
 }
