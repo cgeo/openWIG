@@ -1,8 +1,8 @@
 package openwig;
 
-import henson.midp.Float11;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
+import se.krka.kahlua.stdlib.MathLib;
 
 public class ZonePoint {
 	public double latitude;
@@ -146,7 +146,7 @@ public class ZonePoint {
 	
 	public double bearing (double lat, double lon) {
 		// calculates bearing from specified point to here
-		return Float11.atan2(latitude - lat, longitude - lon);
+		return MathLib.atan2(latitude - lat, longitude - lon);
 	}
 	
 	public static double angle2azimuth (double angle) {

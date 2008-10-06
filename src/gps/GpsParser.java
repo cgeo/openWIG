@@ -1,6 +1,5 @@
 package gps;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -8,7 +7,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 
 import gui.Midlet;
-import javax.bluetooth.BluetoothConnectionException;
+import java.io.IOException;
 
 /**
  * Tato trida se stara o zpracovani NMEA zprav zasilanych od GPS
@@ -195,33 +194,34 @@ public class GpsParser implements Runnable {
 		Midlet.coordinates.gpsConnected();
 
 		//cteni dat
-		ByteArrayOutputStream byteArrayOutputStream = null;
+		StringBuffer sb = new StringBuffer(50);
 		boolean prevfix = fix;
+		int ch = 0;
 		while (thread != null) {
 			try {
-				String s;
-				byteArrayOutputStream = new ByteArrayOutputStream();
-				int ch = 0;
-				//cteni dat
-				if (inputStream != null) {
-					while ((ch = inputStream.read()) != '\n') {
-						byteArrayOutputStream.write(ch);
+				sb.delete(0, sb.length());
+				ch = 0;
+				while (true) {
+					ch = inputStream.read();
+					if (ch == -1) {
+						throw new IOException("Device stopped supplying navigational data.");
+					} else if (ch == '\n') {
+						break;
+					} else {
+						sb.append((char)ch);
 					}
 				}
-				byteArrayOutputStream.flush();
-				byte[] b = byteArrayOutputStream.toByteArray();
-				s = new String(b);
+				String s = sb.toString();
 				nmea = s;
 				receiveNmea(s);
-				byteArrayOutputStream.close();
 				if (prevfix != fix) Midlet.coordinates.fixChanged(fix);
 				prevfix = fix;
-			} catch (BluetoothConnectionException e) {
+			} catch (IOException ex) {
 				close();
-				//Midlet.coordinates.gpsDisconnected();
-				Midlet.coordinates.gpsError(e.getMessage());
-			} catch (Exception ex) {
-				Midlet.error(ex.toString());
+				Midlet.coordinates.gpsError(ex.getMessage());
+			} catch (Throwable e) {
+				close();
+				Midlet.error("GPS thread died: "+e.toString());
 			}
 		}
 
@@ -405,7 +405,7 @@ public class GpsParser implements Runnable {
 		} else if (!param[0].equals(null)) {
 			nmeaCount++;
 		}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			Midlet.error(e.toString()+"\n"+nmea);
 		}
 	}

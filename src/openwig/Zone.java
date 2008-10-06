@@ -3,7 +3,6 @@ package openwig;
 import gui.Midlet;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
-import se.krka.kahlua.stdlib.*;
 
 public class Zone extends Container {
 
@@ -69,13 +68,13 @@ public class Zone extends Container {
 			boolean a = LuaState.boolEval(value);
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
-		} else if (key == "DistanceRange") {
-			distanceRange = LuaState.fromDouble(value);
+		} else if (key == "DistanceRange" && value instanceof Distance) {
+			distanceRange = ((Distance)value).getValue("metres");
 			if (distanceRange == -1 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
-		} else if (key == "ProximityRange") {
-			proximityRange = LuaState.fromDouble(value);
+		} else if (key == "ProximityRange" && value instanceof Distance) {
+			proximityRange = ((Distance)value).getValue("metres");
 		} else if (key == "ShowObjects") {
 			String v = (String)value;
 			if (v == "Always") {

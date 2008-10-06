@@ -1,14 +1,10 @@
 package gui;
 
-import openwig.Engine;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
-import javax.microedition.io.*;
 
-import java.io.*;
 import java.util.Vector;
 
-import se.krka.kahlua.stdlib.*;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
 import openwig.EventTable;
@@ -23,7 +19,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static MainMenu mainMenu;
 	
 	public static TextBox filename;
-	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
+	private static String sourceUrl = "file:///e:/Other/penguin_escape.gwc";
+//	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
 	
 	private static List baseMenu;
 	private static final int MNU_START = 0;
@@ -37,6 +34,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final int ITEMSCREEN = 3;
 	public static final int LOCATIONSCREEN = 4;
 	public static final int TASKSCREEN = 5;	
+	public static final int COORDSCREEN = 6;
 	
 	public static final Command CMD_EXIT = new Command("Exit", Command.EXIT, 10);
 	public static final Command CMD_SELECT = new Command("Select", Command.ITEM, 0);
@@ -258,6 +256,9 @@ public class Midlet extends MIDlet implements CommandListener {
 				return;
 			case TASKSCREEN:
 				push(tasks);
+				return;
+			case COORDSCREEN:
+				push(coordinates);
 				return;
 		}
 	}

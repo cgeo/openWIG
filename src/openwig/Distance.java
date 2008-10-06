@@ -13,7 +13,7 @@ public class Distance {
 		conversions.put("miles", new Double(1609.344));
 		conversions.put("meters", new Double(1));
 		conversions.put("kilometers", new Double(1000));
-		conversions.put("nauticalmiles", new Double(1000));
+		conversions.put("nauticalmiles", new Double(1852));
 	}
 	
 	private static class Method implements JavaFunction {

@@ -50,7 +50,7 @@ public class CartridgeFile {
 				throw new Exception("resource not found");
 			cf.connectionUrl = url;
 		} else if (what.startsWith("file:")) {
-			cf.file = (FileConnection)Connector.open(what);
+			cf.file = (FileConnection)Connector.open(what, Connector.READ);
 		} else {
 			throw new IllegalArgumentException("invalid connection string");
 		}

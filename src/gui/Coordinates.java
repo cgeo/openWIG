@@ -196,6 +196,9 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		} else if (disp == gpsError) {
 			if (cmd.getCommandType() == Command.OK) {
 				gpsParser.open();
+				Midlet.display.setCurrent(Midlet.getCurrentScreen());
+			} else {
+				Midlet.showScreen(Midlet.COORDSCREEN, null);
 			}
 		}
 	}
@@ -218,11 +221,13 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	}
 	
 	public void gpsError (String error) {
-		gpsError = new Alert("chyba bluetooth", "došlo k chybì v bluetooth spojení:\n"+error+"\nobnovit spojení?",
-			null, AlertType.ERROR);
+		gpsDisconnected();
+		gpsError = new Alert("GPS connection failed", error+"\nTry to reconnect?",
+			null, AlertType.CONFIRMATION);
+		gpsError.addCommand(new Command("Yes", Command.OK, 1));
+		gpsError.addCommand(new Command("No", Command.CANCEL, 2));
 		gpsError.setTimeout(Alert.FOREVER);
-		gpsError.addCommand(new Command("Ano", Command.OK, 1));
-		gpsError.addCommand(new Command("Ne", Command.CANCEL, 2));
-		Midlet.display.setCurrent(gpsError, Midlet.display.getCurrent());
+		gpsError.setCommandListener(this);
+		Midlet.display.setCurrent(gpsError);
 	}
 }
