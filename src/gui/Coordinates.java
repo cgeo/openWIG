@@ -195,6 +195,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 			}
 		} else if (disp == gpsError) {
 			if (cmd.getCommandType() == Command.OK) {
+				gpsStatus = GPS_SEARCHING;
 				gpsParser.open();
 				Midlet.display.setCurrent(Midlet.getCurrentScreen());
 			} else {

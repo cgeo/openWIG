@@ -237,7 +237,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void showScreen (int which, EventTable details) {
 		synchronized (Midlet.class) {
 			popCurrentDialog();
-			while (currentScreen != mainMenu) pop(currentScreen);
+			while (currentScreen != mainMenu && screens.size() > 1) pop(currentScreen);
 		}
 		switch (which) {
 			case MAINSCREEN:

@@ -181,24 +181,22 @@ public class GpsParser implements Runnable {
 		StreamConnection streamConnection = null;
 		InputStream inputStream = null;
 		try {
-			streamConnection = (StreamConnection) Connector.open(communicationURL);
-			inputStream = streamConnection.openInputStream();
-		} catch (Exception e) {
-			Midlet.error(e.toString());
-			Midlet.coordinates.gpsDisconnected();
-			close();
-			return;
-		}
-
-		//uspesne pripojeni
-		Midlet.coordinates.gpsConnected();
-
-		//cteni dat
-		StringBuffer sb = new StringBuffer(50);
-		boolean prevfix = fix;
-		int ch = 0;
-		while (thread != null) {
 			try {
+				streamConnection = (StreamConnection) Connector.open(communicationURL);
+				inputStream = streamConnection.openInputStream();
+			} catch (Exception e) {
+				Midlet.error(e.toString());
+				return;
+			}
+
+			//uspesne pripojeni
+			Midlet.coordinates.gpsConnected();
+
+			//cteni dat
+			StringBuffer sb = new StringBuffer(50);
+			boolean prevfix = fix;
+			int ch = 0;
+			while (thread != null) {
 				sb.delete(0, sb.length());
 				ch = 0;
 				while (true) {
@@ -216,18 +214,17 @@ public class GpsParser implements Runnable {
 				receiveNmea(s);
 				if (prevfix != fix) Midlet.coordinates.fixChanged(fix);
 				prevfix = fix;
-			} catch (IOException ex) {
-				close();
-				Midlet.coordinates.gpsError(ex.getMessage());
-			} catch (Throwable e) {
-				close();
-				Midlet.error("GPS thread died: "+e.toString());
 			}
+		} catch (IOException ex) {
+			Midlet.coordinates.gpsError(ex.getMessage());
+		} catch (Throwable e) {
+			Midlet.error("GPS thread died: "+e.toString());
+		} finally {
+			close();
+			if (inputStream != null) try { inputStream.close(); } catch (Exception e) {}
+			if (streamConnection != null) try { streamConnection.close(); } catch (Exception e) {}
+			Midlet.coordinates.gpsDisconnected();
 		}
-
-		if (inputStream != null) try { inputStream.close(); } catch (Exception e) {}
-		if (streamConnection != null) try { streamConnection.close(); } catch (Exception e) {}
-		Midlet.coordinates.gpsDisconnected();
 	}
 	
 	/**
