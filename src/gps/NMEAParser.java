@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * Tato trida se stara o zpracovani NMEA zprav zasilanych od GPS
  */
-public class GpsParser implements Runnable {
+public class NMEAParser implements Runnable, LocationProvider {
 	//gps udaje
 	protected double latitude;
 	protected double longitude;
@@ -35,19 +35,14 @@ public class GpsParser implements Runnable {
 	private String communicationURL;
 	protected String nmea;
 	//zdroje dat
-	public static final int BLUETOOTH = 0;
-	public static final int GPS_GATE = 1;
-	public static final int INTERNAL = 2;
-	public int source;
 	private Thread thread;
 
 	/**
 	 * Pripojeni k neznamemu zarizeni
 	 */
-	public GpsParser(String address, int gpsSource) {
+	public NMEAParser(String address) {
 		nmeaCount = 0;
 		communicationURL = address;
-		source = gpsSource;
 	}
 
 	/**
@@ -69,9 +64,9 @@ public class GpsParser implements Runnable {
 	 * Vraci rychlost v km/h
 	 */
 	public long getSpeed() {
-		if (source == INTERNAL) {
+/*		if (source == INTERNAL) {
 			return (long) (speed * 3.6);
-		} else {
+		} else */{
 			return (long) (speed * 1.852);
 		}
 	}
@@ -81,17 +76,17 @@ public class GpsParser implements Runnable {
 	}
 
 	public String getSatelliteCount() {
-		if (source == INTERNAL) {
+/*		if (source == INTERNAL) {
 			return "N/A";
-		} else {
+		} else */{
 			return fixSatellites + "/" + allSatellites;
 		}
 	}
 
 	public String getAccuracy() {
-		if (source == INTERNAL) {
+/*		if (source == INTERNAL) {
 			return String.valueOf((int) accuracy) + " m";
-		} else {
+		} else */{
 			return accuracy + "(PDOP)";
 		}
 	}
@@ -108,6 +103,15 @@ public class GpsParser implements Runnable {
 		return vdop;
 	}
 	//Zephy 21.11.07 gpsstatus+/
+	
+	public double getPrecision() {
+		try {
+			return Double.parseDouble(getPDOP()) * 5.0;
+		} catch (NumberFormatException e) {
+			return Double.POSITIVE_INFINITY;
+		}
+	}
+	
 	public boolean hasFix() {
 		return fix;
 	}

@@ -1,5 +1,6 @@
 package openwig;
 
+import gui.Coordinates;
 import gui.Midlet;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
@@ -90,6 +91,8 @@ public class Zone extends Container {
 	}
 	
 	public void tick () {
+		if (ncontain > contain) setcontain();
+		if (Midlet.coordinates.mode == Coordinates.MODE_MANUAL) setcontain();
 		if (ncontain == contain) ticks = 0;
 		else {
 			ticks ++;

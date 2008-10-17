@@ -5,10 +5,12 @@ import javax.microedition.lcdui.*;
 
 import java.util.Vector;
 
+import javax.microedition.rms.RecordStoreException;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
 import openwig.EventTable;
 import openwig.Media;
+import util.Config;
 
 public class Midlet extends MIDlet implements CommandListener {
 	
@@ -43,6 +45,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	
 	public static Midlet instance;
 	public static Display display;
+	public static Config config;
 	
 	private static Cancellable currentDialog = null;
 	private static Vector screens = new Vector();
@@ -60,6 +63,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public void startApp() {
 		instance = this;
 		display = Display.getDisplay(this);
+		config = new Config("_configuration");
 		
 		baseMenu = new List("menu", List.IMPLICIT);
 		baseMenu.append("Start", null);

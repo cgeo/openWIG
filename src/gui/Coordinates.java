@@ -1,6 +1,6 @@
 package gui;
 
-import gps.GpsParser;
+import gps.NMEAParser;
 import javax.microedition.lcdui.*;
 import javax.bluetooth.*;
 import net.benhui.btgallery.bluelet.BLUElet;
@@ -28,10 +28,13 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	private static final int MODE_MANUAL = 0;
 	private static final int MODE_GPS = 1;
+	private static final int MODE_BLUETOOTH = 1;
+	private static final int MODE_SERIAL = 2;
+	private static final int MODE_INTERNAL = 3;
 	private int mode = MODE_MANUAL;
 	
 	private BLUElet bluelet;
-	private static GpsParser gpsParser;
+	private static NMEAParser gpsParser;
 	
 	private Alert gpsError;
 	
@@ -187,7 +190,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
 				bluelet = null;
 				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
-				gpsParser = new GpsParser(url, GpsParser.BLUETOOTH);
+				gpsParser = new NMEAParser(url);
 				gpsParser.open();
 			} else if (cmd == BLUElet.BACK) {
 				Midlet.pop(bluelet.getUI());
