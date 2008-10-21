@@ -23,11 +23,7 @@ public class Player extends Thing {
 		}
 		
 		private int refreshLocation () {
-			ZonePoint z = Engine.instance.player.position;
-			z.latitude = Midlet.latitude;
-			z.longitude = Midlet.longitude;
-			z.altitude.setValue(Midlet.altitude, "metres");
-			Engine.instance.cartridge.walk(z);
+			Engine.instance.player.refreshLocation();
 			return 0;
 		}
 	}
@@ -57,5 +53,12 @@ public class Player extends Thing {
 	
 	public void setCompletionCode (String code) {
 		table.rawset("CompletionCode", code.intern());
+	}
+
+	public void refreshLocation() {
+		position.latitude = Midlet.gps.getLatitude();
+		position.longitude = Midlet.gps.getLongitude();
+		position.altitude.setValue(Midlet.gps.getAltitude(), "metres");
+		Engine.instance.cartridge.walk(position);
 	}
 }

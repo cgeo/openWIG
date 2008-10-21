@@ -91,9 +91,9 @@ public class Zone extends Container {
 	}
 	
 	public void tick () {
-		if (ncontain > contain) setcontain();
-		if (Midlet.coordinates.mode == Coordinates.MODE_MANUAL) setcontain();
 		if (ncontain == contain) ticks = 0;
+		else if (ncontain > contain) setcontain();
+		else if (Midlet.gpsType == Midlet.GPS_MANUAL) setcontain();
 		else {
 			ticks ++;
 			if (ticks % 5 == 0) setcontain();

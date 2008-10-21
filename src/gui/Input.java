@@ -33,6 +33,7 @@ public class Input extends Form implements CommandListener, Cancellable {
 			mode = TEXT;
 		} else if (type == "MultipleChoice") {
 			choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
+			choice.setFitPolicy(Choice.TEXT_WRAP_ON);
 			// XXX class Input with this in interface would be more appropriate?
 			LuaTable choices = (LuaTable)input.table.rawget("Choices");
 			int n = choices.len();

@@ -1,11 +1,11 @@
 package gui;
 
+import gps.*;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
 import java.util.Vector;
 
-import javax.microedition.rms.RecordStoreException;
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
 import openwig.EventTable;
@@ -53,8 +53,12 @@ public class Midlet extends MIDlet implements CommandListener {
 	
 	public static Displayable getCurrentScreen () { return currentScreen; }
 	
-	public static double latitude, longitude, altitude;
-	public static double heading = 0;
+	public static LocationProvider gps;
+	public static final int GPS_MANUAL = 0;
+	public static final int GPS_SERIAL = 1;
+	public static final int GPS_BLUETOOTH = 2;
+	public static final int GPS_INTERNAL = 3;
+	public static int gpsType;
 	
 	/////////////////////////////////////
 	//
@@ -74,6 +78,9 @@ public class Midlet extends MIDlet implements CommandListener {
 		baseMenu.setCommandListener(this);
 		
 		coordinates = new Coordinates();
+		
+		resetGps();
+		
 		filename = new TextBox("enter full resource path", "", 1000, TextField.URL);
 		filename.setCommandListener(this);
 		filename.addCommand(new Command("OK", Command.SCREEN, 1));
@@ -204,6 +211,22 @@ public class Midlet extends MIDlet implements CommandListener {
 	/////////////////
 	//
 	//   ????
+
+	public static void resetGps () {
+		if (gps != null) gps.disconnect();
+		gpsType = config.getInt(Config.GPS_TYPE);
+		switch (gpsType) {
+			case GPS_MANUAL:
+				gps = coordinates;
+				break;
+			case GPS_SERIAL: case GPS_BLUETOOTH:
+				gps = new NMEAParser(config.get(Config.GPS_URL));
+				break;
+			default:
+				gpsType = GPS_MANUAL;
+				gps = coordinates;
+		}
+	}
 	
 	public static void start () {
 		mainMenu = new MainMenu();

@@ -8,8 +8,16 @@ public class Config {
 
 	private Hashtable values = new Hashtable();
 	private RecordStore store;
+	
+	public static final String GPS_TYPE = "gpsType";
+	public static final String GPS_URL = "gpsConnectionUrl";
+	public static final String REFRESH_INTERVAL = "refreshInterval";
 
 	public void loadDefaults() {
+		values.put(GPS_TYPE, "0");
+		values.put(REFRESH_INTERVAL, "1");
+		
+		values.put("configVersion", "1");
 	}
 
 	public Config(String storename) {
@@ -72,5 +80,11 @@ public class Config {
 
 	public String get(String key) {
 		return (String) values.get(key);
+	}
+	
+	public int getInt (String key) {
+		String val = get(key);
+		try { return Integer.parseInt(val); }
+		catch (NumberFormatException e) { return 0; }
 	}
 }

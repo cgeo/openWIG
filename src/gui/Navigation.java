@@ -82,8 +82,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		}
 		
 		// now we have a point to navigate to. get our heading:
-		heading = ZonePoint.azimuth2angle(-Midlet.heading);
-		double bearing = target.bearing(Midlet.latitude, Midlet.longitude);
+		heading = ZonePoint.azimuth2angle(-Midlet.gps.getHeading());
+		double bearing = target.bearing(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
 		angle = bearing + heading - ZonePoint.PI_2;
 		
 		double dist;
@@ -91,7 +91,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			if (zone.ncontain == Zone.INSIDE) dist = 0;
 			else dist = zone.distance;
 		}
-		else dist = target.distance(Midlet.latitude, Midlet.longitude);
+		else dist = target.distance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
 
 		long part = (long)(dist * 1000);
 		double d = part/1000.0;
@@ -135,7 +135,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	
 	public void run () {
 		while (running) {
-			try { Thread.sleep(1000); } catch (Exception e) { }
+			try { Thread.sleep(200); } catch (Exception e) { }
 			updateNavi();
 			repaint();
 		}

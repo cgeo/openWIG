@@ -245,7 +245,6 @@ public class NMEAParser implements Runnable, LocationProvider {
 			latitude = degrees + ((double) minutes + (double) fraction / 10000) / 60;
 			if (param[b].charAt(0) == 'S') latitude = -latitude;
 			friendlyLatitude = param[b].charAt(0) + " " + degrees + "° " + minutes + "." + friendlyFraction;
-			Midlet.latitude = latitude;
 		}
 		if (param[c].length() > 9 && param[d].length() == 1) {
 			degrees = Integer.parseInt(param[c].substring(0, 3));
@@ -256,7 +255,6 @@ public class NMEAParser implements Runnable, LocationProvider {
 			longitude = degrees + ((double) minutes + (double) fraction / 10000) / 60;
 			if (param[d].charAt(0) == 'W') longitude = -longitude;
 			friendlyLongitude = param[d].charAt(0) + " " + degree2 + "° " + minutes + "." + friendlyFraction;
-			Midlet.longitude = longitude;
 		}
 		if (param[e].length() > 5) {
 			hour = Integer.parseInt(param[e].substring(0, 2));
@@ -359,7 +357,7 @@ public class NMEAParser implements Runnable, LocationProvider {
 					speed = 0;
 				}
 				if (param[8].length() > 0) {
-					Midlet.heading = heading = Double.parseDouble(param[8]);
+					heading = Double.parseDouble(param[8]);
 				}
 			}
 		} else if (param[0].equals("$GPGGA")) {
@@ -374,7 +372,6 @@ public class NMEAParser implements Runnable, LocationProvider {
 				fixSatellites = Integer.parseInt(param[7]);
 				if (param[9].length() > 0) {
 					altitude = Double.parseDouble(param[9]);
-					Midlet.altitude = altitude;
 				}
 			}
 		} else if (param[0].equals("$GPGSA")) {

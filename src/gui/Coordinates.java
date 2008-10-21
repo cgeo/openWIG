@@ -1,15 +1,19 @@
 package gui;
 
+import gps.LocationProvider;
 import gps.NMEAParser;
 import javax.microedition.lcdui.*;
 import javax.bluetooth.*;
 import net.benhui.btgallery.bluelet.BLUElet;
 import openwig.Engine;
 
-public class Coordinates extends Form implements CommandListener, Pushable, Runnable {
+public class Coordinates extends Form implements CommandListener, Pushable, Runnable, LocationProvider {
 	
 	private TextField latitude = new TextField("latitude", null, 99, TextField.DECIMAL);
 	private TextField longitude = new TextField("longitude", null, 99, TextField.DECIMAL);
+	
+	private double lat = 0;
+	private double lon = 0;
 	
 	private StringItem lblGps = new StringItem("GPS: ", null);
 	private StringItem lblLat = new StringItem("\nLatitude: ", null);
@@ -25,13 +29,6 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private static Command CMD_GPS_ON = new Command("Zapnout GPS", Command.SCREEN, 5);
 	private static Command CMD_GPS_OFF = new Command("Vypnout GPS", Command.SCREEN, 5);
 	private static Command CMD_REPOSITION = new Command("Reposition", Command.SCREEN, 6);
-	
-	private static final int MODE_MANUAL = 0;
-	private static final int MODE_GPS = 1;
-	private static final int MODE_BLUETOOTH = 1;
-	private static final int MODE_SERIAL = 2;
-	private static final int MODE_INTERNAL = 3;
-	private int mode = MODE_MANUAL;
 	
 	private BLUElet bluelet;
 	private static NMEAParser gpsParser;
@@ -50,16 +47,15 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		super("souøadnice");
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
-		setMode(mode);
+		setMode();
 		prepare();
 	}
 	
-	private void setMode (int m) {
-		mode = m;
+	private void setMode () {
 		deleteAll();
 		append(lblGps);
-		switch (mode) {
-			case MODE_MANUAL:
+		switch (Midlet.gpsType) {
+			case Midlet.GPS_MANUAL:
 				removeCommand(CMD_GPS_OFF);
 				removeCommand(CMD_REPOSITION);
 				addCommand(CMD_SET);
@@ -67,7 +63,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				append(latitude);
 				append(longitude);
 				break;
-			case MODE_GPS:
+			default:
 				removeCommand(CMD_SET);
 				removeCommand(CMD_GPS_ON);
 				addCommand(CMD_GPS_OFF);
@@ -145,8 +141,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 			lblAlt.setText(null);
 		}
 		if (Engine.shifted) {
-			lblLatR.setText(String.valueOf(Midlet.latitude + Engine.diff.latitude));
-			lblLonR.setText(String.valueOf(Midlet.longitude + Engine.diff.longitude));
+			lblLatR.setText(String.valueOf(Midlet.gps.getLatitude() + Engine.diff.latitude));
+			lblLonR.setText(String.valueOf(Midlet.gps.getLongitude() + Engine.diff.longitude));
 		}
 	}
 
@@ -161,6 +157,12 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		if (gpsParser != null) gpsParser.close();
 		gpsParser = null;
 	}
+	
+	public double getLatitude() { return lat; }
+	public double getLongitude() { return lon; }
+	public double getAltitude() { return 100; }
+	public double getHeading() { return 0; }
+	public double getPrecision() { return 1; }
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == this) {
@@ -168,12 +170,10 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				startGPS();
 			} else if (cmd == CMD_GPS_OFF) {
 				stopGPS();
-				 setMode(MODE_MANUAL);
 				prepare();
 			} else if (cmd == CMD_SET) {
-				Midlet.latitude = Double.parseDouble(latitude.getString());
-				Midlet.longitude = Double.parseDouble(longitude.getString());
-				Midlet.altitude = 0;
+				lat = Double.parseDouble(latitude.getString());
+				lon = Double.parseDouble(longitude.getString());
 			} else if (cmd == CMD_REPOSITION) {
 				Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
 				prepare();
@@ -183,7 +183,6 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		} else if (bluelet != null && disp == bluelet.getUI()) {
 			if (cmd == BLUElet.SELECTED) {
 				Midlet.pop(bluelet.getUI());
-				setMode(MODE_GPS);
 				gpsStatus = GPS_SEARCHING;
 				prepare();
 			} else if (cmd == BLUElet.COMPLETED) {
@@ -214,7 +213,6 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void gpsDisconnected () {
 		gpsStatus = GPS_OFF;
-		setMode(MODE_MANUAL);
 		prepare();
 	}
 	
@@ -234,4 +232,12 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		gpsError.setCommandListener(this);
 		Midlet.display.setCurrent(gpsError);
 	}
+
+	public int getState() {
+		return LocationProvider.ONLINE;
+	}
+
+	public void connect() { }
+
+	public void disconnect() { }
 }
