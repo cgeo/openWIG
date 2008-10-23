@@ -15,19 +15,19 @@ import util.Config;
 public class Midlet extends MIDlet implements CommandListener {
 	
 	public static Coordinates coordinates;
+	public static Options options;
 	public static Zones zones;
 	public static Things inventory, surroundings;
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
-	
-	public static TextBox filename;
+
 	private static String sourceUrl = "file:///e:/Other/penguin_escape.gwc";
 //	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
 	
 	private static List baseMenu;
 	private static final int MNU_START = 0;
 	private static final int MNU_GPS = 1;
-	private static final int MNU_FILE = 2;
+	private static final int MNU_OPTIONS = 2;
 	private static final int MNU_END = 3;
 	
 	public static final int MAINSCREEN = 0;
@@ -72,19 +72,15 @@ public class Midlet extends MIDlet implements CommandListener {
 		baseMenu = new List("menu", List.IMPLICIT);
 		baseMenu.append("Start", null);
 		baseMenu.append("GPS", null);
-		baseMenu.append("Select file", null);
+		baseMenu.append("Options", null);
 		baseMenu.append("Quit", null);
 		baseMenu.setSelectCommand(CMD_SELECT);
 		baseMenu.setCommandListener(this);
 		
 		coordinates = new Coordinates();
+		options = new Options();
 		
 		resetGps();
-		
-		filename = new TextBox("enter full resource path", "", 1000, TextField.URL);
-		filename.setCommandListener(this);
-		filename.addCommand(new Command("OK", Command.SCREEN, 1));
-		filename.addCommand(CMD_BACK);
 		
 		push(baseMenu);
 	}
@@ -116,9 +112,8 @@ public class Midlet extends MIDlet implements CommandListener {
 						push(coordinates);
 						break;
 						
-					case MNU_FILE:
-						filename.setString(sourceUrl);
-						push(filename);
+					case MNU_OPTIONS:
+						push(options);
 						break;
 						
 					case MNU_END:
@@ -126,11 +121,6 @@ public class Midlet extends MIDlet implements CommandListener {
 						break;
 				}
 			}
-		} else if (disp == filename) {
-			if (cmd.getCommandType() == Command.SCREEN) {
-				sourceUrl = filename.getString();
-			}
-			pop(filename);
 		} else if (cmd.getCommandType() == Command.EXIT) {
 			destroyApp(false);
 		}
@@ -219,8 +209,11 @@ public class Midlet extends MIDlet implements CommandListener {
 			case GPS_MANUAL:
 				gps = coordinates;
 				break;
-			case GPS_SERIAL: case GPS_BLUETOOTH:
-				gps = new NMEAParser(config.get(Config.GPS_URL));
+			case GPS_SERIAL:
+				gps = new NMEAParser("comm:"+config.get(Config.GPS_SERIAL_PORT)+";baudrate=9600");
+				break;
+			case GPS_BLUETOOTH:
+				gps = new NMEAParser(config.get(Config.GPS_BT_URL));
 				break;
 			default:
 				gpsType = GPS_MANUAL;

@@ -10,7 +10,9 @@ public class Config {
 	private RecordStore store;
 	
 	public static final String GPS_TYPE = "gpsType";
-	public static final String GPS_URL = "gpsConnectionUrl";
+	public static final String GPS_BT_URL = "gpsBluetoothUrl";
+	public static final String GPS_BT_NAME = "gpsBluetoothName";
+	public static final String GPS_SERIAL_PORT = "gpsSerialPort";
 	public static final String REFRESH_INTERVAL = "refreshInterval";
 
 	public void loadDefaults() {
@@ -21,6 +23,7 @@ public class Config {
 	}
 
 	public Config(String storename) {
+		loadDefaults();
 		try {
 			store = RecordStore.openRecordStore(storename, true);
 			if (store.getSize() > 0) {

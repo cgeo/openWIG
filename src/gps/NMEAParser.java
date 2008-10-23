@@ -427,6 +427,20 @@ public class NMEAParser implements Runnable, LocationProvider {
 		for (int i = 0; i < ret.length; i++) ret[i] = (String) v.elementAt(i);
 		return ret;
 	}
+
+	public int getState() {
+		if (fix) return LocationProvider.ONLINE;
+		else return LocationProvider.NO_FIX;
+		// XXX TODO
+	}
+
+	public void connect() {
+		// XXX TODO
+	}
+
+	public void disconnect() {
+		// XXX TODO
+	}
 }
 
 
