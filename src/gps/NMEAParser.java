@@ -35,7 +35,8 @@ public class NMEAParser implements Runnable, LocationProvider {
 	private String communicationURL;
 	protected String nmea;
 	//zdroje dat
-	private Thread thread;
+	private Thread thread = null;
+	private boolean connected = false;
 
 	/**
 	 * Pripojeni k neznamemu zarizeni
@@ -156,8 +157,8 @@ public class NMEAParser implements Runnable, LocationProvider {
 	/**
 	 * Otevreni spojeni z GPSkou
 	 */
-	public void open() {
-		close();
+	public void connect() {
+		disconnect();
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -165,7 +166,7 @@ public class NMEAParser implements Runnable, LocationProvider {
 	/**
 	 * Zavreni spojeni z GPSkou
 	 */
-	public void close() {
+	public void disconnect() {
 		nmeaCount = 0;
 		thread = null;
 	}
@@ -194,6 +195,7 @@ public class NMEAParser implements Runnable, LocationProvider {
 			}
 
 			//uspesne pripojeni
+			connected = true;
 			Midlet.coordinates.gpsConnected();
 
 			//cteni dat
@@ -206,7 +208,7 @@ public class NMEAParser implements Runnable, LocationProvider {
 				while (true) {
 					ch = inputStream.read();
 					if (ch == -1) {
-						throw new IOException("Device stopped supplying navigational data.");
+						throw new IOException("GPS device disconnected.");
 					} else if (ch == '\n') {
 						break;
 					} else {
@@ -224,9 +226,10 @@ public class NMEAParser implements Runnable, LocationProvider {
 		} catch (Throwable e) {
 			Midlet.error("GPS thread died: "+e.toString());
 		} finally {
-			close();
+			disconnect();
 			if (inputStream != null) try { inputStream.close(); } catch (Exception e) {}
 			if (streamConnection != null) try { streamConnection.close(); } catch (Exception e) {}
+			connected = false;
 			Midlet.coordinates.gpsDisconnected();
 		}
 	}
@@ -429,17 +432,10 @@ public class NMEAParser implements Runnable, LocationProvider {
 	}
 
 	public int getState() {
-		if (fix) return LocationProvider.ONLINE;
-		else return LocationProvider.NO_FIX;
-		// XXX TODO
-	}
-
-	public void connect() {
-		// XXX TODO
-	}
-
-	public void disconnect() {
-		// XXX TODO
+		if (thread == null) return LocationProvider.OFFLINE;
+		if (! connected) return LocationProvider.CONNECTING;
+		if (! fix) return LocationProvider.NO_FIX;
+		return LocationProvider.ONLINE;
 	}
 }
 

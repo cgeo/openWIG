@@ -251,6 +251,7 @@ public class BLUElet  implements CommandListener
 
         // tell callback device selected
         display.callSerially(new Worker(ID_DEVICE_SELECTED));
+	remotedeviceui.setMsg("[Scanning device...]");
 
       } catch (BluetoothStateException ex)
       {

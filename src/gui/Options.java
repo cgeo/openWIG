@@ -1,6 +1,9 @@
 package gui;
 
+import java.io.IOException;
 import javax.microedition.lcdui.*;
+import javax.bluetooth.*;
+import net.benhui.btgallery.bluelet.BLUElet;
 import util.Config;
 
 public class Options extends Form implements Pushable, CommandListener,
@@ -22,6 +25,8 @@ public class Options extends Form implements Pushable, CommandListener,
 	private String gpsComPort;
 	private boolean gpsDirty;
 	
+	private BLUElet bluelet;
+	
 	private Command CMD_SAVE = new Command("Save", Command.SCREEN, 2);
 
 	public Options () {
@@ -42,6 +47,11 @@ public class Options extends Form implements Pushable, CommandListener,
 		
 		append(refreshInterval);
 		
+		comPorts = new List("Serial ports", List.IMPLICIT);
+		comPorts.setCommandListener(this);
+		comPorts.setSelectCommand(Midlet.CMD_SELECT);
+		comPorts.addCommand(Midlet.CMD_BACK);
+		
 		setCommandListener(this);
 		addCommand(CMD_SAVE);
 		addCommand(Midlet.CMD_BACK);
@@ -49,7 +59,31 @@ public class Options extends Form implements Pushable, CommandListener,
 
 	public void commandAction(Command cmd, Item it) {
 		if (it == gpsSelect) {
-			Midlet.display.setCurrent(new Alert("ahoj!!"), this);
+			switch (gpsType.getSelectedIndex()) {
+				
+				case Midlet.GPS_SERIAL:
+					String ports = System.getProperty("microedition.commports");
+					if (ports == null || ports.length() == 0) {
+						Midlet.display.setCurrent(new Alert("error","No serial ports found!",null,AlertType.ERROR));
+					} else {
+						comPorts.deleteAll();
+						int pos = 0, ppos = 0;
+						while ((pos = ports.indexOf(',', ppos)) != -1) {
+							comPorts.append(ports.substring(ppos, pos),null);
+							ppos = pos + 1;
+						}
+						comPorts.append(ports.substring(ppos), null);
+						Midlet.push(comPorts);
+					}
+					break;
+					
+				case Midlet.GPS_BLUETOOTH:
+					bluelet = new BLUElet(Midlet.instance, this);
+					bluelet.startApp();
+					Midlet.push(bluelet.getUI());
+					bluelet.startInquiry(DiscoveryAgent.GIAC, new UUID[]{new UUID(0x1101)});
+					break;
+			}
 		}
 	}
 
@@ -57,15 +91,47 @@ public class Options extends Form implements Pushable, CommandListener,
 		if (disp == this) {
 			if (cmd == CMD_SAVE) {
 				int newtype = gpsType.getSelectedIndex();
+				// TODO check valid parameters!
 				if (gpstype != newtype) gpsDirty = true;
 				Midlet.config.set(Config.GPS_TYPE, String.valueOf(newtype));
 				Midlet.config.set(Config.REFRESH_INTERVAL, refreshInterval.getString());
 				if (gpsDirty) {
-					// alert
-					return;
+					// TODO offer reconnection
 				}
+				Midlet.resetGps();
 			}
 			Midlet.pop(this);
+			
+		}  else if (bluelet != null && disp == bluelet.getUI()) {
+			if (cmd == BLUElet.SELECTED) {
+				// do nothing
+			} else if (cmd == BLUElet.COMPLETED) {
+				Midlet.pop(bluelet.getUI());				
+				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
+				bluelet = null;
+				String name;
+				try {
+					name = serviceRecord.getHostDevice().getFriendlyName(false);
+				} catch (IOException e) {
+					name = "(name scan failed)";
+				}
+				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
+				Midlet.config.set(Config.GPS_BT_NAME, name);
+				Midlet.config.set(Config.GPS_BT_URL, url);
+				// XXX this breaks "Save/Back" logic
+				gpsDevice.setText(name);
+			} else if (cmd == BLUElet.BACK) {
+				Midlet.pop(bluelet.getUI());
+				bluelet = null;
+			}
+			
+		} else if (disp == comPorts) {
+			if (cmd == Midlet.CMD_SELECT) {
+				String com = comPorts.getString(comPorts.getSelectedIndex());
+				Midlet.config.set(Config.GPS_SERIAL_PORT, com);
+				gpsDevice.setText(com);
+			}
+			Midlet.pop(comPorts);
 		}
 	}
 

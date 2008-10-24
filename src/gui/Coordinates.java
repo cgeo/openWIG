@@ -1,11 +1,7 @@
 package gui;
 
 import gps.LocationProvider;
-import gps.NMEAParser;
 import javax.microedition.lcdui.*;
-import javax.bluetooth.*;
-import net.benhui.btgallery.bluelet.BLUElet;
-import openwig.Engine;
 
 public class Coordinates extends Form implements CommandListener, Pushable, Runnable, LocationProvider {
 	
@@ -20,35 +16,19 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private StringItem lblLon = new StringItem("\nLongitude: ", null);
 	private StringItem lblAlt = new StringItem("\nAltitude: ", null);
 	
-	private StringItem lblRepos = new StringItem(null, "\n-- repositioned --");
-	private StringItem lblLatR = new StringItem("\nLatitude: ", null);
-	private StringItem lblLonR = new StringItem("\nLongitude: ", null);
+	private static Command CMD_SET = new Command("Set", Command.SCREEN, 0);
 	
-	private static Command CMD_SET = new Command("Nastavit", Command.SCREEN, 0);
-	
-	private static Command CMD_GPS_ON = new Command("Zapnout GPS", Command.SCREEN, 5);
-	private static Command CMD_GPS_OFF = new Command("Vypnout GPS", Command.SCREEN, 5);
-	private static Command CMD_REPOSITION = new Command("Reposition", Command.SCREEN, 6);
-	
-	private BLUElet bluelet;
-	private static NMEAParser gpsParser;
+	private static Command CMD_GPS_ON = new Command("Connect", Command.SCREEN, 5);
+	private static Command CMD_GPS_OFF = new Command("Disconnect", Command.SCREEN, 5);
 	
 	private Alert gpsError;
-	
-	private static int gpsStatus = 0;
-	
-	private static final int GPS_OFF = 0;
-	private static final int GPS_SEARCHING = 1;
-	private static final int GPS_LOCKING = 2;
-	private static final int GPS_ON = 3;
-	private static String[] states = { "offline", "p¯ipojuje se", "zjiöùuje pozici", "online" };
+
+	private static String[] states = { "offline", "connecting", "no fix", "online" };
 	
 	public Coordinates () {
-		super("sou¯adnice");
+		super("GPS");
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
-		setMode();
-		prepare();
 	}
 	
 	private void setMode () {
@@ -56,18 +36,16 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		append(lblGps);
 		switch (Midlet.gpsType) {
 			case Midlet.GPS_MANUAL:
+				removeCommand(CMD_GPS_ON);
 				removeCommand(CMD_GPS_OFF);
-				removeCommand(CMD_REPOSITION);
 				addCommand(CMD_SET);
-				addCommand(CMD_GPS_ON);
 				append(latitude);
 				append(longitude);
 				break;
 			default:
 				removeCommand(CMD_SET);
-				removeCommand(CMD_GPS_ON);
+				addCommand(CMD_GPS_ON);
 				addCommand(CMD_GPS_OFF);
-				addCommand(CMD_REPOSITION);
 				append(lblLat);
 				append(lblLon);
 				append(lblAlt);
@@ -76,14 +54,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	}
 	
 	public void prepare () {
-		if (Engine.shifted) {
-			removeCommand(CMD_REPOSITION);
-			append(lblRepos);
-			append(lblLatR);
-			append(lblLonR);
-		}
-		
-		if (gpsStatus == GPS_ON) {
+		setMode();
+		if (Midlet.gps != this && Midlet.gps.getState() == LocationProvider.ONLINE) {
 			start();
 		} else {
 			stop();
@@ -126,36 +98,51 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		}
 	}
 	
+	private String makeFriendlyAngle (double angle) {
+		boolean neg = false; 
+		if (angle < 0) {
+			neg = true;
+			angle *= -1;
+		}
+		double degrees = Math.floor(angle);
+		angle = (angle - degrees) * 60;
+		String an = String.valueOf(angle);
+		if (an.indexOf('.') != -1)
+			an = an.substring(0, Math.min(an.length(), an.indexOf('.') + 5));
+		return (neg ? "- " : "+ ") + String.valueOf(degrees) + "∞ " + an;
+	}
+	
+	private String makeFriendlyLat (double angle) {
+		return makeFriendlyAngle(angle).replace('+', 'N').replace('-', 'S');
+	}
+	
+	private String makeFriendlyLon (double angle) {
+		return makeFriendlyAngle(angle).replace('+', 'E').replace('-', 'W');
+	}
+	
 	private void updateScreen () {
-		lblGps.setText(states[gpsStatus]);
-		if (gpsStatus == GPS_ON) {
-			lblLat.setText(gpsParser.getFriendlyLatitude());
-			lblLon.setText(gpsParser.getFriendlyLongitude());
-			lblAlt.setText(String.valueOf(gpsParser.getAltitude()));
+		lblGps.setText(states[Midlet.gps.getState()]);
+		if (Midlet.gps == this) return;
+		if (Midlet.gps.getState() == LocationProvider.ONLINE) {
+			lblLat.setText(makeFriendlyLat(Midlet.gps.getLatitude()));
+			lblLon.setText(makeFriendlyLon(Midlet.gps.getLongitude()));
+			lblAlt.setText(String.valueOf(Midlet.gps.getAltitude()));
 			
-			latitude.setString(shortenNokiaDecimal(gpsParser.getLatitude()));
-			longitude.setString(shortenNokiaDecimal(gpsParser.getLongitude()));
+			latitude.setString(shortenNokiaDecimal(Midlet.gps.getLatitude()));
+			longitude.setString(shortenNokiaDecimal(Midlet.gps.getLongitude()));
 		} else {
 			lblLat.setText(null);
 			lblLon.setText(null);
 			lblAlt.setText(null);
 		}
-		if (Engine.shifted) {
-			lblLatR.setText(String.valueOf(Midlet.gps.getLatitude() + Engine.diff.latitude));
-			lblLonR.setText(String.valueOf(Midlet.gps.getLongitude() + Engine.diff.longitude));
-		}
 	}
 
 	private void startGPS() {
-		bluelet = new BLUElet(Midlet.instance, this);
-		bluelet.startApp();
-		Midlet.push(bluelet.getUI());
-		bluelet.startInquiry(DiscoveryAgent.GIAC, new UUID[]{new UUID(0x1101)});
+		Midlet.gps.connect();
 	}
 
 	private void stopGPS() {
-		if (gpsParser != null) gpsParser.close();
-		gpsParser = null;
+		Midlet.gps.disconnect();
 	}
 	
 	public double getLatitude() { return lat; }
@@ -174,31 +161,12 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 			} else if (cmd == CMD_SET) {
 				lat = Double.parseDouble(latitude.getString());
 				lon = Double.parseDouble(longitude.getString());
-			} else if (cmd == CMD_REPOSITION) {
-				Engine.reposition(gpsParser.getLatitude(), gpsParser.getLongitude(), gpsParser.getAltitude());
-				prepare();
 			} else if (cmd == Midlet.CMD_BACK) {
 				Midlet.pop(this);
 			}
-		} else if (bluelet != null && disp == bluelet.getUI()) {
-			if (cmd == BLUElet.SELECTED) {
-				Midlet.pop(bluelet.getUI());
-				gpsStatus = GPS_SEARCHING;
-				prepare();
-			} else if (cmd == BLUElet.COMPLETED) {
-				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
-				bluelet = null;
-				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
-				gpsParser = new NMEAParser(url);
-				gpsParser.open();
-			} else if (cmd == BLUElet.BACK) {
-				Midlet.pop(bluelet.getUI());
-				bluelet = null;
-			}
 		} else if (disp == gpsError) {
 			if (cmd.getCommandType() == Command.OK) {
-				gpsStatus = GPS_SEARCHING;
-				gpsParser.open();
+				Midlet.gps.connect();
 				Midlet.display.setCurrent(Midlet.getCurrentScreen());
 			} else {
 				Midlet.showScreen(Midlet.COORDSCREEN, null);
@@ -207,18 +175,14 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	}
 	
 	public void gpsConnected () {
-		gpsStatus = GPS_LOCKING;
 		updateScreen();
 	}
 	
 	public void gpsDisconnected () {
-		gpsStatus = GPS_OFF;
 		prepare();
 	}
 	
 	public void fixChanged (boolean fix) {
-		if (fix) gpsStatus = GPS_ON;
-		else gpsStatus = GPS_LOCKING;
 		prepare();
 	}
 	

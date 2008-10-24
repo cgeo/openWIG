@@ -26,7 +26,7 @@ public class Config {
 		loadDefaults();
 		try {
 			store = RecordStore.openRecordStore(storename, true);
-			if (store.getSize() > 0) {
+			if (store.getNumRecords() > 0) {
 				fetchValues();
 			}
 		} catch (RecordStoreException e) {
@@ -37,7 +37,7 @@ public class Config {
 	private void fetchValues() {
 		if (store == null) return;
 		try {
-			byte[] r = store.getRecord(0);
+			byte[] r = store.getRecord(1);
 			String record = new String(r);
 			int si = 0;
 			int idx;
@@ -66,8 +66,8 @@ public class Config {
 				rep.append('\n');
 			}
 			byte[] data = rep.toString().getBytes();
-			if (store.getSize() > 0) {
-				store.setRecord(0, data, 0, data.length);
+			if (store.getNumRecords() > 0) {
+				store.setRecord(1, data, 0, data.length);
 			} else {
 				store.addRecord(data, 0, data.length);
 			}

@@ -57,8 +57,6 @@ public class Engine implements Runnable {
 			closure = null;
 			
 			player.setCompletionCode(gwcfile.code);
-						
-			origPos = new ZonePoint(player.position);
 					
 			Midlet.start();
 
@@ -131,17 +129,7 @@ public class Engine implements Runnable {
 		cc.start();
 	}
 	
-	private static ZonePoint origPos;
 	public static ZonePoint diff;
-	public static boolean shifted = false;
-	
-	public static void reposition(double lat, double lon, double alt) {
-		if (origPos == null) return;
-		if (shifted) return;
-		shifted = true;
-		diff = new ZonePoint(origPos.latitude - lat, origPos.longitude - lon, 0);
-		instance.cartridge.reposition(diff);
-	}
 	
 	public static byte[] mediaFile (Media media) throws Exception {
 		/*String filename = media.jarFilename();
