@@ -8,6 +8,7 @@ import openwig.Media;
 import openwig.Thing;
 import openwig.Task;
 import openwig.Zone;
+import util.Config;
 
 public class Details extends Form implements CommandListener, Pushable, Runnable {
 	
@@ -97,7 +98,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		switch (z.contain) {
 			case Zone.DISTANT: ss = "distant"; break;
 			case Zone.PROXIMITY: ss = "proximity"; break;
-			case Zone.INSIDE: ss = "uvnitø"; break;
+			case Zone.INSIDE: ss = "inside"; break;
 		}
 		state.setText(ss);
 		
@@ -123,7 +124,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	public void run () {
 		while (running) {
-			try { Thread.sleep(5000); } catch (Exception e) { }
+			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }
 			updateNavi();
 		}
 	}
