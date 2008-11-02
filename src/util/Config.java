@@ -14,6 +14,8 @@ public class Config {
 	public static final String GPS_BT_NAME = "gpsBluetoothName";
 	public static final String GPS_SERIAL_PORT = "gpsSerialPort";
 	public static final String REFRESH_INTERVAL = "refreshInterval";
+	
+	public static final String LAST_DIRECTORY = "lastDirectory";
 
 	public void loadDefaults() {
 		values.put(GPS_TYPE, "0");

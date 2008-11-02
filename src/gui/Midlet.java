@@ -20,6 +20,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Things inventory, surroundings;
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
+	public static Browser browser;
 
 	private static String sourceUrl = "file:///e:/Other/penguin_escape.gwc";
 //	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
@@ -79,6 +80,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		
 		coordinates = new Coordinates();
 		options = new Options();
+		browser = new Browser();
 		
 		resetGps();
 		
@@ -98,7 +100,7 @@ public class Midlet extends MIDlet implements CommandListener {
 			if (cmd == CMD_SELECT) {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
-						Form f = new Form("splash");
+						/*Form f = new Form("splash");
 						f.append(new StringItem(null, "Starting..."));
 						f.addCommand(CMD_EXIT);
 						f.setCommandListener(this);
@@ -106,6 +108,8 @@ public class Midlet extends MIDlet implements CommandListener {
 
 						Thread t = new Thread(new Engine(sourceUrl));
 						t.start();
+						break;*/
+						push(browser);
 						break;
 						
 					case MNU_GPS:
