@@ -1,6 +1,5 @@
 package gui;
 
-import java.io.InputStream;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.EventTable;
@@ -16,11 +15,11 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 1);
 	
 	private StringItem description = new StringItem(null, null);
-	private StringItem state = new StringItem("Stav: ", null);
-	private StringItem distance = new StringItem("Vzdál.: ", null);
+	private StringItem state = new StringItem("State: ", null);
+	private StringItem distance = new StringItem("Distance: ", null);
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
 	
-	static String[] taskStates = { "nesplnìno", "hotovo", "neúspìch" };
+	private static final String[] taskStates = { "pending", "finished", "failed" };
 	
 	private EventTable thing;
 	private Things parent;
@@ -94,10 +93,10 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	private void updateNavi () {
 		Zone z = (Zone)thing;
-		String ss = "(nic)";
+		String ss = "(nothing)";
 		switch (z.contain) {
 			case Zone.DISTANT: ss = "distant"; break;
-			case Zone.PROXIMITY: ss = "proximity"; break;
+			case Zone.PROXIMITY: ss = "near"; break;
 			case Zone.INSIDE: ss = "inside"; break;
 		}
 		state.setText(ss);

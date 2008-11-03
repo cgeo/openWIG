@@ -1,5 +1,6 @@
 package gui;
 
+import gwc.CartridgeFile;
 import java.io.*;
 import java.util.*;
 import javax.microedition.io.Connector;
@@ -11,6 +12,9 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 
 	private Hashtable cache = new Hashtable(10);
 	private String currentPath;
+	private String chdir = null;
+	private boolean up = true;
+	private String openFile = null;
 
 	public Browser() {
 		super("file browser", List.IMPLICIT);
@@ -29,7 +33,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	public void chdir(String where) {
 		System.out.println("chdir "+where);
 		try {
-			FileConnection fc = (FileConnection)Connector.open("file:///"+currentPath, Connector.READ);
+			FileConnection fc = (FileConnection)Connector.open("file:///"+where, Connector.READ);
 			if (fc.isDirectory()) {
 				Enumeration list = fc.list();
 				deleteAll();
@@ -44,8 +48,8 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	}
 
 	public void listRoot() {
-		deleteAll();
 		Enumeration roots = FileSystemRegistry.listRoots();
+		deleteAll();
 		while (roots.hasMoreElements()) {
 			String root = roots.nextElement().toString();
 			append(root, null);
@@ -64,10 +68,45 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 
 	synchronized public void run() {
 		while (thread != null) {
+			
+			try {
+				if (up) {
+					if ("".equals(currentPath) || currentPath.lastIndexOf('/', currentPath.length() - 2) == -1) {
+						listRoot();
+						currentPath = "";
+					} else {
+						String below = currentPath.substring(0, currentPath.lastIndexOf('/', currentPath.length() - 2)) + "/";
+						chdir(below);
+						currentPath = below;
+					}
+					up = false;
+				}
+
+				if (chdir != null) {
+					String newpath = currentPath + chdir;
+					chdir(newpath);
+					currentPath = newpath;
+					chdir = null;
+				}
+
+				if (openFile != null) {
+					String file = "file:///" + currentPath + openFile;
+					try {
+						CartridgeFile cf = CartridgeFile.read(file);
+						Midlet.push(new CartridgeDetails(cf));
+						stop();
+					} catch (IOException e) {
+						Midlet.error("Failed to load cartridge:\n" + e.getMessage());
+					}
+					openFile = null;
+				}
+			} catch (SecurityException e) {
+				Midlet.error("you need to allow me to access your files!");
+			}
+			
 			setTitle(currentPath);
-			if (currentPath.length() == 0) listRoot();
-			else chdir(currentPath);
-			if (Midlet.display.getCurrent() != this) { stop(); break; }
+
+			System.out.println("tick");
 			try { wait(); } catch (InterruptedException e) { }
 		}
 	}
@@ -80,10 +119,11 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 		} else if (cmd == Midlet.CMD_SELECT) {
 			String sel = getString(getSelectedIndex());
 			if ("..".equals(sel)) {
-				if (currentPath.lastIndexOf('/', currentPath.length()-2) == -1) currentPath = "";
-				else currentPath = currentPath.substring(0, currentPath.lastIndexOf('/', currentPath.length()-2)) + "/";
+				up = true;
+			} else if (sel.endsWith("/")) {
+				chdir = sel;
 			} else {
-				currentPath += sel;
+				openFile = sel;
 			}
 			notify();
 		}

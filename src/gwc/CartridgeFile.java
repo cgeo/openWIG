@@ -25,8 +25,8 @@ public class CartridgeFile {
 	
 	private CartridgeFile() { }
 	
-	private void resetSource()
-	throws Exception {
+	private void resetSource() 
+	throws IOException {
 		if (source != null) source.close();
 		if (file != null) 
 			source = new GwcInput(file.openInputStream());
@@ -42,12 +42,12 @@ public class CartridgeFile {
 	}
 	
 	public static CartridgeFile read(String what)
-	throws Exception {
+	throws IOException {
 		CartridgeFile cf = new CartridgeFile();
 		if (what.startsWith("resource:")) {
 			String url = what.substring(9);
 			if (cf.getClass().getResourceAsStream(url) == null)
-				throw new Exception("resource not found");
+				throw new IOException("resource not found");
 			cf.connectionUrl = url;
 		} else if (what.startsWith("file:")) {
 			cf.file = (FileConnection)Connector.open(what, Connector.READ);
@@ -56,7 +56,7 @@ public class CartridgeFile {
 		}
 		
 		cf.resetSource();
-		if (!cf.fileOk()) throw new Exception("invalid cartridge file");
+		if (!cf.fileOk()) throw new IOException("invalid cartridge file");
 		
 		cf.scanOffsets();
 		cf.scanHeader();

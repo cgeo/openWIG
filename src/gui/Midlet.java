@@ -1,6 +1,7 @@
 package gui;
 
 import gps.*;
+import gwc.CartridgeFile;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
@@ -100,15 +101,6 @@ public class Midlet extends MIDlet implements CommandListener {
 			if (cmd == CMD_SELECT) {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
-						/*Form f = new Form("splash");
-						f.append(new StringItem(null, "Starting..."));
-						f.addCommand(CMD_EXIT);
-						f.setCommandListener(this);
-						Display.getDisplay(this).setCurrent(f);
-
-						Thread t = new Thread(new Engine(sourceUrl));
-						t.start();
-						break;*/
 						push(browser);
 						break;
 						
@@ -126,7 +118,7 @@ public class Midlet extends MIDlet implements CommandListener {
 				}
 			}
 		} else if (cmd.getCommandType() == Command.EXIT) {
-			destroyApp(false);
+			end();
 		}
 	}
 	
@@ -225,12 +217,27 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 	}
 	
+	public static void loadCartridge (CartridgeFile cf) {
+		Form f = new Form("splash");
+		f.append(new StringItem(null, "Starting..."));
+		f.addCommand(CMD_EXIT);
+		f.setCommandListener(instance);
+		Display.getDisplay(instance).setCurrent(f);
+
+		Thread t = new Thread(new Engine(cf));
+		t.start();
+	}
+	
 	public static void start () {
 		mainMenu = new MainMenu();
 		zones = new Zones();
 		inventory = new Things("Inventory", Things.INVENTORY);
 		surroundings = new Things("You see", Things.SURROUNDINGS);
 		tasks = new Tasks();
+		synchronized (Midlet.class) {
+			popCurrentDialog();
+			while (currentScreen != baseMenu) pop(currentScreen);
+		}
 		push(mainMenu);
 	}
 	
