@@ -10,6 +10,7 @@ public class Distance {
 	public static Hashtable conversions = new Hashtable(2);
 	static {
 		conversions.put("feet", new Double(0.3048));
+		conversions.put("ft", new Double(0.3048));
 		conversions.put("miles", new Double(1609.344));
 		conversions.put("meters", new Double(1));
 		conversions.put("kilometers", new Double(1000));
@@ -50,7 +51,7 @@ public class Distance {
 			Distance z = (Distance) frame.get(0);
 			String unit = (String) frame.get(1);
 			frame.push(LuaState.toDouble(z.getValue(unit)));
-			return 0;
+			return 1;
 		}
 
 		public int call(LuaCallFrame callFrame, int nArguments) {

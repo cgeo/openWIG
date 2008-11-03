@@ -264,7 +264,7 @@ public class LuaInterface implements JavaFunction {
 	private int translatePoint (LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for TranslatePoint");
 		ZonePoint z = (ZonePoint)callFrame.get(0);
-		double dist = LuaState.fromDouble(callFrame.get(1));
+		Distance dist = (Distance)callFrame.get(1);
 		double angle = LuaState.fromDouble(callFrame.get(2));
 		callFrame.push(z.translate(angle, dist));
 		return 1;

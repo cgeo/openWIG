@@ -110,10 +110,11 @@ public class ZonePoint {
 		altitude = new Distance(alt,"metres");
 	}
 	
-	public ZonePoint translate (double angle, double distance) {
+	public ZonePoint translate (double angle, Distance distance) {
+		double dist = distance.value;
 		double rad = angle * PI_180;
-		double x = m2lat(distance * Math.sin(rad));
-		double y = m2lon(latitude, distance * Math.cos(rad));
+		double x = m2lat(dist * Math.sin(rad));
+		double y = m2lon(latitude, dist * Math.cos(rad));
 		return new ZonePoint(latitude + x, longitude + y, altitude);
 	}
 	

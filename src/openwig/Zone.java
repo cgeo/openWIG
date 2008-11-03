@@ -70,12 +70,12 @@ public class Zone extends Container {
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
 		} else if (key == "DistanceRange" && value instanceof Distance) {
-			distanceRange = ((Distance)value).getValue("metres");
-			if (distanceRange == -1 && contain == NOWHERE) {
+			distanceRange = ((Distance)value).getValue("meters");
+			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
 		} else if (key == "ProximityRange" && value instanceof Distance) {
-			proximityRange = ((Distance)value).getValue("metres");
+			proximityRange = ((Distance)value).getValue("meters");
 		} else if (key == "ShowObjects") {
 			String v = (String)value;
 			if (v == "Always") {
@@ -181,7 +181,7 @@ public class Zone extends Container {
 
 		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;
 		else if (distance < proximityRange) ncontain = PROXIMITY;
-		else if (distance < distanceRange || distanceRange == -1) ncontain = DISTANT;
+		else if (distance < distanceRange || distanceRange < 0) ncontain = DISTANT;
 		else ncontain = NOWHERE;
 		tick();
 	}
