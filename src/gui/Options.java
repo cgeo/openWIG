@@ -1,9 +1,7 @@
 package gui;
 
-import java.io.IOException;
 import javax.microedition.lcdui.*;
-import javax.bluetooth.*;
-import net.benhui.btgallery.bluelet.BLUElet;
+import util.BluetoothOptions;
 import util.Config;
 
 public class Options extends Form implements Pushable, CommandListener,
@@ -14,7 +12,7 @@ public class Options extends Form implements Pushable, CommandListener,
 	
 	// gps type
 	private ChoiceGroup gpsType = new ChoiceGroup("GPS type", Choice.EXCLUSIVE);
-	private StringItem gpsDevice = new StringItem("Device:", "...");
+	public StringItem gpsDevice = new StringItem("Device:", "...");
 	private StringItem gpsSelect = new StringItem(null, "Choose...", StringItem.HYPERLINK);
 	
 	// COM port list
@@ -25,7 +23,7 @@ public class Options extends Form implements Pushable, CommandListener,
 	private String gpsComPort;
 	private boolean gpsDirty;
 	
-	private BLUElet bluelet;
+	private BluetoothOptions btOptions = null;
 	
 	private Command CMD_SAVE = new Command("Save", Command.SCREEN, 2);
 
@@ -55,6 +53,12 @@ public class Options extends Form implements Pushable, CommandListener,
 		setCommandListener(this);
 		addCommand(CMD_SAVE);
 		addCommand(Midlet.CMD_BACK);
+		
+		try {
+			btOptions = new BluetoothOptions();
+		} catch (NoClassDefFoundError e) {
+			btOptions = null;
+		}
 	}
 
 	public void commandAction(Command cmd, Item it) {
@@ -78,10 +82,11 @@ public class Options extends Form implements Pushable, CommandListener,
 					break;
 					
 				case Midlet.GPS_BLUETOOTH:
-					bluelet = new BLUElet(Midlet.instance, this);
-					bluelet.startApp();
-					Midlet.push(bluelet.getUI());
-					bluelet.startInquiry(DiscoveryAgent.GIAC, new UUID[]{new UUID(0x1101)});
+					if (btOptions != null) {
+						btOptions.startInquiry();
+					} else {
+						Midlet.display.setCurrent(new Alert("error","Your device won't let me use bluetooth!",null,AlertType.ERROR));
+					}
 					break;
 			}
 		}
@@ -101,29 +106,6 @@ public class Options extends Form implements Pushable, CommandListener,
 				Midlet.resetGps();
 			}
 			Midlet.pop(this);
-			
-		}  else if (bluelet != null && disp == bluelet.getUI()) {
-			if (cmd == BLUElet.SELECTED) {
-				// do nothing
-			} else if (cmd == BLUElet.COMPLETED) {
-				Midlet.pop(bluelet.getUI());				
-				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
-				bluelet = null;
-				String name;
-				try {
-					name = serviceRecord.getHostDevice().getFriendlyName(false);
-				} catch (IOException e) {
-					name = "(name scan failed)";
-				}
-				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
-				Midlet.config.set(Config.GPS_BT_NAME, name);
-				Midlet.config.set(Config.GPS_BT_URL, url);
-				// XXX this breaks "Save/Back" logic
-				gpsDevice.setText(name);
-			} else if (cmd == BLUElet.BACK) {
-				Midlet.pop(bluelet.getUI());
-				bluelet = null;
-			}
 			
 		} else if (disp == comPorts) {
 			if (cmd == Midlet.CMD_SELECT) {
