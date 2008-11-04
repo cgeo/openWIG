@@ -131,6 +131,7 @@ public class LuaInterface implements JavaFunction {
 			case GETINPUT: return getinput(callFrame, nArguments);
 			case SHOWSCREEN: return showscreen(callFrame, nArguments);
 			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
+			case AUDIO: return playAudio(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -268,5 +269,11 @@ public class LuaInterface implements JavaFunction {
 		double angle = LuaState.fromDouble(callFrame.get(2));
 		callFrame.push(z.translate(angle, dist));
 		return 1;
+	}
+
+	private int playAudio (LuaCallFrame callFrame, int nArguments) {
+		Media m = (Media)callFrame.get(0);
+		m.play();
+		return 0;
 	}
 }

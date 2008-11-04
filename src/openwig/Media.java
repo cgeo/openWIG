@@ -1,5 +1,6 @@
 package openwig;
 
+import java.io.ByteArrayInputStream;
 import se.krka.kahlua.vm.*;
 
 public class Media extends EventTable {
@@ -29,11 +30,25 @@ public class Media extends EventTable {
 			for (int i = 1; i <= n; i++) {
 				LuaTable res = (LuaTable)lt.rawget(new Double(i));
 				type = (String)res.rawget("Type");
+				type = type.toLowerCase().intern();
 			}
 		} else super.setItem(key, value);
 	}
 	
 	public String jarFilename () {
 		return String.valueOf(id)+"."+(type==null ? "" : type);
+	}
+	
+	public void play () {
+		try {
+			ByteArrayInputStream bis = new ByteArrayInputStream(Engine.mediaFile(this));
+			String mime = null;
+			if (type == "wav") mime = "audio/x-wav";
+			else if (type == "mp3") mime = "audio/mpeg";
+			javax.microedition.media.Player p = javax.microedition.media.Manager.createPlayer(bis,mime);
+			p.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
