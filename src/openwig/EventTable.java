@@ -107,8 +107,10 @@ public class EventTable {
 			try {
 				Object o = table.rawget(name.intern());
 				if (o instanceof LuaClosure) {
+					System.out.println(this.name + "." + name);
 					LuaClosure event = (LuaClosure) o;
 					Engine.state.call(event, this, param, null);
+					System.out.println(this.name + "." + name + " done");
 				}
 			} catch (Exception e) {
 				Engine.stacktrace(e);

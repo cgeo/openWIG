@@ -25,7 +25,7 @@ public class Tasks extends ListOfStuff {
 	protected void callStuff(Object what) {
 		Task z = (Task)what;
 		if (z.hasEvent("OnClick")) {
-			z.callEvent("OnClick", null);
+			Engine.callEvent(z, "OnClick", null);
 		} else {
 			Midlet.push(new Details(z, null));
 		}

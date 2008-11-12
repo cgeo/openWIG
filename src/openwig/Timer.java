@@ -3,7 +3,7 @@ package openwig;
 import se.krka.kahlua.vm.*;
 import gui.Midlet;
 
-public class Timer extends EventTable {
+public class Timer extends EventTable implements Runnable {
 	
 	private static java.util.Timer globalTimer;
 	
@@ -99,7 +99,11 @@ public class Timer extends EventTable {
 		} else super.setItem(key, value);
 	}
 	
-	synchronized public void start () {
+	public void start () {
+		new Thread(this).start();
+	}
+	
+	synchronized public void run () {
 		stop();
 		running = true;
 		callEvent("OnStart", null);
@@ -116,7 +120,7 @@ public class Timer extends EventTable {
 	
 	synchronized public void stop () {
 		if (running) {
-			callEvent("OnStop", null);
+			Engine.callEvent(this, "OnStop", null);
 			task.cancel();
 			task = null;
 		}

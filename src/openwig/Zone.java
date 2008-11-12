@@ -59,7 +59,7 @@ public class Zone extends Container {
 			}
 		} else if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
-			if (a != active) callEvent("OnZoneState", null);
+			if (a != active) Engine.callEvent(this, "OnZoneState", null);
 			active = a;			
 			if (active) {
 				walk(Engine.instance.player.position);
@@ -67,7 +67,7 @@ public class Zone extends Container {
 			}
 		} else if (key == "Visible") {
 			boolean a = LuaState.boolEval(value);
-			if (a != visible) callEvent("OnZoneState", null);
+			if (a != visible) Engine.callEvent(this, "OnZoneState", null);
 			visible = a;
 		} else if (key == "DistanceRange" && value instanceof Distance) {
 			distanceRange = ((Distance)value).getValue("meters");
@@ -103,7 +103,7 @@ public class Zone extends Container {
 	private void setcontain () {
 		if (contain == ncontain) return;
 		if (contain == INSIDE) {
-			callEvent("OnExit", null);
+			Engine.callEvent(this, "OnExit", null);
 		}
 		contain = ncontain;
 		if (contain == INSIDE) {
@@ -113,16 +113,16 @@ public class Zone extends Container {
 		}
 		switch (contain) {
 			case INSIDE:
-				callEvent("OnEnter", null);
+				Engine.callEvent(this, "OnEnter", null);
 				break;
 			case PROXIMITY:
-				callEvent("OnProximity", null);
+				Engine.callEvent(this, "OnProximity", null);
 				break;
 			case DISTANT:
-				callEvent("OnDistant", null);
+				Engine.callEvent(this, "OnDistant", null);
 				break;
 			case NOWHERE:
-				callEvent("OnNotInRange", null);
+				Engine.callEvent(this, "OnNotInRange", null);
 				break;
 			default:
 				return;
@@ -198,7 +198,6 @@ public class Zone extends Container {
 	
 	public int visibleThings() {
 		if (!showThings()) return 0;
-		// TODO ShowThings = "OnProximity" or wossname
 		int count = 0;
 		for (int i = 0; i < things.size(); i++) {
 			if (things.elementAt(i) instanceof Player) continue;
@@ -213,12 +212,6 @@ public class Zone extends Container {
 		for (int i = 0; i < things.size(); i++) {
 			Thing z = (Thing)things.elementAt(i);
 			if (z.isVisible()) c.addElement(z);
-		}
-	}
-	
-	public void reposition(ZonePoint diff) {
-		for (int i = 0; i < points.length; i++) {
-			points[i].diff(diff);
 		}
 	}
 }

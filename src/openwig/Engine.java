@@ -64,7 +64,8 @@ public class Engine implements Runnable {
 			Midlet.end();
 			stacktrace(e);
 		}
-			
+		
+		player.refreshLocation();
 		callEvent(cartridge, "OnStart", null);
 			
 		while (!end) {
@@ -120,6 +121,7 @@ public class Engine implements Runnable {
 	}
 	
 	public static void callEvent(EventTable subject, String name, Object param) {
+		if (!subject.hasEvent(name)) return;
 		EventCaller ec = new EventCaller(subject, name, param);
 		ec.start();
 	}

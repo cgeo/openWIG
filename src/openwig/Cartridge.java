@@ -93,11 +93,4 @@ public class Cartridge extends EventTable {
 		}
 		return count;
 	}
-	
-	public void reposition (ZonePoint diff) {
-		for (int i = 0; i < zones.size(); i++) {
-			Zone z = (Zone)zones.elementAt(i);
-			z.reposition(diff);
-		}
-	}
 }
