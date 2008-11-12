@@ -13,7 +13,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	private Hashtable cache = new Hashtable(10);
 	private String currentPath;
 	private String chdir = null;
-	private boolean up = true;
+	private boolean up = false;
 	private String openFile = null;
 
 	public Browser() {
@@ -30,20 +30,17 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 		start();
 	}
 
-	public void chdir(String where) {
-		System.out.println("chdir "+where);
-		try {
-			FileConnection fc = (FileConnection)Connector.open("file:///"+where, Connector.READ);
-			if (fc.isDirectory()) {
-				Enumeration list = fc.list();
-				deleteAll();
-				append("..", null);
-				while (list.hasMoreElements()) {
-					append(list.nextElement().toString(), null);
-				}
+	public void chdir(String where) 
+	throws IOException {
+		if (where.endsWith("/")) { // directory test without (possibly) protected function call
+			FileConnection fc = (FileConnection) Connector.open("file:///" + where, Connector.READ);
+			Enumeration list = fc.list();
+			deleteAll();
+			append("..", null);
+			while (list.hasMoreElements()) {
+				append(list.nextElement().toString(), null);
 			}
-		} catch (IOException e) {
-			
+			Midlet.config.set(Config.LAST_DIRECTORY, where);
 		}
 	}
 
@@ -67,8 +64,21 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	}
 
 	synchronized public void run() {
+		// init path
+		try {
+			if (currentPath.length() == 0) {
+				listRoot();
+			} else try {
+				chdir(currentPath);
+			} catch (IOException e) {
+				currentPath = "";
+				listRoot();
+			}
+		} catch (SecurityException e) {
+			Midlet.error("you need to allow me to access your files!");
+		}
+		
 		while (thread != null) {
-			
 			try {
 				if (up) {
 					if ("".equals(currentPath) || currentPath.lastIndexOf('/', currentPath.length() - 2) == -1) {
@@ -100,13 +110,15 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 					}
 					openFile = null;
 				}
+			} catch (IOException e) {
+				// presumably loading a default path that no longer exists
+				// do nothing (we ate the ioexceptions before anyway
 			} catch (SecurityException e) {
 				Midlet.error("you need to allow me to access your files!");
 			}
 			
 			setTitle(currentPath);
 
-			System.out.println("tick");
 			try { wait(); } catch (InterruptedException e) { }
 		}
 	}
@@ -125,6 +137,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			} else {
 				openFile = sel;
 			}
+			setTitle("wait...");
 			notify();
 		}
 	}
