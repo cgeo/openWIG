@@ -1,9 +1,10 @@
 package openwig;
 
 import java.io.ByteArrayInputStream;
+import javax.microedition.media.PlayerListener;
 import se.krka.kahlua.vm.*;
 
-public class Media extends EventTable {
+public class Media extends EventTable implements PlayerListener {
 	
 	private static int media_no;
 
@@ -46,9 +47,17 @@ public class Media extends EventTable {
 			if (type == "wav") mime = "audio/x-wav";
 			else if (type == "mp3") mime = "audio/mpeg";
 			javax.microedition.media.Player p = javax.microedition.media.Manager.createPlayer(bis,mime);
+			p.addPlayerListener(this);
 			p.start();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void playerUpdate (javax.microedition.media.Player player, String event, Object data) {
+		if (event == PlayerListener.END_OF_MEDIA ||
+			event == PlayerListener.ERROR || event == PlayerListener.STOPPED) {
+			player.close();
 		}
 	}
 }
