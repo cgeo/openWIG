@@ -1,6 +1,5 @@
 package gui;
 
-import javax.microedition.lcdui.*;
 import java.util.Vector;
 import openwig.Engine;
 import openwig.Thing;

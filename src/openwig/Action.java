@@ -43,16 +43,6 @@ public class Action extends EventTable {
 			while ((i = lt.next(i)) != null) {
 				targets.addElement(lt.rawget(i));
 			}
-			setTargets();
-		}
-	}
-	
-	private void setTargets() {
-		if (actor == null) return;
-		
-		for (int i = 0; i < targets.size(); i++) {
-			Thing target = (Thing)targets.elementAt(i);
-			target.foreignActions.addElement(this);
 		}
 	}
 	
@@ -97,7 +87,6 @@ public class Action extends EventTable {
 	
 	public void setActor (Thing a) {
 		actor = a;
-		setTargets();
 	}
 	
 	public Thing getActor () {

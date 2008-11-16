@@ -9,8 +9,6 @@ public class Thing extends Container {
 	
 	public Vector actions = new Vector();
 	
-	public Vector foreignActions = new Vector();
-	
 	public Thing(boolean character) {
 		this.character = character;
 	}
@@ -40,10 +38,6 @@ public class Thing extends Container {
 		int count = 0;
 		for (int i = 0; i < actions.size(); i++) {
 			Action c = (Action)actions.elementAt(i);
-			if (c.isEnabled()) count++;
-		}
-		for (int i = 0; i < foreignActions.size(); i++) {
-			Action c = (Action)foreignActions.elementAt(i);
 			if (c.isEnabled()) count++;
 		}
 		return count;
