@@ -53,6 +53,8 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 			image.setImage(Image.createImage(is, 0, is.length));
 		} catch (Exception e) {
 			image.setAltText(m.altText);
+		} else {
+			image.setImage(null);
 		}
 		deleteAll();
 		content.setText(texts[page]);

@@ -22,9 +22,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Tasks tasks;
 	public static MainMenu mainMenu;
 	public static Browser browser;
-
-	private static String sourceUrl = "file:///e:/Other/penguin_escape.gwc";
-//	private static String sourceUrl = "resource:/openwig/cartridge.gwc";
 	
 	private static List baseMenu;
 	private static final int MNU_START = 0;
