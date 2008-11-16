@@ -3,14 +3,18 @@ package gui;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.EventTable;
+import openwig.Media;
 import se.krka.kahlua.vm.LuaTable;
+import util.Config;
 
-public class Input extends Form implements CommandListener, Cancellable {
+public class Input extends Form implements CommandListener, ItemCommandListener, Cancellable {
 	
 	private static Command CMD_ANSWER = new Command("Answer", Command.SCREEN, 0);
+	private static Command CMD_SHOWFULL = new Command("Show", Command.ITEM, 1);
 
 	private TextField answer = null;
 	private ChoiceGroup choice = null;
+	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
 	
 	private static final int TEXT = 0;
 	private static final int MULTI = 1;
@@ -21,11 +25,24 @@ public class Input extends Form implements CommandListener, Cancellable {
 	public Input (EventTable input) {
 		super(input.name);
 		this.input = input;
+		
+		Media m = (Media)input.table.rawget("Media");
+		if (m != null) {
+			image.setAltText(m.altText);
+			try {
+				byte[] is = Engine.mediaFile(m);
+				Image i = Image.createImage(is, 0, is.length);
+				image.setImage(i);
+			} catch (Exception e) { }
+		}
+		append(image);
+		
 		String text = (String)input.table.rawget("Text");
 		if (text != null && text.length() > 0) {
 			StringItem question = new StringItem(null, text);
 			append(question);
 		}
+		
 		String type = (String)input.table.rawget("InputType");
 		if (type == "Text") {
 			answer = new TextField("Answer:", null, 500, TextField.ANY);
@@ -34,6 +51,10 @@ public class Input extends Form implements CommandListener, Cancellable {
 		} else if (type == "MultipleChoice") {
 			choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
 			choice.setFitPolicy(Choice.TEXT_WRAP_ON);
+			if (Midlet.config.getInt(Config.CHOICE_SHOWFULL) > 0) {
+				choice.addCommand(CMD_SHOWFULL);
+				choice.setItemCommandListener(this);
+			}
 			// XXX class Input with this in interface would be more appropriate?
 			LuaTable choices = (LuaTable)input.table.rawget("Choices");
 			int n = choices.len();
@@ -62,5 +83,13 @@ public class Input extends Form implements CommandListener, Cancellable {
 	}
 
 	public void cancel() {}
+
+	public void commandAction(Command cmd, Item it) {
+		if (it == choice && cmd == CMD_SHOWFULL) {
+			Alert a = new Alert(null, choice.getString(choice.getSelectedIndex()), null, AlertType.INFO);
+			a.setTimeout(Alert.FOREVER);
+			Midlet.display.setCurrent(a,this);
+		}
+	}
 	
 }

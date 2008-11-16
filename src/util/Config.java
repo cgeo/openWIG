@@ -14,12 +14,15 @@ public class Config {
 	public static final String GPS_BT_NAME = "gpsBluetoothName";
 	public static final String GPS_SERIAL_PORT = "gpsSerialPort";
 	public static final String REFRESH_INTERVAL = "refreshInterval";
+	public static final String ENABLE_LOGGING = "enableLogging";
+	public static final String CHOICE_SHOWFULL = "choiceShowFull";
 	
 	public static final String LAST_DIRECTORY = "lastDirectory";
 
 	public void loadDefaults() {
 		values.put(GPS_TYPE, "0");
 		values.put(REFRESH_INTERVAL, "1");
+		values.put(ENABLE_LOGGING, "0");
 		
 		values.put("configVersion", "1");
 	}

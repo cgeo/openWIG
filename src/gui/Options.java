@@ -15,6 +15,11 @@ public class Options extends Form implements Pushable, CommandListener,
 	public StringItem gpsDevice = new StringItem("Device:", "...");
 	private StringItem gpsSelect = new StringItem(null, "Choose...", StringItem.HYPERLINK);
 	
+	// checkboxes
+	private ChoiceGroup checkboxes = new ChoiceGroup(null, Choice.MULTIPLE);
+	private static final int CHK_LOGGING = 0;
+	private static final int CHK_SHOWFULL = 1;
+	
 	// COM port list
 	private List comPorts = null;
 	
@@ -44,6 +49,10 @@ public class Options extends Form implements Pushable, CommandListener,
 		append(gpsSelect);
 		
 		append(refreshInterval);
+		
+		checkboxes.append("Enable logging", null);
+		checkboxes.append("\"Show Full\" command", null);
+		append(checkboxes);
 		
 		comPorts = new List("Serial ports", List.IMPLICIT);
 		comPorts.setCommandListener(this);
@@ -100,6 +109,10 @@ public class Options extends Form implements Pushable, CommandListener,
 				if (gpstype != newtype) gpsDirty = true;
 				Midlet.config.set(Config.GPS_TYPE, String.valueOf(newtype));
 				Midlet.config.set(Config.REFRESH_INTERVAL, refreshInterval.getString());
+				boolean[] flags = new boolean[checkboxes.size()];
+				checkboxes.getSelectedFlags(flags);
+				Midlet.config.set(Config.ENABLE_LOGGING, flags[CHK_LOGGING] ? "1" : "0");
+				Midlet.config.set(Config.CHOICE_SHOWFULL, flags[CHK_SHOWFULL] ? "1" : "0");
 				if (gpsDirty) {
 					// TODO offer reconnection
 				}
@@ -125,6 +138,8 @@ public class Options extends Form implements Pushable, CommandListener,
 		gpsType.setSelectedIndex(gpstype, true);
 		itemStateChanged(gpsType);
 		refreshInterval.setString(Midlet.config.get(Config.REFRESH_INTERVAL));
+		checkboxes.setSelectedIndex(CHK_LOGGING, Midlet.config.getInt(Config.ENABLE_LOGGING) > 0);
+		checkboxes.setSelectedIndex(CHK_SHOWFULL, Midlet.config.getInt(Config.CHOICE_SHOWFULL) > 0);
 	}
 
 	public void itemStateChanged(Item it) {
