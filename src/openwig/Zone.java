@@ -1,6 +1,5 @@
 package openwig;
 
-import gui.Coordinates;
 import gui.Midlet;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
@@ -55,19 +54,19 @@ public class Zone extends Container {
 			}
 			if (active) {
 				walk(Engine.instance.player.position);
-				setcontain();
+				//setcontain();
 			}
 		} else if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
-			if (a != active) Engine.callEvent(this, "OnZoneState", null);
+			if (a != active) callEvent("OnZoneState", null);
 			active = a;			
 			if (active) {
 				walk(Engine.instance.player.position);
-				setcontain();
+				//setcontain();
 			}
 		} else if (key == "Visible") {
 			boolean a = LuaState.boolEval(value);
-			if (a != visible) Engine.callEvent(this, "OnZoneState", null);
+			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
 		} else if (key == "DistanceRange" && value instanceof Distance) {
 			distanceRange = ((Distance)value).getValue("meters");
@@ -103,7 +102,8 @@ public class Zone extends Container {
 	private void setcontain () {
 		if (contain == ncontain) return;
 		if (contain == INSIDE) {
-			Engine.callEvent(this, "OnExit", null);
+			//Engine.callEvent(this, "OnExit", null);
+			callEvent("OnExit", null);
 		}
 		contain = ncontain;
 		if (contain == INSIDE) {
@@ -113,16 +113,20 @@ public class Zone extends Container {
 		}
 		switch (contain) {
 			case INSIDE:
-				Engine.callEvent(this, "OnEnter", null);
+				//Engine.callEvent(this, "OnEnter", null);
+				callEvent("OnEnter", null);
 				break;
 			case PROXIMITY:
-				Engine.callEvent(this, "OnProximity", null);
+				//Engine.callEvent(this, "OnProximity", null);
+				callEvent("OnProximity", null);
 				break;
 			case DISTANT:
-				Engine.callEvent(this, "OnDistant", null);
+				//Engine.callEvent(this, "OnDistant", null);
+				callEvent("OnDistant", null);
 				break;
 			case NOWHERE:
-				Engine.callEvent(this, "OnNotInRange", null);
+				//Engine.callEvent(this, "OnNotInRange", null);
+				callEvent("OnNotInRange", null);
 				break;
 			default:
 				return;
@@ -183,7 +187,7 @@ public class Zone extends Container {
 		else if (distance < proximityRange) ncontain = PROXIMITY;
 		else if (distance < distanceRange || distanceRange < 0) ncontain = DISTANT;
 		else ncontain = NOWHERE;
-		tick();
+		//tick();
 	}
 
 	private boolean showThings () {

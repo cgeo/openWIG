@@ -31,13 +31,13 @@ public class Task extends EventTable {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) {
 				active = a;
-				Engine.callEvent(this, "OnSetActive", null);
+				callEvent("OnSetActive", null);
 			}
 		} else if (key == "Complete") {
 			boolean c = LuaState.boolEval(value);
 			if (c != complete) {
 				complete = c;
-				Engine.callEvent(this, "OnSetComplete", null);
+				callEvent("OnSetComplete", null);
 			}
 		} else if (key == "CorrectState" && value instanceof String) {
 			String v = (String)value;
@@ -45,7 +45,7 @@ public class Task extends EventTable {
 			if (v == "incorrect") s = FAILED;
 			if (s != state) {
 				state = s;
-				Engine.callEvent(this, "OnSetCorrectState", null);
+				callEvent("OnSetCorrectState", null);
 			}
 		} else super.setItem(key, value);
 	}

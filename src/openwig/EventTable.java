@@ -52,10 +52,10 @@ public class EventTable {
 			EventTable z = (EventTable) frame.get(0);
 			Object key = frame.get(1);
 			Object value = frame.get(2);
-			z.table.rawset(key, value);
 			if (key instanceof String) {
 				z.setItem((String) key, value);
 			}
+			z.table.rawset(key, value);
 			return 0;
 		}
 

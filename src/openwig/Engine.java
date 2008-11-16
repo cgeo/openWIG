@@ -76,9 +76,8 @@ public class Engine implements Runnable {
 					|| Midlet.gps.getLongitude() != player.position.longitude
 					|| Midlet.gps.getAltitude() != player.position.altitude.value) {
 					player.refreshLocation();
-				} else {
-					cartridge.tick();
 				}
+				cartridge.tick();
 			} catch (Exception e) {
 				stacktrace(e);
 			}

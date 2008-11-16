@@ -120,7 +120,7 @@ public class Timer extends EventTable implements Runnable {
 	
 	synchronized public void stop () {
 		if (running) {
-			Engine.callEvent(this, "OnStop", null);
+			callEvent("OnStop", null);
 			task.cancel();
 			task = null;
 		}
