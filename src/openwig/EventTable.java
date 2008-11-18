@@ -56,6 +56,7 @@ public class EventTable {
 				z.setItem((String) key, value);
 			}
 			z.table.rawset(key, value);
+			Engine.log("PROP: " + z.toString() + "." + key + " is set to "+ (value == null ? "nil" : value.toString()));
 			return 0;
 		}
 
@@ -107,10 +108,10 @@ public class EventTable {
 			try {
 				Object o = table.rawget(name.intern());
 				if (o instanceof LuaClosure) {
-					System.out.println(this.name + "." + name);
+					Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""));
 					LuaClosure event = (LuaClosure) o;
 					Engine.state.call(event, this, param, null);
-					System.out.println(this.name + "." + name + " done");
+					Engine.log("EEND: " + toString() + "." + name);
 				}
 			} catch (Exception e) {
 				Engine.stacktrace(e);
@@ -120,5 +121,9 @@ public class EventTable {
 	
 	public boolean hasEvent(String name) {
 		return (table.rawget(name.intern())) instanceof LuaClosure;
+	}
+	
+	public String toString()  {
+		return (name == null ? "(unnamed)" : name);
 	}
 }

@@ -103,7 +103,13 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 					String file = "file:///" + currentPath + openFile;
 					try {
 						CartridgeFile cf = CartridgeFile.read(file);
-						Midlet.push(new CartridgeDetails(cf));
+						OutputStream os = null;
+						if (Midlet.config.getInt(Config.ENABLE_LOGGING) > 0) try {
+							FileConnection fc = (FileConnection)Connector.open(file.substring(0, file.length()-3) + "gwl", Connector.READ_WRITE);
+							if (!fc.exists()) fc.create();
+							os = fc.openOutputStream(fc.fileSize());
+						} catch (Exception e) { e.printStackTrace(); }
+						Midlet.push(new CartridgeDetails(cf, os));
 						stop();
 					} catch (IOException e) {
 						Midlet.error("Failed to load cartridge:\n" + e.getMessage());

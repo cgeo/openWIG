@@ -14,6 +14,7 @@ public class Engine implements Runnable {
 	
 	private String codeUrl;
 	private CartridgeFile gwcfile;
+	private PrintStream log;
 	
 	public static Engine instance;
 	public static LuaState state;
@@ -29,6 +30,12 @@ public class Engine implements Runnable {
 		instance = this;
 		gwcfile = cf;
 	}
+	
+	public Engine (CartridgeFile cf, OutputStream out) {
+		instance = this;
+		gwcfile = cf;
+		if (out!=null) log = new PrintStream(out);
+	}	
 	
 	public void run() {
 		state = new LuaState(System.out);
@@ -51,8 +58,10 @@ public class Engine implements Runnable {
 			if (gwcfile == null) throw new Exception("invalid cartridge file");
 			byte[] lbc = gwcfile.getBytecode();
 			
+			PrintStream l = log; log = null; // prevent logging while loading
 			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.environment);
 			state.call(closure, null, null, null);
+			log = l;
 			lbc = null;
 			closure = null;
 			
@@ -65,6 +74,7 @@ public class Engine implements Runnable {
 			stacktrace(e);
 		}
 		
+		if (log!=null) log.println("-------------------\ncartridge "+cartridge.toString()+" started\n-------------------");
 		player.refreshLocation();
 		callEvent(cartridge, "OnStart", null);
 			
@@ -81,13 +91,16 @@ public class Engine implements Runnable {
 			} catch (Exception e) {
 				stacktrace(e);
 			}
-		} 
+		}
+		log.close();
 	}
 	
 	public static void stacktrace (Exception e) {
 		e.printStackTrace();
 		System.out.println(state.currentThread.stackTrace);
-		Midlet.error(e.toString()+"\n\nstack trace: " + state.currentThread.stackTrace);
+		String msg = e.toString()+"\n\nstack trace: " + state.currentThread.stackTrace;
+		log(msg);
+		Midlet.error(msg);
 	}
 	
 	public static void kill () {
@@ -126,6 +139,7 @@ public class Engine implements Runnable {
 	}
 	
 	public static void invokeCallback(LuaClosure callback, Object value) {
+		log("BTTN: "+value.toString()+" pressed");
 		CallbackCaller cc = new CallbackCaller(callback, value);
 		cc.start();
 	}
@@ -136,5 +150,15 @@ public class Engine implements Runnable {
 		/*String filename = media.jarFilename();
 		return media.getClass().getResourceAsStream("/media/"+filename);*/
 		return instance.gwcfile.getFile(media.id);
+	}
+	
+	public static void log(String s) {
+		if (instance.log == null) return;
+		String msg = Double.toString(Midlet.gps.getLatitude()) + "|" +
+			     Double.toString(Midlet.gps.getLongitude()) + "|" +
+			     Double.toString(Midlet.gps.getAltitude()) + "|" +
+			     Double.toString(Midlet.gps.getPrecision()) + "|:: " + s;
+		instance.log.println(msg); instance.log.flush();
+		System.out.println(msg);
 	}
 }

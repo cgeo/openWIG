@@ -1,6 +1,7 @@
 package gui;
 
 import gwc.CartridgeFile;
+import java.io.OutputStream;
 import javax.microedition.lcdui.*;
 import openwig.ZonePoint;
 import util.Config;
@@ -16,11 +17,13 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
 	
 	private CartridgeFile cartridge;
+	private OutputStream logfile;
 	private ZonePoint startPoint;
 	
-	public CartridgeDetails (CartridgeFile what) {
+	public CartridgeDetails (CartridgeFile what, OutputStream log) {
 		super(what.name);
 		cartridge = what;
+		logfile = log;
 		startPoint = new ZonePoint(cartridge.latitude, cartridge.longitude, 0);
 		name.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		image.setLayout(Item.LAYOUT_NEWLINE_AFTER);
@@ -51,7 +54,7 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_START) {
-			Midlet.loadCartridge(cartridge);
+			Midlet.loadCartridge(cartridge, logfile);
 			stop();
 		} else if (cmd == CMD_NAVIGATE) {
 			Midlet.push(new Navigation(startPoint));

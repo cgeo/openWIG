@@ -2,6 +2,7 @@ package gui;
 
 import gps.*;
 import gwc.CartridgeFile;
+import java.io.OutputStream;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
@@ -214,14 +215,14 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 	}
 	
-	public static void loadCartridge (CartridgeFile cf) {
+	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
 		Form f = new Form("splash");
 		f.append(new StringItem(null, "Starting..."));
 		f.addCommand(CMD_EXIT);
 		f.setCommandListener(instance);
 		Display.getDisplay(instance).setCurrent(f);
 
-		Thread t = new Thread(new Engine(cf));
+		Thread t = new Thread(new Engine(cf, log));
 		t.start();
 	}
 	

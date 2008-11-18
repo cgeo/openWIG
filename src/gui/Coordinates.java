@@ -104,7 +104,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 			neg = true;
 			angle *= -1;
 		}
-		double degrees = Math.floor(angle);
+		int degrees = (int)angle;
 		angle = (angle - degrees) * 60;
 		String an = String.valueOf(angle);
 		if (an.indexOf('.') != -1)
@@ -150,6 +150,14 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	public double getAltitude() { return 100; }
 	public double getHeading() { return 0; }
 	public double getPrecision() { return 1; }
+	
+	private double scandbl (String s) {
+		try {
+			return Double.parseDouble(s);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == this) {
@@ -159,8 +167,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				stopGPS();
 				prepare();
 			} else if (cmd == CMD_SET) {
-				lat = Double.parseDouble(latitude.getString());
-				lon = Double.parseDouble(longitude.getString());
+				lat = scandbl(latitude.getString());
+				lon = scandbl(longitude.getString());
 			} else if (cmd == Midlet.CMD_BACK) {
 				Midlet.pop(this);
 			}
