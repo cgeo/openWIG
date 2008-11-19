@@ -33,16 +33,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
 		
-		Media m = (Media)t.table.rawget("Media");
-		if (m != null) {
-			image.setAltText(m.altText);
-			try {
-				byte[] is = Engine.mediaFile(m);
-				Image i = Image.createImage(is, 0, is.length);
-				image.setImage(i);
-			} catch (Exception e) { }
-		}
-		
 		if (t instanceof Task) {
 			append(state);
 		} else if (t instanceof Zone) {
@@ -72,6 +62,19 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		
 		setTitle(thing.name);
 		description.setText(thing.description);
+		
+				
+		Media m = (Media)thing.table.rawget("Media");
+		if (m != null) {
+			image.setAltText(m.altText);
+			try {
+				byte[] is = Engine.mediaFile(m);
+				Image i = Image.createImage(is, 0, is.length);
+				image.setImage(i);
+			} catch (Exception e) { }
+		} else {
+			image.setImage(null);
+		}
 		
 		if (thing instanceof Thing) {
 			Thing t = (Thing)thing;
