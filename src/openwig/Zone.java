@@ -63,6 +63,9 @@ public class Zone extends Container {
 			if (active) {
 				walk(Engine.instance.player.position);
 				//setcontain();
+			} else { // if the zone is deactivated, remove player, just to be sure
+				contain = (distanceRange < 0) ? DISTANT : NOWHERE;
+				if (Engine.instance.player.location == this) Engine.instance.player.moveTo(null);
 			}
 		} else if (key == "Visible") {
 			boolean a = LuaState.boolEval(value);
@@ -191,6 +194,7 @@ public class Zone extends Container {
 	}
 
 	private boolean showThings () {
+		if (!active) return false;
 		switch (showObjects) {
 			case S_ALWAYS: return true;
 			case S_ONPROXIMITY: return contain >= PROXIMITY;
@@ -217,5 +221,11 @@ public class Zone extends Container {
 			Thing z = (Thing)things.elementAt(i);
 			if (z.isVisible()) c.addElement(z);
 		}
+	}
+	
+	public boolean contains (Thing t) {
+		if (t == Engine.instance.player) {
+			return contain == INSIDE;
+		} else return super.contains(t);
 	}
 }

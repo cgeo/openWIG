@@ -28,7 +28,7 @@ public class Container extends EventTable {
 				case CONTAINS:
 					Container p = (Container) callFrame.get(0);
 					Thing t = (Thing) callFrame.get(1);
-					callFrame.push(LuaState.toBoolean(p.things.contains(t)));
+					callFrame.push(LuaState.toBoolean(p.contains(t)));
 					return 1;
 				case MOVETO:
 					Container subject = (Container) callFrame.get(0);
@@ -54,5 +54,9 @@ public class Container extends EventTable {
 		if (c != null) c.things.addElement(this);
 		location = c;
 		table.rawset("Container", c);
+	}
+	
+	public boolean contains (Thing t) {
+		return things.contains(t);
 	}
 }
