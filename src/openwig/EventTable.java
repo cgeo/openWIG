@@ -52,11 +52,7 @@ public class EventTable {
 			EventTable z = (EventTable) frame.get(0);
 			Object key = frame.get(1);
 			Object value = frame.get(2);
-			if (key instanceof String) {
-				z.setItem((String) key, value);
-			}
-			z.table.rawset(key, value);
-			Engine.log("PROP: " + z.toString() + "." + key + " is set to "+ (value == null ? "nil" : value.toString()));
+			z.setprop(key, value);
 			return 0;
 		}
 
@@ -125,5 +121,13 @@ public class EventTable {
 	
 	public String toString()  {
 		return (name == null ? "(unnamed)" : name);
+	}
+
+	public void setprop(Object key, Object value) {
+		if (key instanceof String) {
+			setItem((String) key, value);
+		}
+		table.rawset(key, value);
+		Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()));
 	}
 }

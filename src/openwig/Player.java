@@ -50,10 +50,6 @@ public class Player extends Thing {
 		}
 		return count;
 	}
-	
-	public void setCompletionCode (String code) {
-		table.rawset("CompletionCode", code.intern());
-	}
 
 	public void refreshLocation() {
 		position.latitude = Midlet.gps.getLatitude();

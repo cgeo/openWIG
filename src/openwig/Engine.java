@@ -65,7 +65,8 @@ public class Engine implements Runnable {
 			lbc = null;
 			closure = null;
 			
-			player.setCompletionCode(gwcfile.code);
+			player.setprop("CompletionCode", gwcfile.code.intern());
+			player.setprop("Name", gwcfile.member.intern());
 					
 			Midlet.start();
 

@@ -90,6 +90,7 @@ public class LuaInterface implements JavaFunction {
 		
 		LuaTable env = new LuaTable();
 		env.rawset("Device", "Windows PPC");
+		env.rawset("DeviceID", "You don't need to see his ID.");
 		state.environment.rawset("Env", env);
 		
 		Zone.register(state);

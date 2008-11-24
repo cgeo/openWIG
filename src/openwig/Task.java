@@ -3,7 +3,7 @@ package openwig;
 import se.krka.kahlua.vm.*;
 
 public class Task extends EventTable {
-	
+
 	private boolean active;
 	private boolean complete;
 	
@@ -25,9 +25,7 @@ public class Task extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Visible") {
-			visible = LuaState.boolEval(value);
-		} else if (key == "Active") {
+		if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) {
 				active = a;
