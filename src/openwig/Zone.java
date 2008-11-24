@@ -15,7 +15,7 @@ public class Zone extends Container {
 	}
 	
 	private ZonePoint[] points;
-
+	
 	private boolean active = false;
 	
 	public static final int INSIDE = 2;
@@ -59,12 +59,12 @@ public class Zone extends Container {
 		} else if (key == "Active") {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
-			active = a;			
+			active = a;
 			if (active) {
 				walk(Engine.instance.player.position);
 				//setcontain();
 			} else { // if the zone is deactivated, remove player, just to be sure
-				contain = (distanceRange < 0) ? DISTANT : NOWHERE;
+				contain = ncontain = (distanceRange < 0) ? DISTANT : NOWHERE;
 				if (Engine.instance.player.location == this) Engine.instance.player.moveTo(null);
 			}
 		} else if (key == "Visible") {
@@ -93,6 +93,7 @@ public class Zone extends Container {
 	}
 	
 	public void tick () {
+		if (!active) return;
 		if (ncontain == contain) ticks = 0;
 		else if (ncontain > contain) setcontain();
 		else if (Midlet.gpsType == Midlet.GPS_MANUAL) setcontain();
