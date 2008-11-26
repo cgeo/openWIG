@@ -66,7 +66,6 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private boolean running = false;
 	
 	synchronized public void start () {
-		if (Midlet.getCurrentScreen() != this) return;
 		if (!running) {
 			running = true;
 			Thread t = new Thread(this);
@@ -80,7 +79,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	public void run () {
 		while (running) {
 			updateScreen();
-			try { Thread.sleep(1000); } catch (Exception e) { }
+			try { Thread.sleep(1000); } catch (InterruptedException e) { }
+			if (Midlet.getCurrentScreen() != this) stop();
 		}
 	}
 	

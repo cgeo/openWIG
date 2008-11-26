@@ -13,6 +13,7 @@ public class Config {
 	public static final String GPS_BT_URL = "gpsBluetoothUrl";
 	public static final String GPS_BT_NAME = "gpsBluetoothName";
 	public static final String GPS_SERIAL_PORT = "gpsSerialPort";
+	public static final String GPS_TCP_PORT = "gpsTcpPort";
 	public static final String REFRESH_INTERVAL = "refreshInterval";
 	public static final String ENABLE_LOGGING = "enableLogging";
 	public static final String CHOICE_SHOWFULL = "choiceShowFull";

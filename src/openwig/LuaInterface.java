@@ -91,6 +91,14 @@ public class LuaInterface implements JavaFunction {
 		LuaTable env = new LuaTable();
 		env.rawset("Device", "Windows PPC");
 		env.rawset("DeviceID", "You don't need to see his ID.");
+		env.rawset("Platform", "MIDP-2.0/CLDC-1.1");
+		env.rawset("CartFolder", "c:/what/is/it/to/you");
+		env.rawset("SyncFolder", "c:/what/is/it/to/you");
+		env.rawset("LogFolder", "c:/what/is/it/to/you");
+		env.rawset("CartFilename", "cartridge.gwc");
+		env.rawset("PathSep", "/"); // no. you may NOT do file i/o on this device.
+		env.rawset("Version", "2.11ow");
+		env.rawset("Downloaded", new Double(0));
 		state.environment.rawset("Env", env);
 		
 		Zone.register(state);

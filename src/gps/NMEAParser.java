@@ -108,7 +108,7 @@ public class NMEAParser implements Runnable, LocationProvider {
 	public double getPrecision() {
 		try {
 			return Double.parseDouble(getPDOP()) * 5.0;
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return Double.POSITIVE_INFINITY;
 		}
 	}
@@ -206,14 +206,20 @@ public class NMEAParser implements Runnable, LocationProvider {
 				sb.delete(0, sb.length());
 				ch = 0;
 				while (true) {
-					ch = inputStream.read();
-					if (ch == -1) {
-						throw new IOException("GPS device disconnected.");
-					} else if (ch == '\n') {
-						break;
+					if (inputStream.available() > 0) {
+						ch = inputStream.read();
+						if (ch == -1) {
+							throw new IOException("GPS device disconnected.");
+						} else if (ch == '\n') {
+							break;
+						} else {
+							sb.append((char)ch);
+						}
 					} else {
-						sb.append((char)ch);
+						// let us rest for a bit
+						try { Thread.sleep(100); } catch (InterruptedException e) { }
 					}
+					if (thread == null) return;
 				}
 				String s = sb.toString();
 				nmea = s;

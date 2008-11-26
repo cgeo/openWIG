@@ -20,8 +20,18 @@ public class Options extends Form implements Pushable, CommandListener,
 	private static final int CHK_LOGGING = 0;
 	private static final int CHK_SHOWFULL = 1;
 	
+	// option labels
+	private static final String NAME_MANUAL = "Manual";
+	private static final String NAME_BLUETOOTH = "Bluetooth";
+	private static final String NAME_SERIAL = "Serial port";
+	private static final String NAME_INTERNAL = "Internal";
+	private static final String NAME_SOCKET = "TCP Socket";
+	
 	// COM port list
 	private List comPorts = null;
+	
+	// TCP port number
+	private TextBox tcpPort = null;
 	
 	private int gpstype;
 	private String gpsBtUrl;
@@ -36,9 +46,24 @@ public class Options extends Form implements Pushable, CommandListener,
 		super("Options");
 		setItemStateListener(this);
 		
-		gpsType.append("Manual", null);
-		gpsType.append("Serial port", null);
-		gpsType.append("Bluetooth", null);
+		gpsType.append(NAME_MANUAL, null);
+		
+		try {
+			btOptions = new BluetoothOptions();
+			gpsType.append(NAME_BLUETOOTH, null);
+		} catch (NoClassDefFoundError e) {
+			btOptions = null;
+		}
+		
+		String ports = System.getProperty("microedition.commports");
+		if (ports != null && ports.length() > 0)
+			gpsType.append(NAME_SERIAL, null);
+		
+		if (System.getProperty("microedition.location.version") != null)
+			gpsType.append(NAME_INTERNAL, null);
+		
+		gpsType.append(NAME_SOCKET, null);
+		
 		gpsType.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		append(gpsType);
 		
@@ -59,20 +84,19 @@ public class Options extends Form implements Pushable, CommandListener,
 		comPorts.setSelectCommand(Midlet.CMD_SELECT);
 		comPorts.addCommand(Midlet.CMD_BACK);
 		
+		tcpPort = new TextBox("Port number", null, 100, TextField.NUMERIC);
+		tcpPort.setCommandListener(this);
+		tcpPort.addCommand(CMD_SAVE);
+		tcpPort.addCommand(Midlet.CMD_BACK);
+		
 		setCommandListener(this);
 		addCommand(CMD_SAVE);
 		addCommand(Midlet.CMD_BACK);
-		
-		try {
-			btOptions = new BluetoothOptions();
-		} catch (NoClassDefFoundError e) {
-			btOptions = null;
-		}
 	}
 
 	public void commandAction(Command cmd, Item it) {
 		if (it == gpsSelect) {
-			switch (gpsType.getSelectedIndex()) {
+			switch (selectionToGpsType()) {
 				
 				case Midlet.GPS_SERIAL:
 					String ports = System.getProperty("microedition.commports");
@@ -96,6 +120,10 @@ public class Options extends Form implements Pushable, CommandListener,
 					} else {
 						Midlet.display.setCurrent(new Alert("error","Your device won't let me use bluetooth!",null,AlertType.ERROR));
 					}
+					break;
+					
+				case Midlet.GPS_SOCKET:
+					Midlet.push(tcpPort);
 					break;
 			}
 		}
@@ -127,6 +155,13 @@ public class Options extends Form implements Pushable, CommandListener,
 				gpsDevice.setText(com);
 			}
 			Midlet.pop(comPorts);
+
+		} else if (disp == tcpPort) {
+			if (cmd == CMD_SAVE) {
+				Midlet.config.set(Config.GPS_TCP_PORT, tcpPort.getString());
+				gpsDevice.setText(tcpPort.getString());
+			}
+			Midlet.pop(tcpPort);
 		}
 	}
 
@@ -135,7 +170,7 @@ public class Options extends Form implements Pushable, CommandListener,
 		gpsBtUrl = Midlet.config.get(Config.GPS_BT_URL);
 		gpsComPort = Midlet.config.get(Config.GPS_SERIAL_PORT);
 		gpsDirty = false;
-		gpsType.setSelectedIndex(gpstype, true);
+		setSelection(gpstype);
 		itemStateChanged(gpsType);
 		refreshInterval.setString(Midlet.config.get(Config.REFRESH_INTERVAL));
 		checkboxes.setSelectedIndex(CHK_LOGGING, Midlet.config.getInt(Config.ENABLE_LOGGING) > 0);
@@ -144,7 +179,7 @@ public class Options extends Form implements Pushable, CommandListener,
 
 	public void itemStateChanged(Item it) {
 		if (it == gpsType) {
-			switch (gpsType.getSelectedIndex()) {
+			switch (selectionToGpsType()) {
 				case Midlet.GPS_MANUAL: case Midlet.GPS_INTERNAL:
 					hideDeviceSelection();
 					break;
@@ -160,6 +195,45 @@ public class Options extends Form implements Pushable, CommandListener,
 					gpsDevice.setText((port == null) ? "(not selected)" : port);
 					showDeviceSelection();
 					break;
+				case Midlet.GPS_SOCKET:
+					gpsDevice.setLabel("Local port:");
+					String addr = Midlet.config.get(Config.GPS_TCP_PORT);
+					gpsDevice.setText((addr == null) ? "(not selected)" : addr);
+					tcpPort.setString(addr);
+					showDeviceSelection();
+					break;
+			}
+		}
+	}
+	
+	private int selectionToGpsType() {
+		String s = gpsType.getString(gpsType.getSelectedIndex());
+		if (s == NAME_MANUAL) return Midlet.GPS_MANUAL;
+		if (s == NAME_SERIAL) return Midlet.GPS_SERIAL;
+		if (s == NAME_BLUETOOTH) return Midlet.GPS_BLUETOOTH;
+		if (s == NAME_INTERNAL) return Midlet.GPS_INTERNAL;
+		if (s == NAME_SOCKET) return Midlet.GPS_SOCKET;
+		return -1;
+	}
+	
+	private void setSelection (int type) {
+		String s = null;
+		switch (type) {
+			case Midlet.GPS_MANUAL:
+				s = NAME_MANUAL; break;
+			case Midlet.GPS_SERIAL:
+				s = NAME_SERIAL; break;
+			case Midlet.GPS_BLUETOOTH:
+				s = NAME_BLUETOOTH; break;
+			case Midlet.GPS_INTERNAL:
+				s = NAME_INTERNAL; break;
+			case Midlet.GPS_SOCKET:
+				s = NAME_SOCKET; break;
+		}
+		for (int i = 0; i < gpsType.size(); i++) {
+			if (gpsType.getString(i) == s) {
+				gpsType.setSelectedIndex(i, true);
+				return;
 			}
 		}
 	}

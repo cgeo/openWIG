@@ -61,12 +61,12 @@ public class Engine implements Runnable {
 			PrintStream l = log; log = null; // prevent logging while loading
 			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.environment);
 			state.call(closure, null, null, null);
-			log = l;
 			lbc = null;
 			closure = null;
 			
 			player.setprop("CompletionCode", gwcfile.code.intern());
 			player.setprop("Name", gwcfile.member.intern());
+			log = l;
 					
 			Midlet.start();
 
@@ -80,7 +80,7 @@ public class Engine implements Runnable {
 		callEvent(cartridge, "OnStart", null);
 			
 		while (!end) {
-			try { Thread.sleep(1000); } catch (Exception e) { }
+			try { Thread.sleep(1000); } catch (InterruptedException e) { }
 
 			try {
 				if (Midlet.gps.getLatitude() != player.position.latitude

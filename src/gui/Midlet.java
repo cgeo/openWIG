@@ -58,6 +58,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final int GPS_SERIAL = 1;
 	public static final int GPS_BLUETOOTH = 2;
 	public static final int GPS_INTERNAL = 3;
+	public static final int GPS_SOCKET = 4;
 	public static int gpsType;
 	
 	/////////////////////////////////////
@@ -209,6 +210,14 @@ public class Midlet extends MIDlet implements CommandListener {
 			case GPS_BLUETOOTH:
 				gps = new NMEAParser(config.get(Config.GPS_BT_URL));
 				break;
+			case GPS_SOCKET:
+				gps = new NMEAParser("socket://localhost:"+config.get(Config.GPS_TCP_PORT));
+				break;
+			case GPS_INTERNAL: try {
+				gps = new InternalProvider();
+				break;
+				} catch (Exception e) { error(e.getMessage()); }
+				// if exception is caught, no break and fallback to manual
 			default:
 				gpsType = GPS_MANUAL;
 				gps = coordinates;
