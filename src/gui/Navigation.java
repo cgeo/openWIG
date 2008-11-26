@@ -35,9 +35,15 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		
 		screen.setColor(0x00ff0000);
 		// arrow:
-		for (int i = 0; i < pointX.length; i++) {
+		int[] x = pointX; int[] y = pointY;
+		screen.fillTriangle(x[0],y[0],x[1],y[1],x[3],y[3]);
+		screen.setColor(0x00ffffff);
+		screen.fillTriangle(x[2],y[2],x[1],y[1],x[3],y[3]);
+		screen.setColor(0x00000000);
+		screen.fillArc(centerX-3, centerY-3, 7, 7, 0, 360);
+/*		for (int i = 0; i < pointX.length; i++) {
 			screen.drawLine(pointX[i], pointY[i], pointX[(i+1)%pointX.length], pointY[(i+1)%pointX.length]);
-		}
+		}*/
 		
 		screen.setColor(0x000000ff);
 		// NSEW:
@@ -49,8 +55,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		screen.setColor(0x00000000);
 		// labels:
 		int h = screen.getFont().getHeight();
-		screen.drawString("Dist: "+distance, 5, getHeight() - (3*h), screen.LEFT | screen.TOP);
-		screen.drawString("Azim: "+azimuth, 5, getHeight() - (2*h), screen.LEFT | screen.TOP);
+		screen.drawString("Dist: "+distance, 5, getHeight() - (2*h), screen.LEFT | screen.TOP);
+		screen.drawString("Azim: "+azimuth, 5, getHeight() - h, screen.LEFT | screen.TOP);
 	}
 
 	public void prepare() {
@@ -65,8 +71,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	}
 	
 	protected void sizeChanged (int w, int h) {
-		System.out.println("size changed to "+w+","+h);
-		int fh = Font.getDefaultFont().getHeight() * 3;
+		int fh = Font.getDefaultFont().getHeight();
 		centerX = w/2;
 		centerY = (h-fh)/2;
 		diameter = Math.min(centerX, centerY) - 5;
@@ -113,7 +118,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		pointY[1] = pointY[2] + tcos10;
 		pointY[3] = pointY[2] - tcos10;
 		
-		pointX[2] = centerX; pointY[2] = centerY;
+		pointX[2] = centerX - tcos10; pointY[2] = centerY + tsin10;
 		
 		northX = (int)(Math.cos(heading) * diameter);
 		northY = (int)(Math.sin(heading) * diameter);
