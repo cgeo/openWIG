@@ -207,7 +207,7 @@ public class Options extends Form implements Pushable, CommandListener,
 	}
 	
 	private int selectionToGpsType() {
-		String s = gpsType.getString(gpsType.getSelectedIndex());
+		String s = gpsType.getString(gpsType.getSelectedIndex()).intern();
 		if (s == NAME_MANUAL) return Midlet.GPS_MANUAL;
 		if (s == NAME_SERIAL) return Midlet.GPS_SERIAL;
 		if (s == NAME_BLUETOOTH) return Midlet.GPS_BLUETOOTH;
@@ -230,8 +230,9 @@ public class Options extends Form implements Pushable, CommandListener,
 			case Midlet.GPS_SOCKET:
 				s = NAME_SOCKET; break;
 		}
+		if (s == null) return;
 		for (int i = 0; i < gpsType.size(); i++) {
-			if (gpsType.getString(i) == s) {
+			if (s.equals(gpsType.getString(i))) {
 				gpsType.setSelectedIndex(i, true);
 				return;
 			}
