@@ -15,9 +15,16 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	private String chdir = null;
 	private boolean up = false;
 	private String openFile = null;
+	
+	private static Image gwc = null;
+	static {
+		try {
+			gwc = Image.createImage("/icons/compass.png");
+		} catch (IOException e) { }
+	}
 
 	public Browser() {
-		super("file browser", List.IMPLICIT);
+		super("wait...", List.IMPLICIT);
 		currentPath = Midlet.config.get(Config.LAST_DIRECTORY);
 		if (currentPath == null) currentPath = "";
 		
@@ -38,7 +45,8 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			deleteAll();
 			append("..", null);
 			while (list.hasMoreElements()) {
-				append(list.nextElement().toString(), null);
+				String fn = list.nextElement().toString();
+				append(fn, fn.toLowerCase().endsWith(".gwc") ? gwc : null);
 			}
 			Midlet.config.set(Config.LAST_DIRECTORY, where);
 		}
