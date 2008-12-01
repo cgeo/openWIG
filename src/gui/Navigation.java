@@ -10,12 +10,15 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	private Zone zone = null;
 	
 	private double heading, angle;
+	private double theading, tangle, hstep = 0, astep = 0;
 	private String distance, azimuth;
 	private int[] pointX = {0, 0, 0, 0}; // 0 - tip; 1 - left wing;
 	private int[] pointY = {0, 0, 0, 0}; // 2 - centre; 3 - right wing
 	private int diameter, half, smaller;
 	private int centerX, centerY;
 	private int northX, northY;
+	
+	private static final int STEPS = 4;
 	
 	public Navigation (ZonePoint point) {
 		target = point;
@@ -80,16 +83,46 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		updateNavi();
 	}
 	
-	synchronized private void updateNavi() {
+	private double round (double sum) {
+		while (sum > Math.PI) sum -= ZonePoint.PI_MUL_2;
+		while (sum < -Math.PI) sum += ZonePoint.PI_MUL_2;
+		return sum;
+	}
+	
+	synchronized private boolean updateNavi() {
 		if (zone != null) {
 			target.latitude = zone.nearestX;
 			target.longitude = zone.nearestY;
 		}
 		
 		// now we have a point to navigate to. get our heading:
-		heading = ZonePoint.azimuth2angle(-Midlet.gps.getHeading());
+		double nheading = ZonePoint.azimuth2angle(-Midlet.gps.getHeading());
+		if (nheading != theading) {
+			theading = nheading;
+			hstep = round(nheading - heading) / STEPS;
+		}
 		double bearing = target.bearing(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
-		angle = bearing + heading - ZonePoint.PI_2;
+		double nangle = bearing + theading - ZonePoint.PI_2;
+		if (nangle != tangle) {
+			tangle = nangle;
+			astep = round(nangle - angle) / STEPS;
+		}
+		if (theading == heading && tangle == angle) return false;
+		
+		double a = Math.abs(round(heading - theading));
+		if (hstep != 0 && a >= Math.abs(hstep)) {
+			heading = round(heading + hstep);
+		} else {
+			heading = theading;
+			hstep = 0;
+		}
+		a = Math.abs(round(angle - tangle));
+		if (astep != 0 && a >= Math.abs(astep)) {
+			angle = round(angle + astep);
+		} else {
+			angle = tangle;
+			astep = 0;
+		}
 		
 		double dist;
 		if (zone != null) {
@@ -122,6 +155,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		
 		northX = (int)(Math.cos(heading) * diameter);
 		northY = (int)(Math.sin(heading) * diameter);
+		
+		return true;
 	}
 
 	private boolean running = false;
@@ -140,9 +175,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	
 	public void run () {
 		while (running) {
-			try { Thread.sleep(200); } catch (Exception e) { }
-			updateNavi();
-			repaint();
+			try { Thread.sleep(200); } catch (InterruptedException e) { }
+			if (updateNavi()) repaint();
 		}
 	}
 

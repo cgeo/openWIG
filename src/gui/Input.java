@@ -37,7 +37,7 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 		}
 		append(image);
 		
-		String text = (String)input.table.rawget("Text");
+		String text = Engine.removeHtml((String)input.table.rawget("Text"));
 		if (text != null && text.length() > 0) {
 			StringItem question = new StringItem(null, text);
 			append(question);

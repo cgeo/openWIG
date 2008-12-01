@@ -55,7 +55,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void prepare () {
 		setMode();
-		if (Midlet.gps != this && Midlet.gps.getState() == LocationProvider.ONLINE) {
+		if (Midlet.gps != this && Midlet.gps.getState() != LocationProvider.OFFLINE) {
 			start();
 		} else {
 			stop();
@@ -163,6 +163,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		if (disp == this) {
 			if (cmd == CMD_GPS_ON) {
 				startGPS();
+				prepare();
 			} else if (cmd == CMD_GPS_OFF) {
 				stopGPS();
 				prepare();

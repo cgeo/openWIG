@@ -6,6 +6,7 @@ import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.*;
 
 import java.io.*;
+import java.util.Calendar;
 
 public class Engine implements Runnable {
 
@@ -113,7 +114,7 @@ public class Engine implements Runnable {
 	}
 		
 	public static void message(LuaTable message) {
-		String[] texts = {(String)message.rawget("Text")};
+		String[] texts = {removeHtml((String)message.rawget("Text"))};
 		Media[] media = {(Media)message.rawget("Media")};
 		String button1 = null, button2 = null;
 		LuaTable buttons = (LuaTable)message.rawget("Buttons");
@@ -155,11 +156,44 @@ public class Engine implements Runnable {
 	
 	public static void log(String s) {
 		if (instance.log == null) return;
-		String msg = Double.toString(Midlet.gps.getLatitude()) + "|" +
-			     Double.toString(Midlet.gps.getLongitude()) + "|" +
-			     Double.toString(Midlet.gps.getAltitude()) + "|" +
-			     Double.toString(Midlet.gps.getPrecision()) + "|:: " + s;
-		instance.log.println(msg); instance.log.flush();
-		System.out.println(msg);
+		Calendar now = Calendar.getInstance();
+		instance.log.print(now.get(now.HOUR_OF_DAY));
+		instance.log.print(':');
+		instance.log.print(now.get(now.MINUTE));
+		instance.log.print(':');
+		instance.log.print(now.get(now.SECOND));
+		instance.log.print('|');
+		instance.log.print((int)(Midlet.gps.getLatitude() * 10000 + 0.5) / 10000.0);
+		instance.log.print('|');
+		instance.log.print((int)(Midlet.gps.getLongitude() * 10000 + 0.5) / 10000.0);
+		instance.log.print('|');
+		instance.log.print(Midlet.gps.getAltitude());
+		instance.log.print('|');
+		instance.log.print(Midlet.gps.getPrecision());
+		instance.log.print("|:: ");
+		instance.log.println(s);
+		instance.log.flush();
+	}
+	
+	public static String removeHtml (String s) {
+		StringBuffer sb = new StringBuffer(s.length());
+		int pos = 0;
+		while (pos < s.length()) {
+			int np = s.indexOf("<BR>", pos);
+			if (np == -1) break;
+			sb.append(s.substring(pos, np));
+			pos = np + 4;
+		}
+		sb.append(s.substring(pos));
+		s = sb.toString(); pos = 0; sb.delete(0, sb.length());
+		while (pos < s.length()) {
+			int np = s.indexOf("&nbsp;", pos);
+			if (np == -1) break;
+			sb.append(s.substring(pos, np));
+			sb.append(' ');
+			pos = np + 6;
+		}
+		sb.append(s.substring(pos));
+		return sb.toString();
 	}
 }

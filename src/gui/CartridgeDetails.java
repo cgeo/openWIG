@@ -3,6 +3,7 @@ package gui;
 import gwc.CartridgeFile;
 import java.io.OutputStream;
 import javax.microedition.lcdui.*;
+import openwig.Engine;
 import openwig.ZonePoint;
 import util.Config;
 
@@ -30,7 +31,7 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 		description.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		
 		name.setLabel(cartridge.name);
-		description.setText(cartridge.description);
+		description.setText(Engine.removeHtml(cartridge.description));
 		
 		append(name);
 		append(image);

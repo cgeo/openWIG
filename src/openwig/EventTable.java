@@ -82,7 +82,7 @@ public class EventTable {
 		if (key == "Name") {
 			name = (String)value;
 		} else if (key == "Description") {
-			description = (String)value;
+			description = Engine.removeHtml((String)value);
 		} else if (key == "Visible") {
 			visible = LuaState.boolEval(value);
 		} else if (key == "ObjectLocation") {

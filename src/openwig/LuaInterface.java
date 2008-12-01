@@ -185,7 +185,7 @@ public class LuaInterface implements JavaFunction {
 		Media[] media = new Media[n];
 		for (int i = 1; i <= n; i++) {
 			LuaTable item = (LuaTable)lt.rawget(new Double(i));
-			texts[i-1] = (String)item.rawget("Text");
+			texts[i-1] = Engine.removeHtml((String)item.rawget("Text"));
 			media[i-1] = (Media)item.rawget("Media");
 		}
 		Engine.dialog(texts, media);

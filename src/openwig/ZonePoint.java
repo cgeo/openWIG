@@ -85,6 +85,7 @@ public class ZonePoint {
 	public static final double PI_180 = Math.PI / 180;
 	public static final double DEG_PI = 180 / Math.PI;
 	public static final double PI_2 = Math.PI / 2;
+	public static final double PI_MUL_2 = Math.PI * 2;
 	
 	public static ZonePoint copy (ZonePoint z) {
 		if (z == null) return null;
