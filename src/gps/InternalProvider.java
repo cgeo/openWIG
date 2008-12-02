@@ -6,13 +6,19 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	
 	private javax.microedition.location.LocationProvider provider;
 	private int state;
-	private Location lastLocation = null;
+	private static final QualifiedCoordinates invalidCoordinates = new QualifiedCoordinates(360, 360, -360, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+	private QualifiedCoordinates coords = null;
+	private float course = 0;
 	
 	public InternalProvider () throws Exception {
 		try {
 		provider = javax.microedition.location.LocationProvider.getInstance(new Criteria());
 		provider.setLocationListener(this, -1, -1, -1);
-		lastLocation = provider.getLastKnownLocation();
+		Location loc = provider.getLastKnownLocation();
+		if (loc != null && loc.isValid()) {
+			coords = loc.getQualifiedCoordinates();
+			course = loc.getCourse();
+		} else coords = invalidCoordinates;
 		state = provider.getState();
 		} catch (LocationException e) {
 			throw new Exception(e.toString());
@@ -20,23 +26,23 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	}
 
 	public double getLatitude() {
-		return lastLocation.getQualifiedCoordinates().getLatitude();
+		return coords.getLatitude();
 	}
 
 	public double getLongitude() {
-		return lastLocation.getQualifiedCoordinates().getLongitude();
+		return coords.getLongitude();
 	}
 
 	public double getAltitude() {
-		return lastLocation.getQualifiedCoordinates().getAltitude();
+		return coords.getAltitude();
 	}
 
 	public double getHeading() {
-		return lastLocation.getCourse();
+		return course;
 	}
 
 	public double getPrecision() {
-		return lastLocation.getQualifiedCoordinates().getHorizontalAccuracy();
+		return coords.getHorizontalAccuracy();
 	}
 
 	public int getState() {
@@ -52,7 +58,12 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	}
 
 	public void locationUpdated(javax.microedition.location.LocationProvider prov, Location location) {
-		lastLocation = location;
+		if (location != null && location.isValid()) {
+			coords = location.getQualifiedCoordinates();
+			course = location.getCourse();
+		} else {
+			// nothing, keep the old values?
+		}
 	}
 
 	public void providerStateChanged(javax.microedition.location.LocationProvider prov, int newstate) {
