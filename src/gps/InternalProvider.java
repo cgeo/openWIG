@@ -6,20 +6,26 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	
 	private javax.microedition.location.LocationProvider provider;
 	private int state;
-	private static final QualifiedCoordinates invalidCoordinates = new QualifiedCoordinates(360, 360, -360, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
 	private QualifiedCoordinates coords = null;
 	private float course = 0;
-	
-	public InternalProvider () throws Exception {
+
+	public InternalProvider() throws Exception {
 		try {
-		provider = javax.microedition.location.LocationProvider.getInstance(new Criteria());
-		provider.setLocationListener(this, -1, -1, -1);
-		Location loc = provider.getLastKnownLocation();
-		if (loc != null && loc.isValid()) {
-			coords = loc.getQualifiedCoordinates();
-			course = loc.getCourse();
-		} else coords = invalidCoordinates;
-		state = provider.getState();
+			Criteria c = new Criteria();
+			c.setAltitudeRequired(true);
+			c.setSpeedAndCourseRequired(true);
+			c.setCostAllowed(true);
+			provider = javax.microedition.location.LocationProvider.getInstance(c);
+			provider.setLocationListener(this, -1, -1, -1);
+			Location loc = provider.getLastKnownLocation();
+			if (loc != null && loc.isValid()) {
+				coords = loc.getQualifiedCoordinates();
+				course = loc.getCourse();
+				state = ONLINE;
+			} else {
+				coords = new QualifiedCoordinates(0, 0, -1000, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+				state = NO_FIX;
+			}
 		} catch (LocationException e) {
 			throw new Exception(e.toString());
 		}
@@ -46,9 +52,7 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	}
 
 	public int getState() {
-		if (state == provider.AVAILABLE) return ONLINE;
-		else if (state == provider.TEMPORARILY_UNAVAILABLE) return NO_FIX;
-		else return OFFLINE;
+		return state;
 	}
 
 	public void connect() {
@@ -61,13 +65,15 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 		if (location != null && location.isValid()) {
 			coords = location.getQualifiedCoordinates();
 			course = location.getCourse();
+			state = ONLINE;
 		} else {
+			state = NO_FIX;
 			// nothing, keep the old values?
 		}
 	}
 
 	public void providerStateChanged(javax.microedition.location.LocationProvider prov, int newstate) {
-		state = newstate;
+		if (newstate != prov.AVAILABLE) state = OFFLINE;
 	}
 
 }

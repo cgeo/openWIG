@@ -132,7 +132,7 @@ public class Options extends Form implements Pushable, CommandListener,
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == this) {
 			if (cmd == CMD_SAVE) {
-				int newtype = gpsType.getSelectedIndex();
+				int newtype = selectionToGpsType();
 				// TODO check valid parameters!
 				if (gpstype != newtype) gpsDirty = true;
 				Midlet.config.set(Config.GPS_TYPE, String.valueOf(newtype));
