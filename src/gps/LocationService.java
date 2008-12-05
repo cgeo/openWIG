@@ -1,6 +1,6 @@
 package gps;
 
-public interface LocationProvider {
+public interface LocationService {
 	public double getLatitude();
 	public double getLongitude();
 	public double getAltitude(); // in metres

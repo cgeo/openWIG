@@ -2,9 +2,9 @@ package gps;
 
 import javax.microedition.location.*;
 
-public class InternalProvider implements gps.LocationProvider, LocationListener {
+public class InternalProvider implements LocationService, LocationListener {
 	
-	private javax.microedition.location.LocationProvider provider;
+	private LocationProvider provider;
 	private int state;
 	private QualifiedCoordinates coords = null;
 	private float course = 0;
@@ -15,9 +15,9 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 			c.setAltitudeRequired(true);
 			c.setSpeedAndCourseRequired(true);
 			c.setCostAllowed(true);
-			provider = javax.microedition.location.LocationProvider.getInstance(c);
+			provider = LocationProvider.getInstance(c);
 			provider.setLocationListener(this, -1, -1, -1);
-			Location loc = provider.getLastKnownLocation();
+			Location loc = LocationProvider.getLastKnownLocation();
 			if (loc != null && loc.isValid()) {
 				coords = loc.getQualifiedCoordinates();
 				course = loc.getCourse();
@@ -61,7 +61,7 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 	public void disconnect() {
 	}
 
-	public void locationUpdated(javax.microedition.location.LocationProvider prov, Location location) {
+	public void locationUpdated(LocationProvider prov, Location location) {
 		if (location != null && location.isValid()) {
 			coords = location.getQualifiedCoordinates();
 			course = location.getCourse();
@@ -72,8 +72,8 @@ public class InternalProvider implements gps.LocationProvider, LocationListener 
 		}
 	}
 
-	public void providerStateChanged(javax.microedition.location.LocationProvider prov, int newstate) {
-		if (newstate != prov.AVAILABLE) state = OFFLINE;
+	public void providerStateChanged(LocationProvider prov, int newstate) {
+		if (newstate != LocationProvider.AVAILABLE) state = OFFLINE;
 	}
 
 }

@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * Tato trida se stara o zpracovani NMEA zprav zasilanych od GPS
  */
-public class NMEAParser implements Runnable, LocationProvider {
+public class NMEAParser implements Runnable, LocationService {
 	//gps udaje
 	protected double latitude;
 	protected double longitude;
@@ -438,10 +438,10 @@ public class NMEAParser implements Runnable, LocationProvider {
 	}
 
 	public int getState() {
-		if (thread == null) return LocationProvider.OFFLINE;
-		if (! connected) return LocationProvider.CONNECTING;
-		if (! fix) return LocationProvider.NO_FIX;
-		return LocationProvider.ONLINE;
+		if (thread == null) return LocationService.OFFLINE;
+		if (! connected) return LocationService.CONNECTING;
+		if (! fix) return LocationService.NO_FIX;
+		return LocationService.ONLINE;
 	}
 }
 

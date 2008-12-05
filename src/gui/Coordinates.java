@@ -1,9 +1,9 @@
 package gui;
 
-import gps.LocationProvider;
+import gps.LocationService;
 import javax.microedition.lcdui.*;
 
-public class Coordinates extends Form implements CommandListener, Pushable, Runnable, LocationProvider {
+public class Coordinates extends Form implements CommandListener, Pushable, Runnable, LocationService {
 	
 	private TextField latitude = new TextField("latitude", null, 99, TextField.DECIMAL);
 	private TextField longitude = new TextField("longitude", null, 99, TextField.DECIMAL);
@@ -55,7 +55,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void prepare () {
 		setMode();
-		if (Midlet.gps != this && Midlet.gps.getState() != LocationProvider.OFFLINE) {
+		if (Midlet.gps != this && Midlet.gps.getState() != LocationService.OFFLINE) {
 			start();
 		} else {
 			stop();
@@ -123,7 +123,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private void updateScreen () {
 		lblGps.setText(states[Midlet.gps.getState()]);
 		if (Midlet.gps == this) return;
-		if (Midlet.gps.getState() == LocationProvider.ONLINE) {
+		if (Midlet.gps.getState() == LocationService.ONLINE) {
 			lblLat.setText(makeFriendlyLat(Midlet.gps.getLatitude()));
 			lblLon.setText(makeFriendlyLon(Midlet.gps.getLongitude()));
 			lblAlt.setText(String.valueOf(Midlet.gps.getAltitude()));
@@ -207,7 +207,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	}
 
 	public int getState() {
-		return LocationProvider.ONLINE;
+		return LocationService.ONLINE;
 	}
 
 	public void connect() { }

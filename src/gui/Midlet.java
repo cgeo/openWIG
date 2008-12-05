@@ -53,7 +53,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	
 	public static Displayable getCurrentScreen () { return currentScreen; }
 	
-	public static LocationProvider gps;
+	public static LocationService gps;
 	public static final int GPS_MANUAL = 0;
 	public static final int GPS_SERIAL = 1;
 	public static final int GPS_BLUETOOTH = 2;
