@@ -1,6 +1,8 @@
 package gui;
 
-import gps.*;
+import gps.InternalProviderRedirector;
+import gps.LocationService;
+import gps.NMEAParser;
 import gwc.CartridgeFile;
 import java.io.OutputStream;
 import javax.microedition.midlet.*;
@@ -214,7 +216,7 @@ public class Midlet extends MIDlet implements CommandListener {
 				gps = new NMEAParser("socket://localhost:"+config.get(Config.GPS_TCP_PORT));
 				break;
 			case GPS_INTERNAL: try {
-				gps = new InternalProvider();
+				gps = InternalProviderRedirector.getInstance();
 				break;
 				} catch (Exception e) { error(e.getMessage()); }
 				// if exception is caught, no break and fallback to manual
