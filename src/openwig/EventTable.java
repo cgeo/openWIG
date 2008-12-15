@@ -100,6 +100,7 @@ public class EventTable {
 	}
 	
 	public void callEvent(String name, Object param) {
+		try {
 		synchronized (Engine.state) {
 			try {
 				Object o = table.rawget(name.intern());
@@ -112,6 +113,9 @@ public class EventTable {
 			} catch (Exception e) {
 				Engine.stacktrace(e);
 			}
+		}
+		} catch (Throwable t) {
+			Engine.stacktrace(t);
 		}
 	}
 	

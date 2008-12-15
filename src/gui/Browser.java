@@ -72,6 +72,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	}
 
 	synchronized public void run() {
+		try {
 		// init path
 		try {
 			if (currentPath.length() == 0) {
@@ -79,6 +80,9 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			} else try {
 				chdir(currentPath);
 			} catch (IOException e) {
+				currentPath = "";
+				listRoot();
+			} catch (IllegalArgumentException e) {
 				currentPath = "";
 				listRoot();
 			}
@@ -135,6 +139,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 
 			try { wait(); } catch (InterruptedException e) { }
 		}
+		} catch (Throwable t) { Midlet.error("browser:"+currentPath+t.toString()); }
 	}
 
 	synchronized public void commandAction(Command cmd, Displayable disp) {

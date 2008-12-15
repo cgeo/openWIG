@@ -39,6 +39,7 @@ public class Engine implements Runnable {
 	}	
 	
 	public void run() {
+		try {
 		state = new LuaState(System.out);
 		
 		BaseLib.register(state);
@@ -95,9 +96,12 @@ public class Engine implements Runnable {
 			}
 		}
 		log.close();
+		} catch (Throwable t) {
+			Engine.stacktrace(t);
+		}
 	}
 	
-	public static void stacktrace (Exception e) {
+	public static void stacktrace (Throwable e) {
 		e.printStackTrace();
 		System.out.println(state.currentThread.stackTrace);
 		String msg = e.toString()+"\n\nstack trace: " + state.currentThread.stackTrace;

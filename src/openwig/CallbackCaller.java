@@ -14,6 +14,7 @@ public class CallbackCaller extends Thread {
 	}
 
 	public void run() {
+		try {
 		synchronized (Engine.state) {
 			try {
 				Engine.state.call(callback, value, null, null);
@@ -22,6 +23,9 @@ public class CallbackCaller extends Thread {
 			}
 		}
 		Midlet.refresh();
+		} catch (Throwable t) {
+			Engine.stacktrace(t);
+		}
 	}
 
 }
