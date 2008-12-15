@@ -76,8 +76,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	protected void sizeChanged (int w, int h) {
 		int fh = Font.getDefaultFont().getHeight();
 		centerX = w/2;
-		centerY = (h-fh)/2;
+		centerY = (h - 3*fh)/2;
 		diameter = Math.min(centerX, centerY) - 5;
+		centerY += fh;
 		half = diameter/2;
 		smaller = diameter/5;
 		updateNavi();
@@ -124,18 +125,14 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			astep = 0;
 		}
 		
-		double dist;
 		if (zone != null) {
-			if (zone.ncontain == Zone.INSIDE) dist = 0;
-			else dist = zone.distance;
+			if (zone.ncontain == Zone.INSIDE) distance = "inside";
+			else distance = ZonePoint.makeFriendlyDistance(zone.distance);
 		}
-		else dist = target.distance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
+		else distance = target.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
 
-		long part = (long)(dist * 1000);
-		double d = part/1000.0;
-		distance = Double.toString(d)+" m";
-		part = (long)(ZonePoint.angle2azimuth(bearing) * 100);
-		d = part/100;
+		long part = (long)(ZonePoint.angle2azimuth(bearing) * 100);
+		double d = part/100;
 		azimuth = Double.toString(d);
 		
 		double tsin = Math.sin(angle);

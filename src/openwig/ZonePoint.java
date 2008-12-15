@@ -146,6 +146,25 @@ public class ZonePoint {
 		return Math.sqrt(mx * mx + my * my);
 	}
 	
+	public String friendlyDistance (double lat, double lon) {
+		return makeFriendlyDistance(distance(lat, lon));
+	}
+	
+	public static String makeFriendlyDistance (double dist) {
+		double d = 0; long part = 0;
+		if (dist > 1500) { // abcd.ef km
+			part = (long)(dist / 10);
+			d = part / 100.0;
+			return Double.toString(d)+" km";
+		} else if (dist > 100) { // abcd m
+			return Double.toString((long)dist)+" m";
+		} else { // abcd.ef m
+			part = (long)(dist * 100);
+			d = part / 100.0;
+			return Double.toString(d)+" m";
+		}
+	}
+	
 	public double bearing (double lat, double lon) {
 		// calculates bearing from specified point to here
 		return MathLib.atan2(latitude - lat, longitude - lon);

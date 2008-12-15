@@ -67,9 +67,7 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 	}
 	
 	private void updateNavi () {
-		long part = (long)(startPoint.distance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude()) * 1000);
-		double d = part/1000.0;
-		distance.setText(Double.toString(d)+" m");
+		distance.setText(startPoint.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude()));
 	}
 	
 	private boolean running = false;

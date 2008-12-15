@@ -7,6 +7,7 @@ import openwig.Media;
 import openwig.Thing;
 import openwig.Task;
 import openwig.Zone;
+import openwig.ZonePoint;
 import util.Config;
 
 public class Details extends Form implements CommandListener, Pushable, Runnable {
@@ -14,6 +15,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private static final Command CMD_ACTIONS = new Command("Actions", Command.SCREEN, 0);
 	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 1);
 	
+	private StringItem name = new StringItem(null, null);
 	private StringItem description = new StringItem(null, null);
 	private StringItem state = new StringItem("State: ", null);
 	private StringItem distance = new StringItem("Distance: ", null);
@@ -25,9 +27,10 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private Things parent;
 	
 	public Details (EventTable t, Things where) {
-		super(null);
+		super(t.name);
 		thing = t;
 		parent = where;
+		append(name);
 		append(image);
 		append(description);
 		setCommandListener(this);
@@ -61,6 +64,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		}
 		
 		setTitle(thing.name);
+		name.setLabel(thing.name);
 		description.setText(thing.description);
 		
 				
@@ -105,11 +109,9 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		state.setText(ss);
 		
 		if (z.ncontain == Zone.INSIDE) { 
-			distance.setText("0 m");
+			distance.setText("inside");
 		} else {
-			long part = (long)(z.distance * 1000);
-			double d = part/1000.0;
-			distance.setText(Double.toString(d)+" m");
+			distance.setText(ZonePoint.makeFriendlyDistance(z.distance));
 		}
 	}
 	
