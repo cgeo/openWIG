@@ -227,6 +227,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
+		try {
 		Form f = new Form("splash");
 		f.append(new StringItem(null, "Starting..."));
 		f.addCommand(CMD_EXIT);
@@ -235,6 +236,9 @@ public class Midlet extends MIDlet implements CommandListener {
 
 		Thread t = new Thread(new Engine(cf, log));
 		t.start();
+		} catch (Throwable t) {
+			error(t.toString());
+		}
 	}
 	
 	public static void start () {

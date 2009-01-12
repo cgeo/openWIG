@@ -15,8 +15,10 @@ public class EventCaller extends Thread {
 	}
 
 	public void run() {
+		try {
 		target.callEvent(event, param);
 		Midlet.refresh();
+		} catch (Throwable t) { Midlet.error(t.toString()); }
 	}
 
 }
