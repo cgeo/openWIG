@@ -86,14 +86,14 @@ public class Timer extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Type" && value instanceof String) {
+		if ("Type".equals(key) && value instanceof String) {
 			String v = (String)value;
-			if (v == "Countdown") {
+			if ("Countdown".equals(v)) {
 				type = COUNTDOWN;
-			} else if (v == "Interval") {
+			} else if ("Interval".equals(v)) {
 				type = INTERVAL;
 			}
-		} else if (key == "Duration" && value instanceof Double) {
+		} else if ("Duration".equals(key) && value instanceof Double) {
 			long d = (long)LuaState.fromDouble(value);
 			duration = d * 1000;
 		} else super.setItem(key, value);

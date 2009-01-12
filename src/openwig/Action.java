@@ -29,15 +29,15 @@ public class Action extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Text") {
+		if ("Text".equals(key)) {
 			text = (String)value;
-		} else if (key == "CmdWith") {
+		} else if ("CmdWith".equals(key)) {
 			parameter = LuaState.boolEval(value);
-		} else if (key == "Enabled") {
+		} else if ("Enabled".equals(key)) {
 			enabled = LuaState.boolEval(value);
-		} else if (key == "WorksWithAll") {
+		} else if ("WorksWithAll".equals(key)) {
 			universal = LuaState.boolEval(value);
-		} else if (key == "WorksWithList") {
+		} else if ("WorksWithList".equals(key)) {
 			LuaTable lt = (LuaTable)value;
 			Object i = null;
 			while ((i = lt.next(i)) != null) {

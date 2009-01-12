@@ -79,13 +79,13 @@ public class EventTable {
 	}
 
 	protected void setItem(String key, Object value) {
-		if (key == "Name") {
+		if ("Name".equals(key)) {
 			name = (String)value;
-		} else if (key == "Description") {
+		} else if ("Description".equals(key)) {
 			description = Engine.removeHtml((String)value);
-		} else if (key == "Visible") {
+		} else if ("Visible".equals(key)) {
 			visible = LuaState.boolEval(value);
-		} else if (key == "ObjectLocation") {
+		} else if ("ObjectLocation".equals(key)) {
 			position = ZonePoint.copy((ZonePoint)value);
 		}
 	}

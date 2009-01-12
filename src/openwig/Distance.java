@@ -38,9 +38,9 @@ public class Distance {
 			Distance z = (Distance) frame.get(0);
 			String name = (String) frame.get(1);
 			Object ret = null;
-			if (name == "value")
+			if ("value".equals(name))
 				ret = LuaState.toDouble(z.value);
-			else if (name == "GetValue")
+			else if ("GetValue".equals(name))
 				ret = Distance.getValueMethod;
 			frame.push(ret);
 			return 1;

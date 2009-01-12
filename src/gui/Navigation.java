@@ -50,16 +50,16 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		
 		screen.setColor(0x000000ff);
 		// NSEW:
-		screen.drawChar('N', centerX + northX, centerY - northY, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('S', centerX - northX, centerY + northY, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('E', centerX + northY, centerY + northX, screen.HCENTER | screen.BASELINE);
-		screen.drawChar('W', centerX - northY, centerY - northX, screen.HCENTER | screen.BASELINE);
+		screen.drawChar('N', centerX + northX, centerY - northY, Graphics.HCENTER | Graphics.BASELINE);
+		screen.drawChar('S', centerX - northX, centerY + northY, Graphics.HCENTER | Graphics.BASELINE);
+		screen.drawChar('E', centerX + northY, centerY + northX, Graphics.HCENTER | Graphics.BASELINE);
+		screen.drawChar('W', centerX - northY, centerY - northX, Graphics.HCENTER | Graphics.BASELINE);
 		
 		screen.setColor(0x00000000);
 		// labels:
 		int h = screen.getFont().getHeight();
-		screen.drawString("Dist: "+distance, 5, getHeight() - (2*h), screen.LEFT | screen.TOP);
-		screen.drawString("Azim: "+azimuth, 5, getHeight() - h, screen.LEFT | screen.TOP);
+		screen.drawString("Dist: "+distance, 5, getHeight() - (2*h), Graphics.LEFT | Graphics.TOP);
+		screen.drawString("Azim: "+azimuth, 5, getHeight() - h, Graphics.LEFT | Graphics.TOP);
 	}
 
 	public void prepare() {

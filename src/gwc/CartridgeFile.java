@@ -105,9 +105,9 @@ public class CartridgeFile {
 		if (source.position() > offsets[0]) resetSource();
 		source.pseudoSeek(offsets[0]);
 		int len = source.readInt();
-		byte[] file = new byte[len];
-		source.read(file);
-		return file;
+		byte[] ffile = new byte[len];
+		source.read(ffile);
+		return ffile;
 	}
 
 	private int lastId = -1;
@@ -130,13 +130,13 @@ public class CartridgeFile {
 		if (a != 1) { // deleted object 
 			return null;
 		}
-		int type = source.readInt(); // we don't need this?
+		int ttype = source.readInt(); // we don't need this?
 		int len = source.readInt();
-		byte[] file = new byte[len];
-		source.read(file);
+		byte[] ffile = new byte[len];
+		source.read(ffile);
 		
 		lastId = id;
-		lastFile = file;
-		return file;
+		lastFile = ffile;
+		return ffile;
 	}
 }

@@ -25,22 +25,22 @@ public class Task extends EventTable {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Active") {
+		if ("Active".equals(key)) {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) {
 				active = a;
 				callEvent("OnSetActive", null);
 			}
-		} else if (key == "Complete") {
+		} else if ("Complete".equals(key)) {
 			boolean c = LuaState.boolEval(value);
 			if (c != complete) {
 				complete = c;
 				callEvent("OnSetComplete", null);
 			}
-		} else if (key == "CorrectState" && value instanceof String) {
+		} else if ("CorrectState".equals(key) && value instanceof String) {
 			String v = (String)value;
 			int s = DONE;
-			if (v == "incorrect") s = FAILED;
+			if ("incorrect".equals(v)) s = FAILED;
 			if (s != state) {
 				state = s;
 				callEvent("OnSetCorrectState", null);

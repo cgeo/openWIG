@@ -19,7 +19,7 @@ public class Thing extends Container {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Commands") {
+		if ("Commands".equals(key)) {
 			LuaTable lt = (LuaTable)value;
 			Object i = null;
 			while ((i = lt.next(i)) != null) {

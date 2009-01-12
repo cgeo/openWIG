@@ -44,11 +44,11 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 		}
 		
 		String type = (String)input.table.rawget("InputType");
-		if (type == "Text") {
+		if ("Text".equals(type)) {
 			answer = new TextField("Answer:", null, 500, TextField.ANY);
 			append(answer);
 			mode = TEXT;
-		} else if (type == "MultipleChoice") {
+		} else if ("MultipleChoice".equals(type)) {
 			choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
 			choice.setFitPolicy(Choice.TEXT_WRAP_ON);
 			if (Midlet.config.getInt(Config.CHOICE_SHOWFULL) > 0) {

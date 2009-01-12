@@ -31,11 +31,11 @@ public class ZonePoint {
 			ZonePoint z = (ZonePoint) frame.get(0);
 			String name = (String) frame.get(1);
 			Object ret = null;
-			if (name == "latitude")
+			if ("latitude".equals(name))
 				ret = LuaState.toDouble(z.latitude);
-			else if (name == "longitude")
+			else if ("longitude".equals(name))
 				ret = LuaState.toDouble(z.longitude);
-			else if (name == "altitude")
+			else if ("altitude".equals(name))
 				ret = z.altitude;
 				// ret = LuaState.toDouble(z.altitude);
 			frame.push(ret);
@@ -47,11 +47,11 @@ public class ZonePoint {
 			ZonePoint z = (ZonePoint) frame.get(0);
 			String name = (String) frame.get(1);
 			Object value = frame.get(2);
-			if (name == "latitude")
+			if ("latitude".equals(name))
 				z.latitude = LuaState.fromDouble(value);
-			else if (name == "longitude")
+			else if ("longitude".equals(name))
 				z.longitude = LuaState.fromDouble(value);
-			else if (name == "altitude")
+			else if ("altitude".equals(name))
 				BaseLib.luaAssert(value.getClass() == Distance.class, "invalid value for altitude");
 				z.altitude = (Distance)value;
 				// z.altitude = LuaState.fromDouble(value);

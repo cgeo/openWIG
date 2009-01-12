@@ -44,7 +44,7 @@ public class Zone extends Container {
 	}
 	
 	protected void setItem (String key, Object value) {
-		if (key == "Points" && value != null) {
+		if ("Points".equals(key) && value != null) {
 			LuaTable lt = (LuaTable) value;
 			int n = lt.len();
 			points = new ZonePoint[n];
@@ -56,7 +56,7 @@ public class Zone extends Container {
 				walk(Engine.instance.player.position);
 				//setcontain();
 			}
-		} else if (key == "Active") {
+		} else if ("Active".equals(key)) {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
 			active = a;
@@ -67,26 +67,26 @@ public class Zone extends Container {
 				contain = ncontain = (distanceRange < 0) ? DISTANT : NOWHERE;
 				if (Engine.instance.player.location == this) Engine.instance.player.moveTo(null);
 			}
-		} else if (key == "Visible") {
+		} else if ("Visible".equals(key)) {
 			boolean a = LuaState.boolEval(value);
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
-		} else if (key == "DistanceRange" && value instanceof Distance) {
+		} else if ("DistanceRange".equals(key) && value instanceof Distance) {
 			distanceRange = ((Distance)value).getValue("meters");
 			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
-		} else if (key == "ProximityRange" && value instanceof Distance) {
+		} else if ("ProximityRange".equals(key) && value instanceof Distance) {
 			proximityRange = ((Distance)value).getValue("meters");
-		} else if (key == "ShowObjects") {
+		} else if ("ShowObjects".equals(key)) {
 			String v = (String)value;
-			if (v == "Always") {
+			if ("Always".equals(v)) {
 				showObjects = S_ALWAYS;
-			} else if (v == "OnProximity") {
+			} else if ("OnProximity".equals(v)) {
 				showObjects = S_ONPROXIMITY;
-			} else if (v == "OnEnter") {
+			} else if ("OnEnter".equals(v)) {
 				showObjects = S_ONENTER;
-			} else if (v == "Never") {
+			} else if ("Never".equals(v)) {
 				showObjects = S_NEVER;
 			}
 		} else super.setItem(key, value);

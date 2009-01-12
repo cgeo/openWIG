@@ -161,11 +161,11 @@ public class Engine implements Runnable {
 	public static void log(String s) {
 		if (instance.log == null) return;
 		Calendar now = Calendar.getInstance();
-		instance.log.print(now.get(now.HOUR_OF_DAY));
+		instance.log.print(now.get(Calendar.HOUR_OF_DAY));
 		instance.log.print(':');
-		instance.log.print(now.get(now.MINUTE));
+		instance.log.print(now.get(Calendar.MINUTE));
 		instance.log.print(':');
-		instance.log.print(now.get(now.SECOND));
+		instance.log.print(now.get(Calendar.SECOND));
 		instance.log.print('|');
 		instance.log.print((int)(Midlet.gps.getLatitude() * 10000 + 0.5) / 10000.0);
 		instance.log.print('|');

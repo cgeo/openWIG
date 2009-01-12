@@ -23,15 +23,15 @@ public class Media extends EventTable implements PlayerListener {
 	}
 	
 	protected void setItem (String key, Object value) {	
-		if (key == "AltText") {
+		if ("AltText".equals(key)) {
 			altText = (String)value;
-		} else if (key == "Resources") {
+		} else if ("Resources".equals(key)) {
 			LuaTable lt = (LuaTable)value;
 			int n = lt.len();
 			for (int i = 1; i <= n; i++) {
 				LuaTable res = (LuaTable)lt.rawget(new Double(i));
 				String t = (String)res.rawget("Type");
-				if (t == "fdl") continue;
+				if ("fdl".equals(t)) continue;
 				type = t.toLowerCase().intern();
 			}
 		} else super.setItem(key, value);
@@ -45,8 +45,8 @@ public class Media extends EventTable implements PlayerListener {
 		try {
 			ByteArrayInputStream bis = new ByteArrayInputStream(Engine.mediaFile(this));
 			String mime = null;
-			if (type == "wav") mime = "audio/x-wav";
-			else if (type == "mp3") mime = "audio/mpeg";
+			if ("wav".equals(type)) mime = "audio/x-wav";
+			else if ("mp3".equals(type)) mime = "audio/mpeg";
 			javax.microedition.media.Player p = javax.microedition.media.Manager.createPlayer(bis,mime);
 			p.addPlayerListener(this);
 			p.start();
