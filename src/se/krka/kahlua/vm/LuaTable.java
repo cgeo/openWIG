@@ -28,6 +28,8 @@ import se.krka.kahlua.stdlib.BaseLib;
 
 
 public final class LuaTable {
+	private static final int MIN_CAPACITY = 16;
+
 	private Object[] keys;
 	private Object[] values;
 	private int[] next;
@@ -36,6 +38,9 @@ public final class LuaTable {
 	private boolean weakKeys, weakValues;
 
 	private static int nearestPowerOfTwo(int x) {
+		if (x < MIN_CAPACITY) {
+			return MIN_CAPACITY;
+		}
 		x--;
 		x |= (x >> 1);
 		x |= (x >> 2);
@@ -146,8 +151,20 @@ public final class LuaTable {
 			
 		}
 		
+		if (key instanceof String) {
+			while (true) {
+				if (key.equals(currentKey)) {
+					return index;
+				}
+				index = next[index];
+				if (index == -1) {
+					return -1;
+				}
+				currentKey = __getKey(index);
+			}
+		}
 		
-		// Assume equality == identity for all types except for doubles?
+		// Assume equality == identity for all types except for doubles and strings
 		while (true) {
 			if (key == currentKey) {
 				return index;
@@ -239,7 +256,6 @@ public final class LuaTable {
 			}
 		}
 		int capacity = 2 * nearestPowerOfTwo(used);
-
 
 		keys = new Object[capacity];
 		values = new Object[capacity];
@@ -348,9 +364,11 @@ public final class LuaTable {
 				return 0;
 			}
 			return ad.hashCode();
-		} else if (a instanceof String) {
+		}
+		if (a instanceof String) {
 			return a.hashCode();
-		} else return System.identityHashCode(a);
+		}
+		return System.identityHashCode(a);
 	}
 
 	public void updateWeakSettings(boolean k, boolean v) {

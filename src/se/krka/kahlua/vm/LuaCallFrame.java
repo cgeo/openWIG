@@ -41,24 +41,36 @@ public class LuaCallFrame {
 	boolean restoreTop;
 	
 	public void set(int index, Object o) {
+		if (index > getTop()) {
+			throw new LuaException("Tried to access index outside of stack, top: " + getTop() + ", index: " + index);
+		}
 		thread.objectStack[localBase + index] = o;
 	}
 
 	public Object get(int index) {
+		if (index > getTop()) {
+			throw new LuaException("Tried to access index outside of stack, top: " + getTop() + ", index: " + index);
+		}
 		return thread.objectStack[localBase + index];
 	}
 
-	public void push(Object x) {
+	public int push(Object x) {
 		int top = getTop();
 		setTop(top + 1);
 		set(top, x);
+		return 1; // returns how much we pushed onto the stack for return value purposes
 	}
 
-	public void push(Object x, Object y) {
+	public int push(Object x, Object y) {
 		int top = getTop();
 		setTop(top + 2);
 		set(top, x);
 		set(top + 1, y);
+		return 2; // returns how much we pushed onto the stack for return value purposes
+	}
+	
+	public int pushNil() {
+		return push(null);
 	}
 	
 	public final void stackCopy(int startIndex, int destIndex, int len) {
@@ -69,6 +81,17 @@ public class LuaCallFrame {
 		for (; startIndex <= endIndex; startIndex++) {
 			thread.objectStack[localBase + startIndex] = null;
 		}
+	}
+
+	/**
+	 * This ensures that top is at least as high as index, and that everything from index and up is empty.
+	 * @param index
+	 */
+	public void clearFromIndex(int index) {
+		if (getTop() < index) {
+			setTop(index);
+		}
+		stackClear(index, getTop() - 1);
 	}
 	
 	public void setTop(int index) {
@@ -103,14 +126,21 @@ public class LuaCallFrame {
 		}
 	}
 
+	public void setPrototypeStacksize() {
+		if (closure != null) {
+			setTop(closure.prototype.maxStacksize);
+		}
+	}
+	
 	public void pushVarargs(int index, int n) {
 		int nParams = closure.prototype.numParams;
 		int nVarargs = nArguments - nParams;
 		if (nVarargs < 0) nVarargs = 0;
-		if (n == -1) n = nVarargs;
+		if (n == -1) {
+			n = nVarargs;
+			setTop(index + n);
+		}
 		if (nVarargs > n) nVarargs = n;
-		
-		setTop(index + n);
 		
 		stackCopy(-nArguments + nParams, index, nVarargs);
 		
