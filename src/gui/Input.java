@@ -21,6 +21,7 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	private int mode = TEXT;
 	
 	private EventTable input;
+	private boolean eventCalled = false;
 	
 	public Input (EventTable input) {
 		super(input.name);
@@ -78,11 +79,14 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 			} else {
 				Engine.callEvent(input, "OnGetInput", null);
 			}
+			eventCalled = true;
 		}
 		Midlet.popDialog(this);
 	}
 
-	public void cancel() {}
+	public void cancel() {
+		if (!eventCalled) Engine.callEvent(input, "OnGetInput", null);
+	}
 
 	public void commandAction(Command cmd, Item it) {
 		if (it == choice && cmd == CMD_SHOWFULL) {

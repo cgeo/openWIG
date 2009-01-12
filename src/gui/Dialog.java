@@ -56,10 +56,8 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 		} else {
 			image.setImage(null);
 		}
-		deleteAll();
 		content.setText(texts[page]);
-		append(image);
-		append(content);
+		Midlet.display.setCurrentItem(image);
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
