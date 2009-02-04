@@ -83,6 +83,7 @@ public class Engine implements Runnable {
 			
 		while (!end) {
 			try { Thread.sleep(1000); } catch (InterruptedException e) { }
+			if (!end) break;
 
 			try {
 				if (Midlet.gps.getLatitude() != player.position.latitude
@@ -98,6 +99,9 @@ public class Engine implements Runnable {
 		log.close();
 		} catch (Throwable t) {
 			Engine.stacktrace(t);
+		} finally {
+			instance = null;
+			state = null;
 		}
 	}
 	
@@ -113,8 +117,6 @@ public class Engine implements Runnable {
 		Timer.kill();
 		if (instance == null) return;
 		instance.end = true;
-		instance = null;
-		state = null;
 	}
 		
 	public static void message(LuaTable message) {
@@ -180,6 +182,7 @@ public class Engine implements Runnable {
 	}
 	
 	public static String removeHtml (String s) {
+		if (s == null) return null;
 		StringBuffer sb = new StringBuffer(s.length());
 		int pos = 0;
 		while (pos < s.length()) {

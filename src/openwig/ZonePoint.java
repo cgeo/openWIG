@@ -113,7 +113,7 @@ public class ZonePoint {
 	
 	public ZonePoint translate (double angle, Distance distance) {
 		double dist = distance.value;
-		double rad = angle * PI_180;
+		double rad = azimuth2angle(angle);
 		double x = m2lat(dist * Math.sin(rad));
 		double y = m2lon(latitude, dist * Math.cos(rad));
 		return new ZonePoint(latitude + x, longitude + y, altitude);
