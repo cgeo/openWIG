@@ -26,8 +26,10 @@ public class LuaInterface implements JavaFunction {
 	private static final int NOCASEEQUALS = 16;
 	private static final int SHOWSCREEN = 17;
 	private static final int TRANSLATEPOINT = 18;
+	private static final int SHOWSTATUSTEXT = 19;
+	private static final int VECTORTOPOINT = 20;
 	
-	private static final int NUM_FUNCTIONS = 19;
+	private static final int NUM_FUNCTIONS = 21;
 	
 	private static final String[] names;
 	static {
@@ -51,6 +53,8 @@ public class LuaInterface implements JavaFunction {
 		names[NOCASEEQUALS] = "NoCaseEquals";
 		names[SHOWSCREEN] = "ShowScreen";
 		names[TRANSLATEPOINT] = "TranslatePoint";
+		names[SHOWSTATUSTEXT] = "ShowStatusText";
+		names[VECTORTOPOINT] = "VectorToPoint";
 	}
 
 	private int index;
@@ -141,6 +145,7 @@ public class LuaInterface implements JavaFunction {
 			case SHOWSCREEN: return showscreen(callFrame, nArguments);
 			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
 			case AUDIO: return playAudio(callFrame, nArguments);
+			case VECTORTOPOINT: return vectorToPoint(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -278,6 +283,17 @@ public class LuaInterface implements JavaFunction {
 		double angle = LuaState.fromDouble(callFrame.get(2));
 		callFrame.push(z.translate(angle, dist));
 		return 1;
+	}
+	
+	private int vectorToPoint (LuaCallFrame callFrame, int nArguments) {
+		BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for VectorToPoint");
+		ZonePoint a = (ZonePoint)callFrame.get(0);
+		ZonePoint b = (ZonePoint)callFrame.get(1);
+		double bearing = ZonePoint.angle2azimuth(b.bearing(a.latitude, a.longitude));
+		double distance = b.distance(a.latitude, a.longitude);
+		callFrame.push(LuaState.toDouble(bearing));
+		callFrame.push(LuaState.toDouble(distance));
+		return 2;
 	}
 
 	private int playAudio (LuaCallFrame callFrame, int nArguments) {
