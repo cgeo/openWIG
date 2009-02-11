@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007-2008 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -50,8 +50,9 @@ public final class BaseLib implements JavaFunction {
 	private static final int RAWGET = 15;
 	private static final int COLLECTGARBAGE = 16;
 	private static final int TABLECONCAT = 17;
+	private static final int DEBUGSTACKTRACE = 18;
 
-	private static final int NUM_FUNCTIONS = 18;
+	private static final int NUM_FUNCTIONS = 19;
 
 	private static final String[] names;
 	private static final Object MODE_KEY = "__mode";
@@ -86,6 +87,7 @@ public final class BaseLib implements JavaFunction {
 		names[RAWGET] = "rawget";
 		names[COLLECTGARBAGE] = "collectgarbage";
 		names[TABLECONCAT] = "tableconcat";
+		names[DEBUGSTACKTRACE] = "debugstacktrace";
 	}
 
 	private int index;
@@ -99,7 +101,7 @@ public final class BaseLib implements JavaFunction {
 		initFunctions();
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
-			state.environment.rawset(names[i], functions[i]);
+			state.getEnvironment().rawset(names[i], functions[i]);
 		}
 	}
 
@@ -137,11 +139,31 @@ public final class BaseLib implements JavaFunction {
 		case RAWGET: return rawget(callFrame, nArguments);
 		case COLLECTGARBAGE: return collectgarbage(callFrame, nArguments);
 		case TABLECONCAT: return tableConcat(callFrame, nArguments);
+		case DEBUGSTACKTRACE: return debugstacktrace(callFrame, nArguments);
 		default:
 			// Should never happen
 			// throw new Error("Illegal function object");
 			return 0;
 		}
+	}
+
+	private int debugstacktrace(LuaCallFrame callFrame, int nArguments) {
+		Double levelDouble = (Double) getOptArg(callFrame, 1, BaseLib.TYPE_NUMBER);
+		int level = 0;
+		if (levelDouble != null) {
+			level = levelDouble.intValue();
+		}
+		Double countDouble = (Double) getOptArg(callFrame, 2, BaseLib.TYPE_NUMBER);
+		int count = Integer.MAX_VALUE;
+		if (countDouble != null) {
+			count = countDouble.intValue(); 
+		}
+		Double haltAtDouble = (Double) getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER);
+		int haltAt = 0;
+		if (haltAtDouble != null) {
+			haltAt = haltAtDouble.intValue(); 
+		}
+		return callFrame.push(callFrame.thread.getCurrentStackTrace(level, count, haltAt));
 	}
 
 	private int rawget(LuaCallFrame callFrame, int nArguments) {
@@ -183,13 +205,26 @@ public final class BaseLib implements JavaFunction {
 	private int setfenv(LuaCallFrame callFrame, int nArguments) {
         luaAssert(nArguments >= 2, "Not enough arguments");
 
-        Object o = callFrame.get(0);
-    	luaAssert(o instanceof LuaClosure, "expected a lua function");
-
         LuaTable newEnv = (LuaTable) callFrame.get(1);
         luaAssert(newEnv != null, "expected a table");
+        
+    	LuaClosure closure = null;
+        
+        Object o = callFrame.get(0);
+        if (o instanceof LuaClosure) {
+        	closure = (LuaClosure) o;
+        } else {
+        	o = rawTonumber(o);
+        	luaAssert(o != null, "expected a lua function or a number");
+        	int level = ((Double) o).intValue();
+        	if (level == 0) {
+        		callFrame.thread.environment = newEnv;
+        		return 0;
+        	}
+        	closure = callFrame.thread.getParent(level).closure;
+        	luaAssert(closure != null, "No closure found at this level: " + level);
+        }
 
-    	LuaClosure closure = (LuaClosure) o;
     	closure.env = newEnv;
 
     	callFrame.setTop(1);
@@ -204,7 +239,7 @@ public final class BaseLib implements JavaFunction {
 
         Object res = null;
         if (o == null || o instanceof JavaFunction) {
-        	res = callFrame.thread.state.environment;
+        	res = callFrame.thread.environment;
         } else if (o instanceof LuaClosure) {
         	LuaClosure closure = (LuaClosure) o;
         	res = closure.env;
@@ -213,9 +248,7 @@ public final class BaseLib implements JavaFunction {
         	luaAssert(d != null, "Expected number");
         	int level = d.intValue();
         	luaAssert(level >= 0, "level must be non-negative");
-        	int callFrame2index = callFrame.thread.callFrameTop - level - 1;
-        	luaAssert(callFrame2index >= 0, "invalid level");
-        	LuaCallFrame callFrame2 = callFrame.thread.callFrameStack[callFrame2index];
+        	LuaCallFrame callFrame2 = callFrame.thread.getParent(level);
         	res = callFrame2.getEnvironment();
         }
         callFrame.push(res);
@@ -289,6 +322,11 @@ public final class BaseLib implements JavaFunction {
 
 	private int error(LuaCallFrame callFrame, int nArguments) {
 		if (nArguments >= 1) {
+			String stacktrace = (String) getOptArg(callFrame, 2, BaseLib.TYPE_STRING);
+			if (stacktrace == null) {
+				stacktrace = "";
+			}
+			callFrame.thread.stackTrace = stacktrace;
 			throw new LuaException(callFrame.get(0));
 		}
 		return 0;
@@ -300,7 +338,7 @@ public final class BaseLib implements JavaFunction {
 
 	private static int print(LuaCallFrame callFrame, int nArguments) {
 		LuaState state = callFrame.thread.state;
-		LuaTable env = state.environment;
+		LuaTable env = state.getEnvironment();
 		Object toStringFun = state.tableGet(env, "tostring");
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < nArguments; i++) {
@@ -341,8 +379,17 @@ public final class BaseLib implements JavaFunction {
 	}
 
 	public static String numberToString(Double num) {
+		if (num.isNaN()) {
+			return "nan";
+		}
+		if (num.isInfinite()) {
+			if (MathLib.isNegative(num.doubleValue())) {
+				return "-inf";
+			}
+			return "inf";
+		}
 		double n = num.doubleValue();
-		if (Math.floor(n) == n) {
+		if (Math.floor(n) == n && Math.abs(n) < 1e14) {
 			return String.valueOf(num.longValue());
 		}
 		return num.toString();
@@ -582,6 +629,16 @@ public final class BaseLib implements JavaFunction {
 				return LuaState.toDouble(Integer.parseInt(s, radix));
 			}
 		} catch (NumberFormatException e) {
+			s = s.toLowerCase();
+			if (s.endsWith("nan")) {
+				return LuaState.toDouble(Double.NaN);
+			}
+			if (s.endsWith("inf")) {
+				if (s.charAt(0) == '-') {
+					return LuaState.toDouble(Double.NEGATIVE_INFINITY);
+				}
+				return LuaState.toDouble(Double.POSITIVE_INFINITY);
+			}
 			return null;
 		}
 	}

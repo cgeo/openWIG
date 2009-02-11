@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007-2008 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,6 @@ public final class LuaState {
 	private static final int OP_CLOSURE = 36;
 	private static final int OP_VARARG = 37;
 
-	public LuaTable environment;
 	public LuaThread currentThread;
 
 	// Needed for Math lib - every state needs its own random
@@ -101,11 +100,11 @@ public final class LuaState {
 	}
 
 	public final void reset() {
-		environment = new LuaTable();
+		currentThread = new LuaThread(this, new LuaTable());
+
 		userdataMetatables = new LuaTable();
-		environment.rawset("_G", environment);
-		environment.rawset("_VERSION", "Lua 5.1 for CLDC 1.1");
-		currentThread = new LuaThread(this);
+		getEnvironment().rawset("_G", getEnvironment());
+		getEnvironment().rawset("_VERSION", "Lua 5.1 for CLDC 1.1");
 	}
 
 	/*
@@ -377,7 +376,8 @@ public final class LuaState {
 					if ((bd = BaseLib.rawTonumber(bo)) == null || (cd = BaseLib.rawTonumber(co)) == null) {
 						String meta_op = meta_ops[opcode];
 
-						Object metafun = getMetaOp(bo, co, meta_op);
+						Object metafun = getBinMetaOp(bo, co, meta_op);
+						BaseLib.luaAssert(metafun != null, meta_op + " not defined for operands");
 						res = call(metafun, bo, co, null);
 					} else {
 						res = primitiveMath(bd, cd, opcode);
@@ -396,6 +396,7 @@ public final class LuaState {
 						res = toDouble(-fromDouble(aDouble));
 					} else {
 						Object metafun = getMetaOp(aObj, "__unm");
+						BaseLib.luaAssert(metafun != null, "__unm not defined for operand");
 						res = call(metafun, aObj, null, null);
 					}
 					callFrame.set(a, res);
@@ -422,7 +423,7 @@ public final class LuaState {
 						res = toDouble(s.length());
 					} else {
 						Object f = getMetaOp(o, "__len");
-
+						BaseLib.luaAssert(f != null, "__len not defined for operand");
 						res = call(f, o, null, null);
 					}
 					callFrame.set(a, res);
@@ -473,13 +474,8 @@ public final class LuaState {
 						if (first <= last) {
 							Object leftConcat = callFrame.get(last);
 
-							Object metafun = getMetaOp(leftConcat, "__concat");
-							if (metafun == null) {
-								metafun = getMetaOp(res, "__concat");
-							}
-							if (metafun == null) {
-								throw new RuntimeException("missing __concat for " + leftConcat + " and " + res);
-							}
+							Object metafun = getBinMetaOp(leftConcat, res, "__concat");
+							BaseLib.luaAssert(metafun != null, "__concat not defined for operands");
 							res = call(metafun, leftConcat, res, null);
 							last--;
 						}
@@ -542,38 +538,43 @@ public final class LuaState {
 							}
 						}
 					} else {
-						boolean invert = false;
-
-						String meta_op = meta_ops[opcode];
-
-						Object metafun = getMetaOp(bo, co, meta_op);
-
-						/* Special case:
-						 * OP_LE uses OP_LT if __le is not defined.
-						 * a <= b is then translated to not (b < a)
-						 */
-						if (metafun == null && opcode == OP_LE) {
-							metafun = getMetaOp(bo, co, "__lt");
-
-							// Swap the objects
-							Object tmp = bo;
-							bo = co;
-							co = tmp;
-
-							// Invert a (i.e. add the "not"
-							invert = true;
-						}
-
 						boolean resBool;
-						if (metafun == null && opcode == OP_EQ) {
-							resBool = LuaState.luaEquals(bo, co);
-						} else {
-							Object res = call(metafun, bo, co, null);
-							resBool = boolEval(res);
-						}
+						if (bo == co) {
+							resBool = true;
+						} else { 						
+							boolean invert = false;
 
-						if (invert) {
-							resBool = !resBool;
+							String meta_op = meta_ops[opcode];
+
+							Object metafun = getCompMetaOp(bo, co, meta_op);
+
+							/* Special case:
+							 * OP_LE uses OP_LT if __le is not defined.
+							 * a <= b is then translated to not (b < a)
+							 */
+							if (metafun == null && opcode == OP_LE) {
+								metafun = getCompMetaOp(bo, co, "__lt");
+
+								// Swap the objects
+								Object tmp = bo;
+								bo = co;
+								co = tmp;
+
+								// Invert a (i.e. add the "not"
+								invert = true;
+							}
+
+							if (metafun == null && opcode == OP_EQ) {
+								resBool = LuaState.luaEquals(bo, co);
+							} else {
+								BaseLib.luaAssert(metafun != null, meta_op + " not defined for operand");
+								Object res = call(metafun, bo, co, null);
+								resBool = boolEval(res);
+							}
+
+							if (invert) {
+								resBool = !resBool;
+							}
 						}
 						if (resBool == (a == 0)) {
 							callFrame.pc++;
@@ -628,7 +629,9 @@ public final class LuaState {
 					int returnBase2 = base + a;
 					
 					Object funObject = callFrame.get(a);
+					BaseLib.luaAssert(funObject != null, "Tried to call nil");
 					Object fun = prepareMetatableCall(funObject);
+					BaseLib.luaAssert(fun != null, "Object " + funObject + " did not have __call metatable set");
 					
 					// If it's a metatable __call, prepend the caller as the first argument 
 					if (fun != funObject) {
@@ -950,13 +953,21 @@ public final class LuaState {
 		return meta.rawget(meta_op);
 	}
 
-	public final Object getMetaOp(Object a, Object b, String meta_op) {
+	public final Object getCompMetaOp(Object a, Object b, String meta_op) {
 		LuaTable meta1 = (LuaTable) getmetatable(a, true);
 		LuaTable meta2 = (LuaTable) getmetatable(b, true);
 		if (meta1 != meta2 || meta1 == null) {
 			return null;
 		}
 		return meta1.rawget(meta_op);
+	}
+
+	public final Object getBinMetaOp(Object a, Object b, String meta_op) {
+		Object op = getMetaOp(a, meta_op);
+		if (op != null) {
+			return op;
+		}
+		return getMetaOp(b, meta_op);
 	}
 
 	public void setUserdataMetatable(Class type, LuaTable metatable) {
@@ -1196,6 +1207,10 @@ public final class LuaState {
 		return 4;
 	}
 
+	public LuaTable getEnvironment() {
+		return currentThread.environment;
+	}
+	
 	public static boolean luaEquals(Object a, Object b) {
 		if (a == null || b == null) {
 			return a == b;

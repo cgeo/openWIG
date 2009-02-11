@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2007-2008 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -101,7 +101,7 @@ public final class MathLib implements JavaFunction {
 	public static void register(LuaState state) {
 		initFunctions();
 		LuaTable math = new LuaTable();
-		state.environment.rawset("math", math);
+		state.getEnvironment().rawset("math", math);
 
 		math.rawset("pi", LuaState.toDouble(Math.PI));
 		math.rawset("huge", LuaState.toDouble(Double.POSITIVE_INFINITY));
@@ -179,13 +179,65 @@ public final class MathLib implements JavaFunction {
 		callFrame.push(LuaState.toDouble(Math.floor(x)));
 		return 1;
 	}
+	
+	
+	public static boolean isNegative(double vDouble) {
+		return Double.doubleToLongBits(vDouble) < 0;
+	}
+
+
+	/**
+	 * Rounds towards even numbers
+	 * @param x
+	 */
+	public static double round(double x) {
+		if (x < 0) {
+			return -round(-x);
+		}
+		x += 0.5;
+		double x2 = Math.floor(x);
+		if (x2 == x) {
+			return x2 - ((long) x2 & 1); 
+		}
+		return x2;
+	}
+
+	/**
+	 * Rounds to keep _precision_ decimals.
+	 * @param x
+	 * @param precision
+	 * @return
+	 */
+	public static double roundToPrecision(double x, int precision) {
+		double roundingOffset = MathLib.ipow(10, precision);
+		return round(x * roundingOffset) / roundingOffset;
+	}
+	
+	public static double roundToSignificantNumbers(double x, int precision) {
+		if (x == 0) {
+			return 0;
+		}
+		if (x < 0) {
+			return -roundToSignificantNumbers(-x, precision);
+		}
+		double lowerLimit = MathLib.ipow(10.0, precision - 1);
+		double upperLimit = lowerLimit * 10.0;
+		double multiplier = 1.0;
+		while (multiplier * x < lowerLimit) {
+			multiplier *= 10.0;
+		}
+		while (multiplier * x >= upperLimit) {
+			multiplier /= 10.0;
+		}
+		return round(x * multiplier) / multiplier;
+	}
 
 	private static int modf(LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
 		double x = LuaState.fromDouble(callFrame.get(0));
 
 		boolean negate = false;
-		if (x < 0) {
+		if (MathLib.isNegative(x)) {
 			negate = true;
 			x = -x;
 		}
@@ -217,7 +269,7 @@ public final class MathLib implements JavaFunction {
 		} else {
 			v2 = Math.abs(v2);
 			boolean negate = false;
-			if (v1 < 0) {
+			if (MathLib.isNegative(v1)) {
 				negate = true;
 				v1 = -v1;
 			}
@@ -528,9 +580,9 @@ public final class MathLib implements JavaFunction {
 	}
 
     /* Thanks rici lake for ipow-implementation */
-	private static double ipow(double base, int exponent) {
+	public static double ipow(double base, int exponent) {
 		boolean inverse = false;
-		if (exponent < 0) {
+		if (MathLib.isNegative(exponent)) {
 			exponent = -exponent;
 			inverse = true;
 		}

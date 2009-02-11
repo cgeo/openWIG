@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2008 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2008-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,13 @@ THE SOFTWARE.
 */
 package se.krka.kahlua.vm;
 
+import se.krka.kahlua.stdlib.BaseLib;
+
 import java.util.Vector;
 
 public class LuaThread {
+	public LuaTable environment;
+
 	public LuaThread parent;
 	
 	public String stackTrace = "";
@@ -46,8 +50,9 @@ public class LuaThread {
 
 	public int expectedResults;
 	
-	public LuaThread(LuaState state) {
+	public LuaThread(LuaState state, LuaTable environment) {
 		this.state = state;
+		this.environment = environment;
 	}
 
 	private void init() {
@@ -68,7 +73,6 @@ public class LuaThread {
 		callFrame.fromLua = fromLua;
 		callFrame.insideCoroutine = insideCoroutine;
 		callFrame.closure = closure;
-		
 		return callFrame;
 	}
 
@@ -207,6 +211,30 @@ public class LuaThread {
 		return top;
 	}
 
+	public LuaCallFrame getParent(int level) {
+		BaseLib.luaAssert(level >= 0, "Level must be non-negative");
+		int index = callFrameTop - level - 1;
+		BaseLib.luaAssert(index >= 0, "Level too high");
+		return callFrameStack[index];
+	}
+	
+	public String getCurrentStackTrace(int level, int count, int haltAt) {
+		if (level < 0) {
+			level = 0;
+		}
+		if (count < 0) {
+			count = 0;
+		}
+		StringBuffer buffer = new StringBuffer();
+		for (int i = callFrameTop - 1 - level; i >= haltAt; i--) {
+			if (count-- <= 0) {
+				break;
+			}
+			buffer.append(getStackTrace(callFrameStack[i]));
+		}
+		return buffer.toString();
+	}
+	
 	public void cleanCallFrames(LuaCallFrame callerFrame) {
 		LuaCallFrame frame;
 		while ((frame = currentCallFrame()) != callerFrame) {
@@ -216,15 +244,20 @@ public class LuaThread {
 		}
 	}
 
-	void addStackTrace(LuaCallFrame frame) {
+	public void addStackTrace(LuaCallFrame frame) {
+		stackTrace += getStackTrace(frame); 
+	}
+
+	private String getStackTrace(LuaCallFrame frame) {
 		if (frame.closure != null) {
 			int[] lines = frame.closure.prototype.lines;
 			if (lines != null) {
-				frame.pc--;
-				if (frame.pc < lines.length) {
-					stackTrace += "at " + frame.closure.prototype + ": " + lines[frame.pc] + "(opcode index: " + frame.pc + ")\n";
+				int pc = frame.pc - 1;
+				if (pc < lines.length) {
+					return "at " + frame.closure.prototype + ":" + lines[pc] + " (opcode: " + pc + ")\n";
 				}
 			}
 		}
+		return "";
 	}
 }
