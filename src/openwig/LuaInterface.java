@@ -72,7 +72,7 @@ public class LuaInterface implements JavaFunction {
 
 	public static void register(LuaState state) {
 		LuaTable wig = new LuaTable();
-		state.environment.rawset("Wherigo", wig);
+		state.getEnvironment().rawset("Wherigo", wig);
 		for (int i = 1; i < NUM_FUNCTIONS; i++) {
 			wig.rawset(names[i], functions[i]);
 		}
@@ -90,7 +90,7 @@ public class LuaInterface implements JavaFunction {
 		wig.rawset("LOCATIONSCREEN", new Double(Midlet.LOCATIONSCREEN));
 		wig.rawset("TASKSCREEN", new Double(Midlet.TASKSCREEN));
 		
-		state.environment.rawset("require", functions[0]);
+		state.getEnvironment().rawset("require", functions[0]);
 		
 		LuaTable env = new LuaTable();
 		env.rawset("Device", "Windows PPC");
@@ -103,7 +103,7 @@ public class LuaInterface implements JavaFunction {
 		env.rawset("PathSep", "/"); // no. you may NOT do file i/o on this device.
 		env.rawset("Version", "2.11ow");
 		env.rawset("Downloaded", new Double(0));
-		state.environment.rawset("Env", env);
+		state.getEnvironment().rawset("Env", env);
 		
 		Zone.register(state);
 		ZonePoint.register(state);

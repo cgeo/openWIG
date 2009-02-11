@@ -52,7 +52,7 @@ public class Engine implements Runnable {
 		
 		try {
 			InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
-			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.environment);
+			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
 			state.call(closure, null, null, null);
 			stdlib.close(); stdlib = null;
 			
@@ -61,7 +61,7 @@ public class Engine implements Runnable {
 			byte[] lbc = gwcfile.getBytecode();
 			
 			PrintStream l = log; log = null; // prevent logging while loading
-			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.environment);
+			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
 			state.call(closure, null, null, null);
 			lbc = null;
 			closure = null;
