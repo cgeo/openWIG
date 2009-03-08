@@ -26,6 +26,10 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static MainMenu mainMenu;
 	public static Browser browser;
 	
+	public static StringItem engineOutput = null;
+	
+	public static StringBuffer backlog = new StringBuffer();
+	
 	private static List baseMenu;
 	private static final int MNU_START = 0;
 	private static final int MNU_GPS = 1;
@@ -45,7 +49,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
 	public static final Command CMD_BACK = new Command("Back", Command.BACK, 9);
 	
-	public static Midlet instance;
+	public static Midlet instance = null;
 	public static Display display;
 	public static Config config;
 	
@@ -68,25 +72,27 @@ public class Midlet extends MIDlet implements CommandListener {
 	//    Midlet maintenance
 	
 	public void startApp() {
-		instance = this;
 		display = Display.getDisplay(this);
-		config = new Config("_configuration");
-		
-		baseMenu = new List("menu", List.IMPLICIT);
-		baseMenu.append("Start", null);
-		baseMenu.append("GPS", null);
-		baseMenu.append("Options", null);
-		baseMenu.append("Quit", null);
-		baseMenu.setSelectCommand(CMD_SELECT);
-		baseMenu.setCommandListener(this);
-		
-		coordinates = new Coordinates();
-		options = new Options();
-		browser = new Browser();
-		
-		resetGps();
-		
-		push(baseMenu);
+		if (instance == null) {
+			instance = this;
+			config = new Config("_configuration");
+
+			baseMenu = new List("menu", List.IMPLICIT);
+			baseMenu.append("Start", null);
+			baseMenu.append("GPS", null);
+			baseMenu.append("Options", null);
+			baseMenu.append("Quit", null);
+			baseMenu.setSelectCommand(CMD_SELECT);
+			baseMenu.setCommandListener(this);
+
+			coordinates = new Coordinates();
+			options = new Options();
+			browser = new Browser();
+
+			resetGps();
+
+			push(baseMenu);
+		}
 	}
 
 	public void pauseApp() {
@@ -229,7 +235,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
 		try {
 		Form f = new Form("splash");
-		f.append(new StringItem(null, "Starting..."));
+		f.append(engineOutput = new StringItem(null, "Creating engine..."));
 		f.addCommand(CMD_EXIT);
 		f.setCommandListener(instance);
 		Display.getDisplay(instance).setCurrent(f);

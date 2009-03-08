@@ -42,10 +42,18 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				append(latitude);
 				append(longitude);
 				break;
+			case Midlet.GPS_BLUETOOTH:
+			case Midlet.GPS_SERIAL:
+			case Midlet.GPS_SOCKET:
+				if (Midlet.gps.getState() == LocationService.OFFLINE) {
+					removeCommand(CMD_GPS_OFF);
+					addCommand(CMD_GPS_ON);
+				} else {
+					removeCommand(CMD_GPS_ON);
+					addCommand(CMD_GPS_OFF);
+				}
 			default:
 				removeCommand(CMD_SET);
-				addCommand(CMD_GPS_ON);
-				addCommand(CMD_GPS_OFF);
 				append(lblLat);
 				append(lblLon);
 				append(lblAlt);
@@ -139,10 +147,16 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 
 	private void startGPS() {
 		Midlet.gps.connect();
+		removeCommand(CMD_GPS_ON);
+		addCommand(CMD_GPS_OFF);
 	}
 
 	private void stopGPS() {
 		Midlet.gps.disconnect();
+		stop();
+		updateScreen();
+		removeCommand(CMD_GPS_OFF);
+		addCommand(CMD_GPS_ON);
 	}
 	
 	public double getLatitude() { return lat; }
@@ -163,10 +177,8 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		if (disp == this) {
 			if (cmd == CMD_GPS_ON) {
 				startGPS();
-				prepare();
 			} else if (cmd == CMD_GPS_OFF) {
 				stopGPS();
-				prepare();
 			} else if (cmd == CMD_SET) {
 				lat = scandbl(latitude.getString());
 				lon = scandbl(longitude.getString());

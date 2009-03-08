@@ -3,7 +3,6 @@ package openwig;
 import gui.Midlet;
 import gwc.CartridgeFile;
 import se.krka.kahlua.vm.*;
-import se.krka.kahlua.stdlib.*;
 
 import java.io.*;
 import java.util.Calendar;
@@ -21,6 +20,12 @@ public class Engine implements Runnable {
 	public static LuaState state;
 	
 	private boolean end = false;
+	
+	private StringBuffer stdout = new StringBuffer("Creating engine...\n");
+	private void write(String s) {
+		stdout.append(s);
+		Midlet.engineOutput.setText(stdout.toString());
+	}
 
 	public Engine (String codeUrl) {
 		instance = this;
@@ -40,36 +45,47 @@ public class Engine implements Runnable {
 	
 	public void run() {
 		try {
+		write("Creating state...\n");
 		state = new LuaState(System.out);
 		
+/*		write("Registering base libs...\n");
 		BaseLib.register(state);
 		MathLib.register(state);
 		StringLib.register(state);
 		CoroutineLib.register(state);
-		OsLib.register(state);
-
-		LuaInterface.register(state);
+		OsLib.register(state);*/
 		
 		try {
+			write("Loading stdlib...");
 			InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
 			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
+			write("calling...\n");
 			state.call(closure, null, null, null);
 			stdlib.close(); stdlib = null;
 			
+			write("Registering WIG libs...\n");
+			LuaInterface.register(state);
+			
+			write("Loading gwc...");
 			if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
 			if (gwcfile == null) throw new Exception("invalid cartridge file");
+			write("loading code...");
 			byte[] lbc = gwcfile.getBytecode();
 			
 			PrintStream l = log; log = null; // prevent logging while loading
+			write("parsing...");
 			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+			write("calling...\n");
 			state.call(closure, null, null, null);
 			lbc = null;
 			closure = null;
 			
+			write("Setting remaining properties...\n");
 			player.setprop("CompletionCode", gwcfile.code.intern());
 			player.setprop("Name", gwcfile.member.intern());
 			log = l;
 					
+			write("Starting game...\n");
 			Midlet.start();
 
 		} catch (Exception e) {
@@ -83,7 +99,7 @@ public class Engine implements Runnable {
 			
 		while (!end) {
 			try { Thread.sleep(1000); } catch (InterruptedException e) { }
-			if (!end) break;
+			if (end) break;
 
 			try {
 				if (Midlet.gps.getLatitude() != player.position.latitude
