@@ -62,7 +62,12 @@ public class GwcInput {
 	}
 	
 	public long skip (long n) throws IOException {
-		long re = stream.skip(n);
+		byte[] scan = new byte[512];
+		long a = n / 512; int b = (int)(n % 512);
+		long re = 0;
+		while (a-- > 0) re += stream.read(scan, 0, 512);
+		re += stream.read(scan, 0, b);
+		/*long re = stream.skip(n);*/
 		pos += re;
 		return re;
 	}
@@ -76,8 +81,7 @@ public class GwcInput {
 	public void pseudoSeek (long position) throws IOException {
 		if (position < pos) throw new IOException("can't seek backwards, sorry :e(");
 		if (position > pos) {
-			long skip = stream.skip(position - pos);
-			pos += skip;
+			skip(position - pos);
 		}
 	}
 }
