@@ -1,11 +1,11 @@
 package openwig;
 
-import java.util.Vector;
+import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
 public class Container extends EventTable {
-	
-	public Vector things = new Vector();
+
+	public LuaTable inventory = new LuaTable();
 	protected Container location = null;
 	
 	public static void register (LuaState state) {
@@ -47,16 +47,19 @@ public class Container extends EventTable {
 	public Container() {
 		table.rawset("MoveTo", moveto);
 		table.rawset("Contains", contains);
+		table.rawset("Inventory", inventory);
 	}
 	
 	public void moveTo (Container c) {
-		if (location != null) location.things.removeElement(this);
-		if (c != null) c.things.addElement(this);
+		if (location != null) TableLib.removeItem(location.inventory, this);
+			// location.things.removeElement(this);
+		if (c != null) Engine.tableInsert(c.inventory, this);
+			// c.things.addElement(this);
 		location = c;
 		table.rawset("Container", c);
 	}
 	
 	public boolean contains (Thing t) {
-		return things.contains(t);
+		return TableLib.contains(inventory, t);
 	}
 }

@@ -30,6 +30,7 @@ import se.krka.kahlua.stdlib.CoroutineLib;
 import se.krka.kahlua.stdlib.MathLib;
 import se.krka.kahlua.stdlib.OsLib;
 import se.krka.kahlua.stdlib.StringLib;
+import se.krka.kahlua.stdlib.TableLib;
 
 public final class LuaState {
 	private static final int FIELDS_PER_FLUSH = 50;
@@ -137,6 +138,7 @@ public final class LuaState {
 		MathLib.register(this);
 		CoroutineLib.register(this);
 		OsLib.register(this);
+		TableLib.register(this);
 
 /*		LuaClosure closure = loadByteCodeFromResource("stdlib", getEnvironment());
 		call(closure, null, null, null);*/

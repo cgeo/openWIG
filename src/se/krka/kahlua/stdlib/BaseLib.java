@@ -49,11 +49,10 @@ public final class BaseLib implements JavaFunction {
 	private static final int RAWSET = 14;
 	private static final int RAWGET = 15;
 	private static final int COLLECTGARBAGE = 16;
-	private static final int TABLECONCAT = 17;
-	private static final int DEBUGSTACKTRACE = 18;
-	private static final int BYTECODELOADER = 19;
+	private static final int DEBUGSTACKTRACE = 17;
+	private static final int BYTECODELOADER = 18;
 
-	private static final int NUM_FUNCTIONS = 20;
+	private static final int NUM_FUNCTIONS = 19;
 
 	private static final String[] names;
 	private static final Object MODE_KEY = "__mode";
@@ -87,7 +86,6 @@ public final class BaseLib implements JavaFunction {
 		names[RAWSET] = "rawset";
 		names[RAWGET] = "rawget";
 		names[COLLECTGARBAGE] = "collectgarbage";
-		names[TABLECONCAT] = "tableconcat";
 		names[DEBUGSTACKTRACE] = "debugstacktrace";
 		names[BYTECODELOADER] = "bytecodeloader";
 	}
@@ -140,7 +138,6 @@ public final class BaseLib implements JavaFunction {
 		case RAWSET: return rawset(callFrame, nArguments);
 		case RAWGET: return rawget(callFrame, nArguments);
 		case COLLECTGARBAGE: return collectgarbage(callFrame, nArguments);
-		case TABLECONCAT: return tableConcat(callFrame, nArguments);
 		case DEBUGSTACKTRACE: return debugstacktrace(callFrame, nArguments);
 		case BYTECODELOADER: return bytecodeloader(callFrame, nArguments);
 		default:
@@ -696,43 +693,6 @@ public final class BaseLib implements JavaFunction {
 			return tonumber((String) o);
 		}
 		return null;
-	}
-
-	private static int tableConcat(LuaCallFrame callFrame, int nArguments) {
-		luaAssert(nArguments >= 1, "expected table, got no arguments");
-		LuaTable table = (LuaTable) callFrame.get(0);
-
-		String separator = "";
-		if (nArguments >= 2) {
-			separator = rawTostring(callFrame.get(1));
-		}
-
-		int first = 1;
-		if (nArguments >= 3) {
-			Double firstDouble = rawTonumber(callFrame.get(2));
-			first = firstDouble.intValue();
-		}
-
-		int last;
-		if (nArguments >= 4) {
-			Double lastDouble = rawTonumber(callFrame.get(3));
-			last = lastDouble.intValue();
-		} else {
-			last = table.len();
-		}
-
-		StringBuffer buffer = new StringBuffer();
-		for (int i = first; i <= last; i++) {
-			if (i > first) {
-				buffer.append(separator);
-			}
-
-			Double key = LuaState.toDouble(i);
-			Object value = table.rawget(key);
-			buffer.append(rawTostring(value));
-		}
-
-		return callFrame.push(buffer.toString());
 	}
 	
 	private static int bytecodeloader(LuaCallFrame callFrame, int nArguments) {

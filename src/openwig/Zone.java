@@ -208,19 +208,23 @@ public class Zone extends Container {
 	public int visibleThings() {
 		if (!showThings()) return 0;
 		int count = 0;
-		for (int i = 0; i < things.size(); i++) {
-			if (things.elementAt(i) instanceof Player) continue;
-			Thing z = (Thing)things.elementAt(i);
-			if (z.isVisible()) count++;
+		Object key = null;
+		while ((key = inventory.next(key)) != null) {
+			Object o = inventory.rawget(key);
+			if (o instanceof Player) continue;
+			if (!(o instanceof Thing)) continue;
+			if (((Thing)o).isVisible()) count++;
 		}
 		return count;
 	}
 	
-	public void collectThings (Vector c) {
+	public void collectThings (LuaTable c) {
 		if (!showThings()) return;
-		for (int i = 0; i < things.size(); i++) {
-			Thing z = (Thing)things.elementAt(i);
-			if (z.isVisible()) c.addElement(z);
+		Object key = null;
+		while ((key = inventory.next(key)) != null) {
+			Object z = inventory.rawget(key);
+			if (z instanceof Thing && ((Thing)z).isVisible())
+				Engine.tableInsert(table, z);
 		}
 	}
 	

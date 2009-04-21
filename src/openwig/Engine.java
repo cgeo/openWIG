@@ -3,6 +3,7 @@ package openwig;
 import gui.Midlet;
 import gwc.CartridgeFile;
 import se.krka.kahlua.vm.*;
+import se.krka.kahlua.stdlib.TableLib;
 
 import java.io.*;
 import java.util.Calendar;
@@ -217,5 +218,18 @@ public class Engine implements Runnable {
 		}
 		sb.append(s.substring(pos));
 		return sb.toString();
+	}
+
+	public static void tableInsert (LuaTable table, int position, Object item) {
+		TableLib.insert(state, table, position, item);
+	}
+	public static void tableInsert (LuaTable table, Object item) {
+		TableLib.insert(state, table, item);
+	}
+	public static Object tableRemove (LuaTable table, int position) {
+		return TableLib.remove(state, table, position);
+	}
+	public static Object tableRemove (LuaTable table) {
+		return TableLib.remove(state, table);
 	}
 }

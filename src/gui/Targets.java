@@ -4,6 +4,7 @@ import java.util.Vector;
 import openwig.Engine;
 import openwig.Thing;
 import openwig.Action;
+import se.krka.kahlua.vm.LuaTable;
 
 public class Targets extends ListOfStuff {
 
@@ -28,11 +29,14 @@ public class Targets extends ListOfStuff {
 	}
 
 	protected Vector getValidStuff() {
-		Vector current = Engine.instance.cartridge.currentThings();
-		int size = current.size() + Engine.instance.player.things.size();
+		LuaTable current = Engine.instance.cartridge.currentThings();
+		int size = current.len() + Engine.instance.player.inventory.len();
 		Vector newtargets = new Vector(size);
-		for (int i = 0; i < current.size(); i++) newtargets.addElement(current.elementAt(i));
-		for (int i = 0; i < Engine.instance.player.things.size(); i++) newtargets.addElement(Engine.instance.player.things.elementAt(i));
+		Object key = null;
+		while ((key = current.next(key)) != null)
+			newtargets.addElement(current.rawget(key));
+		while ((key = Engine.instance.player.inventory.next(key)) != null)
+			newtargets.addElement(Engine.instance.player.inventory.rawget(key));
 		
 		for (int i = 0; i < newtargets.size(); i++) {
 			Thing t = (Thing)newtargets.elementAt(i);

@@ -48,17 +48,23 @@ public class Action extends EventTable {
 	
 	public int visibleTargets(Container where) {
 		int count = 0;
-		for (int i = 0; i < where.things.size(); i++) {
-			Thing t = (Thing)where.things.elementAt(i);
+		Object key = null;
+		while ((key = where.inventory.next(key)) != null) {
+			Object o = where.inventory.rawget(key);
+			if (!(o instanceof Thing)) continue;
+			Thing t = (Thing)o;
 			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
 		}
 		return count;
 	}
 	
-	public int targetsInside(Vector v) {
+	public int targetsInside(LuaTable v) {
 		int count = 0;
-		for (int i = 0; i < v.size(); i++) {
-			Thing t = (Thing)v.elementAt(i);
+		Object key = null;
+		while ((key = v.next(key)) != null) {
+			Object o = v.rawget(key);
+			if (!(o instanceof Thing)) continue;
+			Thing t = (Thing)o;
 			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
 		}
 		return count;

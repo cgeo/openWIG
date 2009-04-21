@@ -59,8 +59,8 @@ public class Cartridge extends EventTable {
 		return count;
 	}
 	
-	public Vector currentThings () {
-		Vector ret = new Vector();
+	public LuaTable currentThings () {
+		LuaTable ret = new LuaTable();
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
 			z.collectThings(ret);

@@ -4,6 +4,7 @@ import javax.microedition.lcdui.*;
 import java.util.Vector;
 import openwig.Engine;
 import openwig.Thing;
+import se.krka.kahlua.vm.LuaTable;
 
 public class Things extends ListOfStuff {
 	
@@ -37,12 +38,13 @@ public class Things extends ListOfStuff {
 	}
 
 	protected Vector getValidStuff() {
-		Vector container;
-		if (mode == INVENTORY) container = Engine.instance.player.things;
+		LuaTable container;
+		if (mode == INVENTORY) container = Engine.instance.player.inventory;
 		else container = Engine.instance.cartridge.currentThings();
-		Vector newthings = new Vector(container.size());
-		for (int i = 0; i < container.size(); i++) {
-			Thing t = (Thing)container.elementAt(i);
+		Vector newthings = new Vector(container.len());
+		Object key = null;
+		while ((key = container.next(key)) != null) {
+			Thing t = (Thing)container.rawget(key);
 			if (t.isVisible()) newthings.addElement(t);
 		}
 		return newthings;

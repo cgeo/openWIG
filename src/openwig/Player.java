@@ -44,9 +44,10 @@ public class Player extends Thing {
 	
 	public int visibleThings() {
 		int count = 0;
-		for (int i = 0; i < things.size(); i++) {
-			Thing t = (Thing)things.elementAt(i);
-			if (t.isVisible()) count++;
+		Object key = null;
+		while ((key = inventory.next(key)) != null) {
+			Object o = inventory.rawget(key);
+			if (o instanceof Thing && ((Thing)o).isVisible()) count++;
 		}
 		return count;
 	}
