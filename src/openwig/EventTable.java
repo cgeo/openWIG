@@ -101,19 +101,13 @@ public class EventTable {
 	
 	public void callEvent(String name, Object param) {
 		try {
-		synchronized (Engine.state) {
-			try {
-				Object o = table.rawget(name.intern());
-				if (o instanceof LuaClosure) {
-					Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""));
-					LuaClosure event = (LuaClosure) o;
-					Engine.state.call(event, this, param, null);
-					Engine.log("EEND: " + toString() + "." + name);
-				}
-			} catch (Exception e) {
-				Engine.stacktrace(e);
+			Object o = table.rawget(name.intern());
+			if (o instanceof LuaClosure) {
+				Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""));
+				LuaClosure event = (LuaClosure) o;
+				Engine.state.call(event, this, param, null);
+				Engine.log("EEND: " + toString() + "." + name);
 			}
-		}
 		} catch (Throwable t) {
 			Engine.stacktrace(t);
 		}

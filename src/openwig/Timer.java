@@ -5,10 +5,7 @@ import gui.Midlet;
 
 public class Timer extends EventTable {
 	
-	private static java.util.Timer globalTimer;
-	
 	public static void register (LuaState state) {
-		globalTimer = new java.util.Timer();
 		EventTable.register(state);
 		state.setUserdataMetatable(Timer.class, metatable);
 	}
@@ -47,7 +44,8 @@ public class Timer extends EventTable {
 		
 		private int tick (LuaCallFrame frame, int n) {
 			Timer t = (Timer)frame.get(0);
-			t.tick();
+			//t.tick();
+			t.callEvent("OnTick", null);
 			return 0;
 		}
 	}
@@ -56,26 +54,13 @@ public class Timer extends EventTable {
 	private static Method stopMethod = new Method(Method.STOP);
 	private static Method tickMethod = new Method(Method.TICK);
 	
-	private static class TimerTask extends java.util.TimerTask {
-		
-		private Timer parent;
-		public TimerTask (Timer parent) {
-			this.parent = parent;
-		}
-
-		public void run() {
-			parent.tick();
-			Midlet.refresh();
-		}	
-	}
-	
-	private TimerTask task = null;
-	
 	private static final int COUNTDOWN = 0;
 	private static final int INTERVAL = 1;
 	private int type = COUNTDOWN;
 	
 	private long duration = -1;
+	
+	private long lastTick = 0;
 	
 	private boolean running = false;
 	
@@ -100,33 +85,35 @@ public class Timer extends EventTable {
 	}
 	
 	public void start () {
-		stop();
-		task = new TimerTask(this);
+		if (running) return;
+		table.rawset("Remaining", LuaState.toDouble(duration / 1000));
 		callEvent("OnStart", null);
-		switch (type) {
-			case COUNTDOWN:
-				globalTimer.schedule(task, duration);
-				break;
-			case INTERVAL:
-				globalTimer.scheduleAtFixedRate(task, duration, duration);
-				break;
-		}
+		running = true;
+		lastTick = System.currentTimeMillis();
 	}
 	
 	public void stop () {
-		if (task != null) {
-			task.cancel();
-			task = null;
+		if (running) {
 			callEvent("OnStop", null);
 		}
+		running = false;
 	}
 	
 	public void tick () {
-		callEvent("OnTick", null);
-	}
-	
-	public static void kill() {
-		if (globalTimer != null) globalTimer.cancel();
-		globalTimer = null;
-	}
+		if (!running) return;
+		long ctm = System.currentTimeMillis();
+		long time = ctm - lastTick;
+		long remaining = duration - time;
+		while (remaining < 0) remaining += duration;
+		table.rawset("Remaining", LuaState.toDouble(remaining / 1000));
+		while (time >= duration) {
+			callEvent("OnTick", null);
+			time -= duration;
+			lastTick = ctm;
+			if (type == COUNTDOWN) {
+				running = false;
+				break;
+			}
+		}
+	}	
 }

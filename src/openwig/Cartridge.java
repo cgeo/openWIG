@@ -5,11 +5,14 @@ import se.krka.kahlua.vm.*;
 
 public class Cartridge extends EventTable {
 	public Vector zones = new Vector();
+	public Vector timers = new Vector();
 	
 	public Vector things = new Vector();
 	public Vector universalActions = new Vector();
 	
 	public Vector tasks = new Vector();
+	
+	public LuaTable allZObjects = new LuaTable();
 	
 	private static class Method implements JavaFunction {
 		public int call (LuaCallFrame frame, int n) {
@@ -25,6 +28,8 @@ public class Cartridge extends EventTable {
 	
 	public Cartridge () {
 		table.rawset("RequestSync", m);
+		table.rawset("AllZObjects", allZObjects);
+		Engine.tableInsert(allZObjects, this);
 	}
 		
 	public void walk (ZonePoint zp) {		
@@ -38,7 +43,12 @@ public class Cartridge extends EventTable {
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
 			z.tick();
-		}		
+		}
+		for (int i = 0; i < timers.size(); i++) {
+			Timer t = (Timer)timers.elementAt(i);
+			t.tick();
+		}
+
 	}
 	
 	public int visibleZones () {
@@ -84,5 +94,13 @@ public class Cartridge extends EventTable {
 			if (a.isVisible()) count++;
 		}
 		return count;
+	}
+	
+	public void addObject (Object o) {
+		Engine.tableInsert(allZObjects, o);
+		if (o instanceof Task) tasks.addElement(o);
+		else if (o instanceof Zone) zones.addElement(o);
+		else if (o instanceof Timer) timers.addElement(o);
+		else if (o instanceof Thing) things.addElement(o);
 	}
 }

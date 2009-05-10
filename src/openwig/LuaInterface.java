@@ -136,7 +136,9 @@ public class LuaInterface implements JavaFunction {
 			case COMMAND: return command(callFrame, nArguments);
 			case MEDIA: return media(callFrame, nArguments);
 			case INPUT:
-				callFrame.push(new EventTable());
+				EventTable et = new EventTable();
+				Engine.instance.cartridge.addObject(et);
+				callFrame.push(et);
 				return 1;
 			case TIMER: return timer(callFrame, nArguments);
 			case TASK: return task(callFrame, nArguments);
@@ -151,8 +153,6 @@ public class LuaInterface implements JavaFunction {
 	}
 	
 	private int requireWherigo (LuaCallFrame callFrame, int nArguments) {
-		String what = (String)callFrame.get(0);
-		if ("Wherigo".equals(what)) System.out.println("works");
 		return 0;
 	}
 	
@@ -200,19 +200,23 @@ public class LuaInterface implements JavaFunction {
 	private int zone (LuaCallFrame callFrame, int nArguments) {
 		Object param = callFrame.get(0);
 		Zone z = new Zone();
-		Engine.instance.cartridge.zones.addElement(z);
+		Engine.instance.cartridge.addObject(z);
 		if (param instanceof LuaTable) z.setTable((LuaTable)param);
 		callFrame.push(z);
 		return 1;
 	}
 	
 	private int media (LuaCallFrame callFrame, int nArguments) {
-		callFrame.push(new Media());
+		Media m = new Media();
+		Engine.instance.cartridge.addObject(m);
+		callFrame.push(m);
 		return 1;
 	}
 	
 	private int timer (LuaCallFrame callFrame, int nArguments) {
-		callFrame.push(new Timer());
+		Timer t = new Timer();
+		Engine.instance.cartridge.addObject(t);
+		callFrame.push(t);
 		return 1;
 	}
 	
@@ -230,7 +234,7 @@ public class LuaInterface implements JavaFunction {
 			throw new RuntimeException("unknown constructor format: "+o.getClass().getName());
 		}
 		Thing i = new Thing(character);
-		c.things.addElement(i);
+		c.addObject(i);
 		if (cont != null) i.moveTo(cont);
 		callFrame.push(i);
 		return 1;
@@ -238,14 +242,15 @@ public class LuaInterface implements JavaFunction {
 	
 	private int command (LuaCallFrame callFrame, int nArguments) {
 		LuaTable lt = (LuaTable)callFrame.get(0);
-		callFrame.push(new Action(lt));
+		Action a = new Action(lt);
+		Engine.instance.cartridge.addObject(a);
+		callFrame.push(a);
 		return 1;
 	}
 	
 	private int task (LuaCallFrame callFrame, int nArguments) {
-		Cartridge c = (Cartridge)callFrame.get(0);
 		Task t = new Task();
-		c.tasks.addElement(t);
+		Engine.instance.cartridge.addObject(t);
 		callFrame.push(t);
 		return 1;
 	}

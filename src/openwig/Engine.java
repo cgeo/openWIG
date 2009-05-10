@@ -6,7 +6,43 @@ import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.TableLib;
 
 import java.io.*;
-import java.util.Calendar;
+import java.util.*;
+
+interface Caller {
+	void call();
+}
+
+
+class EventCaller implements Caller {
+	private EventTable target = null;
+	private String event;
+	private Object param;
+	
+	public EventCaller (EventTable target, String event, Object param) {
+		this.target = target;
+		this.event = event;
+		this.param = param;
+	}
+	
+	public void call() {
+		target.callEvent(event, param);
+	}
+	
+}
+
+class CallbackCaller implements Caller {
+	private LuaClosure callback;
+	private Object value;
+	
+	public CallbackCaller (LuaClosure callback, Object value) {
+		this.callback = callback;
+		this.value = value;
+	}
+	
+	public void call () {
+		Engine.state.call(callback, value, null, null);
+	}
+}
 
 public class Engine implements Runnable {
 
@@ -16,6 +52,8 @@ public class Engine implements Runnable {
 	private String codeUrl;
 	private CartridgeFile gwcfile;
 	private PrintStream log;
+	
+	private static Vector eventQueue;
 
 	public static Engine instance;
 	public static LuaState state;
@@ -67,6 +105,9 @@ public class Engine implements Runnable {
 
 				write("Registering WIG libs...\n");
 				LuaInterface.register(state);
+				
+				write("Building event queue...\n");
+				eventQueue = new Vector();
 
 				write("Loading gwc...");
 				if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
@@ -97,11 +138,23 @@ public class Engine implements Runnable {
 
 			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started\n-------------------");
 			player.refreshLocation();
-			callEvent(cartridge, "OnStart", null);
+			cartridge.callEvent("OnStart", null);
+			Midlet.refresh();
 
+			long lastTick = System.currentTimeMillis();
 			while (!end) {
-				try { Thread.sleep(1000); } catch (InterruptedException e) { }
-				if (end) break;
+				boolean events = false;
+				while (!eventQueue.isEmpty()) {
+					Caller c = (Caller)eventQueue.firstElement();
+					eventQueue.removeElementAt(0);
+					try {
+						c.call();
+						events = true;
+					} catch (Throwable t) {
+						stacktrace(t);
+					}
+				}
+				if (events) Midlet.refresh();
 
 				try {
 					if (Midlet.gps.getLatitude() != player.position.latitude
@@ -112,6 +165,21 @@ public class Engine implements Runnable {
 					cartridge.tick();
 				} catch (Exception e) {
 					stacktrace(e);
+				}
+				
+				synchronized (this) {
+					if (!eventQueue.isEmpty()) continue;
+					
+					long stm = System.currentTimeMillis();
+					long sleep = lastTick + 1000 - stm;
+					if (sleep < 1) {
+						lastTick += 1000;
+						continue;
+					}
+					try {
+						Thread.sleep(sleep);
+						lastTick += 1000;
+					} catch (InterruptedException e) { }
 				}
 			}
 			log.close();
@@ -132,7 +200,6 @@ public class Engine implements Runnable {
 	}
 
 	public static void kill () {
-		Timer.kill();
 		if (instance == null) return;
 		instance.end = true;
 	}
@@ -161,13 +228,20 @@ public class Engine implements Runnable {
 	public static void callEvent (EventTable subject, String name, Object param) {
 		if (!subject.hasEvent(name)) return;
 		EventCaller ec = new EventCaller(subject, name, param);
-		ec.start();
+		
+		synchronized (Engine.instance) {
+			eventQueue.addElement(ec);
+			Engine.instance.notify();
+		}
 	}
 
 	public static void invokeCallback (LuaClosure callback, Object value) {
 		log("BTTN: " + value.toString() + " pressed");
 		CallbackCaller cc = new CallbackCaller(callback, value);
-		cc.start();
+		synchronized (Engine.instance) {
+			eventQueue.addElement(cc);
+			Engine.instance.notify();
+		}
 	}
 
 	public static byte[] mediaFile (Media media) throws Exception {
