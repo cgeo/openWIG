@@ -32,7 +32,6 @@ public class Actions extends ListOfStuff {
 	}
 
 	protected Vector getValidStuff() {
-		System.out.println("getting valid stuff for thing "+thing.name);
 		int size = thing.actions.size();
 		Vector newactions = new Vector(size);
 		for (int i = 0; i < thing.actions.size(); i++) newactions.addElement(thing.actions.elementAt(i));

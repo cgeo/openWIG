@@ -100,8 +100,7 @@ public class Zone extends Container {
 	private void setcontain () {
 		if (contain == ncontain) return;
 		if (contain == INSIDE) {
-			//Engine.callEvent(this, "OnExit", null);
-			callEvent("OnExit", null);
+			Engine.callEvent(this, "OnExit", null);
 		}
 		contain = ncontain;
 		if (contain == INSIDE) {
@@ -111,20 +110,16 @@ public class Zone extends Container {
 		}
 		switch (contain) {
 			case INSIDE:
-				//Engine.callEvent(this, "OnEnter", null);
-				callEvent("OnEnter", null);
+				Engine.callEvent(this, "OnEnter", null);
 				break;
 			case PROXIMITY:
-				//Engine.callEvent(this, "OnProximity", null);
-				callEvent("OnProximity", null);
+				Engine.callEvent(this, "OnProximity", null);
 				break;
 			case DISTANT:
-				//Engine.callEvent(this, "OnDistant", null);
-				callEvent("OnDistant", null);
+				Engine.callEvent(this, "OnDistant", null);
 				break;
 			case NOWHERE:
-				//Engine.callEvent(this, "OnNotInRange", null);
-				callEvent("OnNotInRange", null);
+				Engine.callEvent(this, "OnNotInRange", null);
 				break;
 			default:
 				return;
@@ -218,7 +213,7 @@ public class Zone extends Container {
 		while ((key = inventory.next(key)) != null) {
 			Object z = inventory.rawget(key);
 			if (z instanceof Thing && ((Thing)z).isVisible())
-				Engine.tableInsert(table, z);
+				Engine.tableInsert(c, z);
 		}
 	}
 	

@@ -215,12 +215,12 @@ public class LuaInterface implements JavaFunction {
 		Object o = callFrame.get(0);
 		Cartridge c;
 		Container cont = null;
-		if (o instanceof LuaTable) {
+		if (o instanceof Cartridge) {
+			c = (Cartridge)o;
+		} else if (o instanceof LuaTable) {
 			LuaTable lt = (LuaTable)o;
 			c = (Cartridge)lt.rawget("Cartridge");
 			cont = (Container)lt.rawget("Container");
-		} else if (o instanceof Cartridge) {
-			c = (Cartridge)o;
 		} else {
 			throw new RuntimeException("unknown constructor format: "+o.getClass().getName());
 		}

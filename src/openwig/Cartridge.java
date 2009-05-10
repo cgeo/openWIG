@@ -40,7 +40,7 @@ public class Cartridge extends EventTable {
 		}
 		for (int i = 0; i < timers.size(); i++) {
 			Timer t = (Timer)timers.elementAt(i);
-			t.tick();
+			t.updateRemaining();
 		}
 
 	}

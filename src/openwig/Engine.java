@@ -12,7 +12,6 @@ interface Caller {
 	void call();
 }
 
-
 class EventCaller implements Caller {
 	private EventTable target = null;
 	private String event;
@@ -40,6 +39,7 @@ class CallbackCaller implements Caller {
 	}
 	
 	public void call () {
+		Engine.log("BTTN: " + value.toString() + " pressed");
 		Engine.state.call(callback, value, null, null);
 	}
 }
@@ -53,7 +53,36 @@ public class Engine implements Runnable {
 	private CartridgeFile gwcfile;
 	private PrintStream log;
 	
-	private static Vector eventQueue;
+	private Vector eventQueue;
+	private class EventQueue extends Thread {		
+		public void run () {
+			boolean events;
+			while (!end) {
+				events = false;
+				while (!eventQueue.isEmpty()) {
+					events = true;
+					Caller c = (Caller)eventQueue.firstElement();
+					eventQueue.removeElementAt(0);
+					try {
+						c.call();
+					} catch (Throwable t) {
+						stacktrace(t);
+					}
+				}
+				if (events) Midlet.refresh();
+				synchronized (this) {
+					if (!eventQueue.isEmpty()) continue;
+					try { wait(); } catch (InterruptedException e) { }
+				}
+			}
+		}
+		
+		synchronized public void addCall (Caller c) {
+			eventQueue.addElement(c);
+			notify();
+		}
+	}
+	private static EventQueue eventRunner;
 
 	public static Engine instance;
 	public static LuaState state;
@@ -107,7 +136,8 @@ public class Engine implements Runnable {
 				LuaInterface.register(state);
 				
 				write("Building event queue...\n");
-				eventQueue = new Vector();
+				eventQueue = new Vector(10);
+				eventRunner = new EventQueue();
 
 				write("Loading gwc...");
 				if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
@@ -124,8 +154,8 @@ public class Engine implements Runnable {
 				closure = null;
 
 				write("Setting remaining properties...\n");
-				player.rawset("CompletionCode", gwcfile.code.intern());
-				player.rawset("Name", gwcfile.member.intern());
+				player.rawset("CompletionCode", gwcfile.code);
+				player.rawset("Name", gwcfile.member);
 				log = l;
 
 				write("Starting game...\n");
@@ -140,22 +170,9 @@ public class Engine implements Runnable {
 			player.refreshLocation();
 			cartridge.callEvent("OnStart", null);
 			Midlet.refresh();
+			eventRunner.start();
 
-			long lastTick = System.currentTimeMillis();
 			while (!end) {
-				boolean events = false;
-				while (!eventQueue.isEmpty()) {
-					Caller c = (Caller)eventQueue.firstElement();
-					eventQueue.removeElementAt(0);
-					try {
-						c.call();
-						events = true;
-					} catch (Throwable t) {
-						stacktrace(t);
-					}
-				}
-				if (events) Midlet.refresh();
-
 				try {
 					if (Midlet.gps.getLatitude() != player.position.latitude
 					|| Midlet.gps.getLongitude() != player.position.longitude
@@ -167,27 +184,15 @@ public class Engine implements Runnable {
 					stacktrace(e);
 				}
 				
-				synchronized (this) {
-					if (!eventQueue.isEmpty()) continue;
-					
-					long stm = System.currentTimeMillis();
-					long sleep = lastTick + 1000 - stm;
-					if (sleep < 1) {
-						lastTick += 1000;
-						continue;
-					}
-					try {
-						Thread.sleep(sleep);
-						lastTick += 1000;
-					} catch (InterruptedException e) { }
-				}
+				try { Thread.sleep(1000); } catch (InterruptedException e) { }
 			}
-			log.close();
+			if (log != null) log.close();
 		} catch (Throwable t) {
 			Engine.stacktrace(t);
 		} finally {
 			instance = null;
 			state = null;
+			eventRunner = null;
 		}
 	}
 
@@ -201,6 +206,7 @@ public class Engine implements Runnable {
 
 	public static void kill () {
 		if (instance == null) return;
+		Timer.kill();
 		instance.end = true;
 	}
 
@@ -228,20 +234,12 @@ public class Engine implements Runnable {
 	public static void callEvent (EventTable subject, String name, Object param) {
 		if (!subject.hasEvent(name)) return;
 		EventCaller ec = new EventCaller(subject, name, param);
-		
-		synchronized (Engine.instance) {
-			eventQueue.addElement(ec);
-			Engine.instance.notify();
-		}
+		eventRunner.addCall(ec);
 	}
 
 	public static void invokeCallback (LuaClosure callback, Object value) {
-		log("BTTN: " + value.toString() + " pressed");
 		CallbackCaller cc = new CallbackCaller(callback, value);
-		synchronized (Engine.instance) {
-			eventQueue.addElement(cc);
-			Engine.instance.notify();
-		}
+		eventRunner.addCall(cc);
 	}
 
 	public static byte[] mediaFile (Media media) throws Exception {

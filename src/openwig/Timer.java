@@ -1,8 +1,11 @@
 package openwig;
 
 import se.krka.kahlua.vm.*;
+import gui.Midlet;
 
 public class Timer extends EventTable {
+	
+	private static java.util.Timer globalTimer;
 
 	private static JavaFunction start = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -29,17 +32,24 @@ public class Timer extends EventTable {
 		}
 	};
 	
+	private class TimerTask extends java.util.TimerTask {
+		public void run() {
+			tick();
+			Midlet.refresh();
+		}	
+	}
+	
+	private TimerTask task = null;
+	
 	private static final int COUNTDOWN = 0;
 	private static final int INTERVAL = 1;
 	private int type = COUNTDOWN;
 	
 	private long duration = -1;
-	
 	private long lastTick = 0;
 	
-	private boolean running = false;
-	
 	public Timer () {
+		if (globalTimer == null) globalTimer = new java.util.Timer();
 		table.rawset("Start", start);
 		table.rawset("Stop", stop);
 		table.rawset("Tick", tick);
@@ -55,40 +65,54 @@ public class Timer extends EventTable {
 			}
 		} else if ("Duration".equals(key) && value instanceof Double) {
 			long d = (long)LuaState.fromDouble(value);
+			rawset("Remaining", value);
 			duration = d * 1000;
 		} else super.setItem(key, value);
 	}
 	
 	public void start () {
-		if (running) return;
-		table.rawset("Remaining", LuaState.toDouble(duration / 1000));
-		callEvent("OnStart", null);
-		running = true;
+		if (task != null) return;
+		if (duration == 0) {
+			callEvent("OnStart", null);
+			callEvent("OnTick", null);
+			return;
+		}
+		task = new TimerTask();
 		lastTick = System.currentTimeMillis();
+		updateRemaining();
+		callEvent("OnStart", null);
+		switch (type) {
+			case COUNTDOWN:
+				globalTimer.schedule(task, duration);
+				break;
+			case INTERVAL:
+				globalTimer.scheduleAtFixedRate(task, duration, duration);
+				break;
+		}
 	}
 	
 	public void stop () {
-		if (running) {
+		if (task != null) {
+			task.cancel();
+			task = null;
 			callEvent("OnStop", null);
 		}
-		running = false;
 	}
 	
 	public void tick () {
-		if (!running) return;
-		long ctm = System.currentTimeMillis();
-		long time = ctm - lastTick;
-		long remaining = duration - time;
-		while (remaining < 0) remaining += duration;
-		table.rawset("Remaining", LuaState.toDouble(remaining / 1000));
-		while (time >= duration) {
-			callEvent("OnTick", null);
-			time -= duration;
-			lastTick = ctm;
-			if (type == COUNTDOWN) {
-				running = false;
-				break;
-			}
-		}
-	}	
+		Engine.callEvent(this, "OnTick", null);
+		lastTick = System.currentTimeMillis();
+		updateRemaining();
+	}
+	
+	public void updateRemaining () {
+		long stm = System.currentTimeMillis();
+		long time = (duration/1000) - ((stm - lastTick)/1000);
+		table.rawset("Remaining", LuaState.toDouble(time));
+	}
+	
+	public static void kill() {
+		if (globalTimer != null) globalTimer.cancel();
+		globalTimer = null;
+	}
 }

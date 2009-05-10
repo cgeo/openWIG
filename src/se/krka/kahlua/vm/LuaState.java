@@ -1,24 +1,24 @@
 /*
-Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+ Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ */
 package se.krka.kahlua.vm;
 
 import java.io.IOException;
@@ -33,45 +33,83 @@ import se.krka.kahlua.stdlib.StringLib;
 import se.krka.kahlua.stdlib.TableLib;
 
 public final class LuaState {
-	private static final int FIELDS_PER_FLUSH = 50;
-	private static final int OP_MOVE = 0;
-	private static final int OP_LOADK = 1;
-	private static final int OP_LOADBOOL = 2;
-	private static final int OP_LOADNIL = 3;
-	private static final int OP_GETUPVAL = 4;
-	private static final int OP_GETGLOBAL = 5;
-	private static final int OP_GETTABLE = 6;
-	private static final int OP_SETGLOBAL = 7;
-	private static final int OP_SETUPVAL = 8;
-	private static final int OP_SETTABLE = 9;
-	private static final int OP_NEWTABLE = 10;
-	private static final int OP_SELF = 11;
-	private static final int OP_ADD = 12;
-	private static final int OP_SUB = 13;
-	private static final int OP_MUL = 14;
-	private static final int OP_DIV = 15;
-	private static final int OP_MOD = 16;
-	private static final int OP_POW = 17;
-	private static final int OP_UNM = 18;
-	private static final int OP_NOT = 19;
-	private static final int OP_LEN = 20;
-	private static final int OP_CONCAT = 21;
-	private static final int OP_JMP = 22;
-	private static final int OP_EQ = 23;
-	private static final int OP_LT = 24;
-	private static final int OP_LE = 25;
-	private static final int OP_TEST = 26;
-	private static final int OP_TESTSET = 27;
-	private static final int OP_CALL = 28;
-	private static final int OP_TAILCALL = 29;
-	private static final int OP_RETURN = 30;
-	private static final int OP_FORLOOP = 31;
-	private static final int OP_FORPREP = 32;
-	private static final int OP_TFORLOOP = 33;
-	private static final int OP_SETLIST = 34;
-	private static final int OP_CLOSE = 35;
-	private static final int OP_CLOSURE = 36;
-	private static final int OP_VARARG = 37;
+	public static final int FIELDS_PER_FLUSH = 50;
+
+	public static final int OP_MOVE = 0;
+
+	public static final int OP_LOADK = 1;
+
+	public static final int OP_LOADBOOL = 2;
+
+	public static final int OP_LOADNIL = 3;
+
+	public static final int OP_GETUPVAL = 4;
+
+	public static final int OP_GETGLOBAL = 5;
+
+	public static final int OP_GETTABLE = 6;
+
+	public static final int OP_SETGLOBAL = 7;
+
+	public static final int OP_SETUPVAL = 8;
+
+	public static final int OP_SETTABLE = 9;
+
+	public static final int OP_NEWTABLE = 10;
+
+	public static final int OP_SELF = 11;
+
+	public static final int OP_ADD = 12;
+
+	public static final int OP_SUB = 13;
+
+	public static final int OP_MUL = 14;
+
+	public static final int OP_DIV = 15;
+
+	public static final int OP_MOD = 16;
+
+	public static final int OP_POW = 17;
+
+	public static final int OP_UNM = 18;
+
+	public static final int OP_NOT = 19;
+
+	public static final int OP_LEN = 20;
+
+	public static final int OP_CONCAT = 21;
+
+	public static final int OP_JMP = 22;
+
+	public static final int OP_EQ = 23;
+
+	public static final int OP_LT = 24;
+
+	public static final int OP_LE = 25;
+
+	public static final int OP_TEST = 26;
+
+	public static final int OP_TESTSET = 27;
+
+	public static final int OP_CALL = 28;
+
+	public static final int OP_TAILCALL = 29;
+
+	public static final int OP_RETURN = 30;
+
+	public static final int OP_FORLOOP = 31;
+
+	public static final int OP_FORPREP = 32;
+
+	public static final int OP_TFORLOOP = 33;
+
+	public static final int OP_SETLIST = 34;
+
+	public static final int OP_CLOSE = 35;
+
+	public static final int OP_CLOSURE = 36;
+
+	public static final int OP_VARARG = 37;
 
 	public LuaThread currentThread;
 
@@ -99,7 +137,7 @@ public final class LuaState {
 		meta_ops[OP_LT] = "__lt";
 		meta_ops[OP_LE] = "__le";
 	}
-	
+
 	public LuaState(PrintStream stream) {
 		out = stream;
 		reset();
@@ -108,39 +146,32 @@ public final class LuaState {
 	public LuaState() {
 		this(System.out);
 	}
-	
+
 	// For debugging purposes only
 	/*
-	public static void main(String[] args) {
-		LuaState s = new LuaState();
-		try {
-			LuaClosure closure = LuaPrototype.loadByteCode(new FileInputStream("coroutine.lbc"), s.getEnvironment());
-			s.pcall(closure, null);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	*/
-	
-	public final void reset() {
-		currentThread = new LuaThread(this, new LuaTable());
+	 * public static void main(String[] args) { LuaState s = new LuaState(); try {
+	 * LuaClosure closure = LuaPrototype.loadByteCode(new
+	 * FileInputStream("coroutine.lbc"), s.getEnvironment()); s.pcall(closure,
+	 * null); } catch (FileNotFoundException e) { // TODO Auto-generated catch
+	 * block e.printStackTrace(); } catch (IOException e) { // TODO
+	 * Auto-generated catch block e.printStackTrace(); } }
+	 */
 
-		userdataMetatables = new LuaTable();
+	public final void reset() {
+		currentThread = new LuaThread(this, new LuaTableImpl());
+
+		userdataMetatables = new LuaTableImpl();
 		getEnvironment().rawset("_G", getEnvironment());
 		getEnvironment().rawset("_VERSION", "Lua 5.1 for CLDC 1.1");
-		
+
 		BaseLib.register(this);
 		StringLib.register(this);
 		MathLib.register(this);
 		CoroutineLib.register(this);
 		OsLib.register(this);
 		TableLib.register(this);
-
-/*		LuaClosure closure = loadByteCodeFromResource("stdlib", getEnvironment());
+		
+/*		LuaClosure closure = loadByteCodeFromResource("/stdlib", getEnvironment());
 		call(closure, null, null, null);*/
 	}
 
@@ -161,7 +192,8 @@ public final class LuaState {
 			throw new RuntimeException("tried to call a non-function");
 		}
 
-		LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o, base + 1, base, nArguments, false, false);
+		LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o,
+				base + 1, base, nArguments, false, false);
 		callFrame.init();
 
 		luaMainloop();
@@ -173,10 +205,12 @@ public final class LuaState {
 		return nReturnValues;
 	}
 
-	private int callJava(JavaFunction f, int localBase, int returnBase, int nArguments) {
+	private int callJava(JavaFunction f, int localBase, int returnBase,
+			int nArguments) {
 		LuaThread thread = currentThread;
 
-		LuaCallFrame callFrame = thread.pushNewCallFrame(null, localBase, returnBase, nArguments, false, false);
+		LuaCallFrame callFrame = thread.pushNewCallFrame(null, localBase,
+				returnBase, nArguments, false, false);
 
 		int nReturnValues = f.call(callFrame, nArguments);
 
@@ -206,8 +240,10 @@ public final class LuaState {
 		LuaCallFrame callFrame = currentThread.currentCallFrame();
 		LuaClosure closure = callFrame.closure;
 		LuaPrototype prototype = closure.prototype;
-		int[] opcodes = prototype.opcodes;
+		int[] opcodes = prototype.code;
 
+		int returnBase = callFrame.returnBase;
+		
 		while (true) {
 			try {
 				int a, b, c;
@@ -215,7 +251,6 @@ public final class LuaState {
 				int op = opcodes[callFrame.pc++];
 				int opcode = op & 63;
 
-				int returnBase = callFrame.returnBase;
 				switch (opcode) {
 				case OP_MOVE: {
 					a = getA8(op);
@@ -267,7 +302,7 @@ public final class LuaState {
 
 					Object bObj = callFrame.get(b);
 
-					Object key = getRegisterOrConstant(callFrame, c);
+					Object key = getRegisterOrConstant(callFrame, c, prototype);
 
 					Object res = tableGet(bObj, key);
 					callFrame.set(a, res);
@@ -299,8 +334,8 @@ public final class LuaState {
 
 					Object aObj = callFrame.get(a);
 
-					Object key = getRegisterOrConstant(callFrame, b);
-					Object value = getRegisterOrConstant(callFrame, c);
+					Object key = getRegisterOrConstant(callFrame, b, prototype);
+					Object value = getRegisterOrConstant(callFrame, c, prototype);
 
 					tableSet(aObj, key, value);
 
@@ -309,11 +344,12 @@ public final class LuaState {
 				case OP_NEWTABLE: {
 					a = getA8(op);
 
-					// Used to set up initial array and hash size - not implemented
+					// Used to set up initial array and hash size - not
+					// implemented
 					// b = getB9(op);
 					// c = getC9(op);
 
-					LuaTable t = new LuaTable();
+					LuaTable t = new LuaTableImpl();
 					callFrame.set(a, t);
 					break;
 				}
@@ -322,7 +358,7 @@ public final class LuaState {
 					b = getB9(op);
 					c = getC9(op);
 
-					Object key = getRegisterOrConstant(callFrame, c);
+					Object key = getRegisterOrConstant(callFrame, c, prototype);
 					Object bObj = callFrame.get(b);
 
 					Object fun = tableGet(bObj, key);
@@ -341,16 +377,19 @@ public final class LuaState {
 					b = getB9(op);
 					c = getC9(op);
 
-					Object bo = getRegisterOrConstant(callFrame, b);
-					Object co = getRegisterOrConstant(callFrame, c);
+					Object bo = getRegisterOrConstant(callFrame, b, prototype);
+					Object co = getRegisterOrConstant(callFrame, c, prototype);
 
 					Double bd = null, cd = null;
 					Object res = null;
-					if ((bd = BaseLib.rawTonumber(bo)) == null || (cd = BaseLib.rawTonumber(co)) == null) {
+					if ((bd = BaseLib.rawTonumber(bo)) == null
+							|| (cd = BaseLib.rawTonumber(co)) == null) {
 						String meta_op = meta_ops[opcode];
 
 						Object metafun = getBinMetaOp(bo, co, meta_op);
-						BaseLib.luaAssert(metafun != null, meta_op + " not defined for operands");
+						if (!(metafun != null)) {
+							BaseLib.fail((meta_op + " not defined for operands"));
+						}
 						res = call(metafun, bo, co, null);
 					} else {
 						res = primitiveMath(bd, cd, opcode);
@@ -369,7 +408,7 @@ public final class LuaState {
 						res = toDouble(-fromDouble(aDouble));
 					} else {
 						Object metafun = getMetaOp(aObj, "__unm");
-						BaseLib.luaAssert(metafun != null, "__unm not defined for operand");
+						//BaseLib.luaAssert(metafun != null, "__unm not defined for operand");
 						res = call(metafun, aObj, null, null);
 					}
 					callFrame.set(a, res);
@@ -433,7 +472,9 @@ public final class LuaState {
 
 									int firstString = last - nStrings + 1;
 									while (firstString <= last) {
-										concatBuffer.append(BaseLib.rawTostring(callFrame.get(firstString)));
+										concatBuffer.append(BaseLib
+												.rawTostring(callFrame
+														.get(firstString)));
 										firstString++;
 									}
 									concatBuffer.append(resStr);
@@ -447,8 +488,11 @@ public final class LuaState {
 						if (first <= last) {
 							Object leftConcat = callFrame.get(last);
 
-							Object metafun = getBinMetaOp(leftConcat, res, "__concat");
-							BaseLib.luaAssert(metafun != null, "__concat not defined for operands: " + leftConcat + " and " + res);
+							Object metafun = getBinMetaOp(leftConcat, res,
+									"__concat");
+							if (!(metafun != null)) {
+								BaseLib.fail(("__concat not defined for operands: " + leftConcat + " and " + res));
+							}
 							res = call(metafun, leftConcat, res, null);
 							last--;
 						}
@@ -467,9 +511,8 @@ public final class LuaState {
 					b = getB9(op);
 					c = getC9(op);
 
-					Object bo = getRegisterOrConstant(callFrame, b);
-					Object co = getRegisterOrConstant(callFrame, c);
-
+					Object bo = getRegisterOrConstant(callFrame, b, prototype);
+					Object co = getRegisterOrConstant(callFrame, c, prototype);
 
 					if (bo instanceof Double && co instanceof Double) {
 						double bd_primitive = fromDouble(bo);
@@ -514,16 +557,16 @@ public final class LuaState {
 						boolean resBool;
 						if (bo == co) {
 							resBool = true;
-						} else { 						
+						} else {
 							boolean invert = false;
 
 							String meta_op = meta_ops[opcode];
 
 							Object metafun = getCompMetaOp(bo, co, meta_op);
 
-							/* Special case:
-							 * OP_LE uses OP_LT if __le is not defined.
-							 * a <= b is then translated to not (b < a)
+							/*
+							 * Special case: OP_LE uses OP_LT if __le is not
+							 * defined. a <= b is then translated to not (b < a)
 							 */
 							if (metafun == null && opcode == OP_LE) {
 								metafun = getCompMetaOp(bo, co, "__lt");
@@ -540,7 +583,9 @@ public final class LuaState {
 							if (metafun == null && opcode == OP_EQ) {
 								resBool = LuaState.luaEquals(bo, co);
 							} else {
-								BaseLib.luaAssert(metafun != null, meta_op + " not defined for operand");
+								if (!(metafun != null)) {
+									BaseLib.fail((meta_op + " not defined for operand"));
+								}
 								Object res = call(metafun, bo, co, null);
 								resBool = boolEval(res);
 							}
@@ -572,7 +617,6 @@ public final class LuaState {
 					b = getB9(op);
 					c = getC9(op);
 
-
 					Object value = callFrame.get(b);
 					if (boolEval(value) != (c == 0)) {
 						callFrame.set(a, value);
@@ -582,8 +626,7 @@ public final class LuaState {
 
 					break;
 				}
-				case OP_CALL:
-				{
+				case OP_CALL: {
 					a = getA8(op);
 					b = getB9(op);
 					c = getC9(op);
@@ -600,45 +643,56 @@ public final class LuaState {
 
 					int localBase2 = base + a + 1;
 					int returnBase2 = base + a;
-					
+
 					Object funObject = callFrame.get(a);
 					BaseLib.luaAssert(funObject != null, "Tried to call nil");
 					Object fun = prepareMetatableCall(funObject);
-					BaseLib.luaAssert(fun != null, "Object " + funObject + " did not have __call metatable set");
-					
-					// If it's a metatable __call, prepend the caller as the first argument 
+					if (!(fun != null)) {
+						BaseLib.fail(("Object " + funObject + " did not have __call metatable set"));
+					}
+
+					// If it's a metatable __call, prepend the caller as the
+					// first argument
 					if (fun != funObject) {
 						localBase2 = returnBase2;
 						nArguments2++;
 					}
-					
+
 					if (fun instanceof LuaClosure) {
-						LuaCallFrame newCallFrame = currentThread.pushNewCallFrame((LuaClosure) fun, localBase2, returnBase2, nArguments2, true, callFrame.insideCoroutine);
+						LuaCallFrame newCallFrame = currentThread
+								.pushNewCallFrame((LuaClosure) fun, localBase2,
+										returnBase2, nArguments2, true,
+										callFrame.insideCoroutine);
 						newCallFrame.init();
 
 						callFrame = newCallFrame;
 						closure = newCallFrame.closure;
 						prototype = closure.prototype;
-						opcodes = prototype.opcodes;
+						opcodes = prototype.code;
+						returnBase = callFrame.returnBase;
 					} else if (fun instanceof JavaFunction) {
-						callJava((JavaFunction) fun, base + a + 1, base + a, nArguments2);
+						callJava((JavaFunction) fun, base + a + 1, base + a,
+								nArguments2);
 
 						callFrame = currentThread.currentCallFrame();
-						
-						// This means that we got back from a yield to a java function, such as pcall
+
+						// This means that we got back from a yield to a java
+						// function, such as pcall
 						if (callFrame.isJava()) {
 							return;
 						}
-						
+
 						closure = callFrame.closure;
 						prototype = closure.prototype;
-						opcodes = prototype.opcodes;
+						opcodes = prototype.code;
+						returnBase = callFrame.returnBase;
 
 						if (callFrame.restoreTop) {
 							callFrame.setTop(prototype.maxStacksize);
 						}
 					} else {
-						throw new RuntimeException("Tried to call a non-function: " + fun);
+						throw new RuntimeException(
+								"Tried to call a non-function: " + fun);
 					}
 
 					break;
@@ -660,17 +714,21 @@ public final class LuaState {
 					Object funObject = callFrame.get(a);
 					BaseLib.luaAssert(funObject != null, "Tried to call nil");
 					Object fun = prepareMetatableCall(funObject);
-					BaseLib.luaAssert(fun != null, "Object " + funObject + " did not have __call metatable set");
-					
+					if (!(fun != null)) {
+						BaseLib.fail(("Object " + funObject + " did not have __call metatable set"));
+					}
+
 					int localBase2 = returnBase + 1;
-					
-					// If it's a metatable __call, prepend the caller as the first argument 
+
+					// If it's a metatable __call, prepend the caller as the
+					// first argument
 					if (fun != funObject) {
 						localBase2 = returnBase;
 						nArguments2++;
 					}
 
-					currentThread.stackCopy(base + a, returnBase, nArguments2 + 1);
+					currentThread.stackCopy(base + a, returnBase,
+							nArguments2 + 1);
 					currentThread.setTop(returnBase + nArguments2 + 1);
 
 					if (fun instanceof LuaClosure) {
@@ -679,25 +737,30 @@ public final class LuaState {
 						callFrame.closure = (LuaClosure) fun;
 						callFrame.init();
 					} else {
-						BaseLib.luaAssert(fun instanceof JavaFunction, "Tried to call a non-function: " + fun);
+						if (!(fun instanceof JavaFunction)) {
+							BaseLib.fail(("Tried to call a non-function: " + fun));
+						}
 						LuaThread oldThread = currentThread;
-						callJava((JavaFunction) fun, localBase2, returnBase, nArguments2);
+						callJava((JavaFunction) fun, localBase2, returnBase,
+								nArguments2);
 
 						callFrame = currentThread.currentCallFrame();
 						oldThread.popCallFrame();
-						
+
 						if (oldThread != currentThread) {
 							if (oldThread.isDead()) {
-								
+
 								if (currentThread.parent == oldThread) {
 									currentThread.parent = oldThread.parent;
 									oldThread.parent = null;
-									
-									// This is an implicit yield, so push a TRUE to the parent
-									currentThread.parent.currentCallFrame().push(Boolean.TRUE); 
+
+									// This is an implicit yield, so push a TRUE
+									// to the parent
+									currentThread.parent.currentCallFrame()
+											.push(Boolean.TRUE);
 								}
 							}
-							
+
 							callFrame = currentThread.currentCallFrame();
 							if (callFrame.isJava()) {
 								return;
@@ -707,16 +770,18 @@ public final class LuaState {
 								return;
 							}
 							callFrame = currentThread.currentCallFrame();
-							
+
 							if (callFrame.restoreTop) {
-								callFrame.setTop(callFrame.closure.prototype.maxStacksize);
+								callFrame
+										.setTop(callFrame.closure.prototype.maxStacksize);
 							}
 						}
 					}
 
 					closure = callFrame.closure;
 					prototype = closure.prototype;
-					opcodes = prototype.opcodes;
+					opcodes = prototype.code;
+					returnBase = callFrame.returnBase;
 
 					break;
 				}
@@ -731,16 +796,20 @@ public final class LuaState {
 						b = callFrame.getTop() - a;
 					}
 
-					currentThread.stackCopy(callFrame.localBase + a, returnBase, b);
+					currentThread.stackCopy(callFrame.localBase + a,
+							returnBase, b);
 					currentThread.setTop(returnBase + b);
 
 					if (callFrame.fromLua) {
-						if (callFrame.insideCoroutine && currentThread.callFrameTop == 1) {
+						if (callFrame.insideCoroutine
+								&& currentThread.callFrameTop == 1) {
+							callFrame.localBase = callFrame.returnBase;
 							LuaThread thread = currentThread;
 							CoroutineLib.yieldHelper(callFrame, callFrame, b);
 							thread.popCallFrame();
-							
-							// If this thread is called from a java function, return immediately
+
+							// If this thread is called from a java function,
+							// return immediately
 							callFrame = currentThread.currentCallFrame();
 							if (callFrame.isJava()) {
 								return;
@@ -752,8 +821,8 @@ public final class LuaState {
 
 						closure = callFrame.closure;
 						prototype = closure.prototype;
-						opcodes = prototype.opcodes;
-
+						opcodes = prototype.code;
+						returnBase = callFrame.returnBase;
 
 						if (callFrame.restoreTop) {
 							callFrame.setTop(prototype.maxStacksize);
@@ -782,7 +851,7 @@ public final class LuaState {
 					double step = fromDouble(callFrame.get(a + 2));
 					iter += step;
 					Double iterDouble = toDouble(iter);
-					callFrame.set(a,  iterDouble);
+					callFrame.set(a, iterDouble);
 
 					if ((step > 0) ? iter <= end : iter >= end) {
 						b = getSBx(op);
@@ -843,7 +912,8 @@ public final class LuaState {
 					a = getA8(op);
 					b = getBx(op);
 					LuaPrototype newPrototype = prototype.prototypes[b];
-					LuaClosure newClosure = new LuaClosure(newPrototype, closure.env);
+					LuaClosure newClosure = new LuaClosure(newPrototype,
+							closure.env);
 					callFrame.set(a, newClosure);
 					int numUpvalues = newPrototype.numUpvalues;
 					for (int i = 0; i < numUpvalues; i++) {
@@ -877,7 +947,7 @@ public final class LuaState {
 				}
 				} // switch
 			} catch (RuntimeException e) {
-				//inspectThread(currentThread);
+				// inspectThread(currentThread);
 
 				// Pop off all java frames first
 				while (true) {
@@ -886,7 +956,6 @@ public final class LuaState {
 					if (callFrame.isLua()) {
 						break;
 					}
-					currentThread.cleanCallFrames(callFrame);
 					currentThread.addStackTrace(callFrame);
 					currentThread.popCallFrame();
 				}
@@ -901,7 +970,8 @@ public final class LuaState {
 							// Yield and fail
 
 							// Copy arguments
-							LuaCallFrame nextCallFrame = parent.currentCallFrame();
+							LuaCallFrame nextCallFrame = parent
+									.currentCallFrame();
 
 							nextCallFrame.push(Boolean.FALSE);
 							nextCallFrame.push(e.getMessage());
@@ -912,19 +982,23 @@ public final class LuaState {
 							callFrame = currentThread.currentCallFrame();
 							closure = callFrame.closure;
 							prototype = closure.prototype;
-							opcodes = prototype.opcodes;
+							opcodes = prototype.code;
+							returnBase = callFrame.returnBase;
 
 							rethrow = false;
 						}
 						break;
 					}
-					currentThread.cleanCallFrames(callFrame);
 					currentThread.addStackTrace(callFrame);
 					currentThread.popCallFrame();
 
 					if (!callFrame.fromLua) {
 						break;
 					}
+				}
+				// Close all live upvalues before resuming
+				if (callFrame != null) {
+					callFrame.closeUpvalues(0);
 				}
 				if (rethrow) {
 					throw e;
@@ -962,15 +1036,13 @@ public final class LuaState {
 		userdataMetatables.rawset(type, metatable);
 	}
 
-	private final Object getRegisterOrConstant(LuaCallFrame callFrame, int index) {
-		Object o;
+	private final Object getRegisterOrConstant(LuaCallFrame callFrame, int index, LuaPrototype prototype) {
 		int cindex = index - 256;
 		if (cindex < 0) {
-			o = callFrame.get(index);
+			return callFrame.get(index);
 		} else {
-			o = callFrame.closure.prototype.constants[cindex];
+			return prototype.constants[cindex];
 		}
-		return o;
 	}
 
 	/*
@@ -997,8 +1069,7 @@ public final class LuaState {
 		return (op >>> 14) - 131071;
 	}
 
-	private Double primitiveMath(Double x, Double y, int opcode)
-	{
+	private Double primitiveMath(Double x, Double y, int opcode) {
 		double v1 = fromDouble(x);
 		double v2 = fromDouble(y);
 		double res = 0;
@@ -1038,7 +1109,7 @@ public final class LuaState {
 		final int argslen = 3;
 		currentThread.setTop(oldTop + 1 + argslen);
 		currentThread.objectStack[oldTop] = fun;
-		
+
 		currentThread.objectStack[oldTop + 1] = arg1;
 		currentThread.objectStack[oldTop + 2] = arg2;
 		currentThread.objectStack[oldTop + 3] = arg3;
@@ -1052,15 +1123,15 @@ public final class LuaState {
 		currentThread.setTop(oldTop);
 		return ret;
 	}
-	
+
 	public final Object call(Object fun, Object[] args) {
 		int oldTop = currentThread.getTop();
 		int argslen = args == null ? 0 : args.length;
 		currentThread.setTop(oldTop + 1 + argslen);
 		currentThread.objectStack[oldTop] = fun;
-		
+
 		for (int i = 1; i <= argslen; i++) {
-			currentThread.objectStack[oldTop + i] = args[i-1];
+			currentThread.objectStack[oldTop + i] = args[i - 1];
 		}
 		int nReturnValues = call(argslen);
 
@@ -1074,39 +1145,38 @@ public final class LuaState {
 
 	public final Object tableGet(Object table, Object key) {
 		Object curObj = table;
-    	for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
-    		boolean isTable = curObj instanceof LuaTable;
-    		if (isTable) {
+		for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
+			boolean isTable = curObj instanceof LuaTable;
+			if (isTable) {
 				LuaTable t = (LuaTable) curObj;
 				Object res = t.rawget(key);
 				if (res != null) {
 					return res;
 				}
-    		}
-    		Object metaOp = getMetaOp(curObj, "__index");
-    		if (metaOp == null) {
-    			if (isTable) {
-    				return null;
-    			}
-    	   		throw new RuntimeException("attempted index of non-table: " + curObj);
-    		}
-    		if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
-        		Object res = call(metaOp, table, key, null);
-    			return res;
-    		} else {
-    			curObj = metaOp;
-    		}
-    	}
-   		throw new RuntimeException("loop in gettable");
+			}
+			Object metaOp = getMetaOp(curObj, "__index");
+			if (metaOp == null) {
+				if (isTable) {
+					return null;
+				}
+				throw new RuntimeException("attempted index of non-table: "
+						+ curObj);
+			}
+			if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
+				Object res = call(metaOp, table, key, null);
+				return res;
+			} else {
+				curObj = metaOp;
+			}
+		}
+		throw new RuntimeException("loop in gettable");
 	}
 
 	public final void tableSet(Object table, Object key, Object value) {
-		LuaTable.checkKey(key);
-
 		Object curObj = table;
-    	for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
-    		Object metaOp;
-    		if (curObj instanceof LuaTable) {
+		for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
+			Object metaOp;
+			if (curObj instanceof LuaTable) {
 				LuaTable t = (LuaTable) curObj;
 
 				if (t.rawget(key) != null) {
@@ -1114,23 +1184,23 @@ public final class LuaState {
 					return;
 				}
 
-	    		metaOp = getMetaOp(curObj, "__newindex");
-	    		if (metaOp == null) {
-	    			t.rawset(key, value);
-	    			return;
-	    		}
-    		} else {
-    			metaOp = getMetaOp(curObj, "__newindex");
-    			BaseLib.luaAssert(metaOp != null, "attempted index of non-table");
-    		}
-    		if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
-    			call(metaOp, table, key, value);
-    			return;
-    		} else {
-    			curObj = metaOp;
-    		}
-    	}
-   		throw new RuntimeException("loop in settable");
+				metaOp = getMetaOp(curObj, "__newindex");
+				if (metaOp == null) {
+					t.rawset(key, value);
+					return;
+				}
+			} else {
+				metaOp = getMetaOp(curObj, "__newindex");
+				BaseLib.luaAssert(metaOp != null,	"attempted index of non-table");
+			}
+			if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
+				call(metaOp, table, key, value);
+				return;
+			} else {
+				curObj = metaOp;
+			}
+		}
+		throw new RuntimeException("loop in settable");
 	}
 
 	public final Object getmetatable(Object o, boolean raw) {
@@ -1140,7 +1210,7 @@ public final class LuaState {
 		LuaTable metatable;
 		if (o instanceof LuaTable) {
 			LuaTable t = (LuaTable) o;
-			metatable = t.metatable;
+			metatable = t.getMetatable();
 		} else {
 			metatable = (LuaTable) userdataMetatables.rawget(o.getClass());
 		}
@@ -1162,7 +1232,8 @@ public final class LuaState {
 		currentThread.setTop(oldTop + 1 + nArgs);
 		currentThread.objectStack[oldTop] = fun;
 		if (nArgs > 0) {
-			System.arraycopy(args, 0, currentThread.objectStack, oldTop + 1, nArgs);
+			System.arraycopy(args, 0, currentThread.objectStack, oldTop + 1,
+					nArgs);
 		}
 		int nRet = pcall(nArgs);
 		Object[] ret = new Object[nRet];
@@ -1198,6 +1269,9 @@ public final class LuaState {
 			exception = e;
 			errorMessage = e.getMessage();
 		}
+		if (currentCallFrame != null) {
+			currentCallFrame.closeUpvalues(0);
+		}
 		thread.cleanCallFrames(currentCallFrame);
 		if (errorMessage instanceof String) {
 			errorMessage = ((String) errorMessage);
@@ -1215,7 +1289,7 @@ public final class LuaState {
 	public LuaTable getEnvironment() {
 		return currentThread.environment;
 	}
-	
+
 	public static boolean luaEquals(Object a, Object b) {
 		if (a == null || b == null) {
 			return a == b;
@@ -1248,9 +1322,8 @@ public final class LuaState {
 		return b ? Boolean.TRUE : Boolean.FALSE;
 	}
 
-	
 	public LuaClosure loadByteCodeFromResource(String name, LuaTable environment) {
-		InputStream stream = getClass().getResourceAsStream("/" + name + ".lbc");
+		InputStream stream = getClass().getResourceAsStream(name + ".lbc");
 		if (stream == null) {
 			return null;
 		}
@@ -1260,5 +1333,4 @@ public final class LuaState {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
-	
 }

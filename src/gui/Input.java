@@ -73,9 +73,9 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_ANSWER) {
 			if (mode == TEXT) {
-				Engine.callEvent(input, "OnGetInput", answer.getString().intern());
+				Engine.callEvent(input, "OnGetInput", answer.getString());
 			} else if (mode == MULTI) {
-				Engine.callEvent(input, "OnGetInput", choice.getString(choice.getSelectedIndex()).intern());
+				Engine.callEvent(input, "OnGetInput", choice.getString(choice.getSelectedIndex()));
 			} else {
 				Engine.callEvent(input, "OnGetInput", null);
 			}

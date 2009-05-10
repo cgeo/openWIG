@@ -30,7 +30,7 @@ public class Media extends EventTable implements PlayerListener {
 				LuaTable res = (LuaTable)lt.rawget(new Double(i));
 				String t = (String)res.rawget("Type");
 				if ("fdl".equals(t)) continue;
-				type = t.toLowerCase().intern();
+				type = t.toLowerCase();
 			}
 		} else super.setItem(key, value);
 	}

@@ -44,7 +44,7 @@ public class EventTable implements LuaTable {
 	
 	public void callEvent(String name, Object param) {
 		try {
-			Object o = table.rawget(name.intern());
+			Object o = table.rawget(name);
 			if (o instanceof LuaClosure) {
 				Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""));
 				LuaClosure event = (LuaClosure) o;
@@ -57,7 +57,7 @@ public class EventTable implements LuaTable {
 	}
 	
 	public boolean hasEvent(String name) {
-		return (table.rawget(name.intern())) instanceof LuaClosure;
+		return (table.rawget(name)) instanceof LuaClosure;
 	}
 	
 	public String toString()  {
