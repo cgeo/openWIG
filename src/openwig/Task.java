@@ -19,11 +19,6 @@ public class Task extends EventTable {
 		else return state;
 	}
 	
-	public static void register (LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Task.class, metatable);
-	}
-	
 	protected void setItem (String key, Object value) {
 		if ("Active".equals(key)) {
 			boolean a = LuaState.boolEval(value);

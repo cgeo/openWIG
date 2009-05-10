@@ -71,7 +71,7 @@ public class LuaInterface implements JavaFunction {
 	}
 
 	public static void register(LuaState state) {
-		LuaTable wig = new LuaTable();
+		LuaTable wig = new LuaTableImpl();
 		state.getEnvironment().rawset("Wherigo", wig);
 		for (int i = 1; i < NUM_FUNCTIONS; i++) {
 			wig.rawset(names[i], functions[i]);
@@ -92,7 +92,7 @@ public class LuaInterface implements JavaFunction {
 		
 		state.getEnvironment().rawset("require", functions[0]);
 		
-		LuaTable env = new LuaTable();
+		LuaTable env = new LuaTableImpl();
 		env.rawset("Device", "Windows PPC");
 		env.rawset("DeviceID", "You don't need to see his ID.");
 		env.rawset("Platform", "MIDP-2.0/CLDC-1.1");
@@ -105,16 +105,7 @@ public class LuaInterface implements JavaFunction {
 		env.rawset("Downloaded", new Double(0));
 		state.getEnvironment().rawset("Env", env);
 		
-		Zone.register(state);
-		ZonePoint.register(state);
-		Distance.register(state);
-		Cartridge.register(state);
-		Thing.register(state);
-		Action.register(state);
-		Player.register(state);
-		Task.register(state);
-		Media.register(state);
-		Timer.register(state);
+		Media.reset();
 	}
 
 	public String toString() {

@@ -12,22 +12,16 @@ public class Cartridge extends EventTable {
 	
 	public Vector tasks = new Vector();
 	
-	public LuaTable allZObjects = new LuaTable();
+	public LuaTable allZObjects = new LuaTableImpl();
 	
-	private static class Method implements JavaFunction {
-		public int call (LuaCallFrame frame, int n) {
+	private static JavaFunction requestSync = new JavaFunction() {
+		public int call (LuaCallFrame callFrame, int nArguments) {
 			return 0;
 		}
-	}
-	private static Method m = new Method();
-	
-	public static void register(LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Cartridge.class, metatable);
-	}
+	};
 	
 	public Cartridge () {
-		table.rawset("RequestSync", m);
+		table.rawset("RequestSync", requestSync);
 		table.rawset("AllZObjects", allZObjects);
 		Engine.tableInsert(allZObjects, this);
 	}
@@ -70,7 +64,7 @@ public class Cartridge extends EventTable {
 	}
 	
 	public LuaTable currentThings () {
-		LuaTable ret = new LuaTable();
+		LuaTable ret = new LuaTableImpl();
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
 			z.collectThings(ret);

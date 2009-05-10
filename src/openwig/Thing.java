@@ -13,11 +13,6 @@ public class Thing extends Container {
 		this.character = character;
 	}
 	
-	public static void register (LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Thing.class, metatable);
-	}
-	
 	protected void setItem (String key, Object value) {
 		if ("Commands".equals(key)) {
 			LuaTable lt = (LuaTable)value;

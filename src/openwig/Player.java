@@ -4,36 +4,13 @@ import gui.Midlet;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
-
-	private static class Method implements JavaFunction {
-		public static final int REFRESHLOCATION = 0;
-		
-		private int index;
-		public Method (int index) {
-			this.index = index;
-		}
-		
-		public int call(LuaCallFrame callFrame, int nArguments) {
-			switch (index) {
-				case REFRESHLOCATION:
-					return refreshLocation();
-				default:
-					return 0;
-			}
-		}
-		
-		private int refreshLocation () {
+	
+	private static JavaFunction refreshLocation = new JavaFunction() {
+		public int call (LuaCallFrame callFrame, int nArguments) {
 			Engine.instance.player.refreshLocation();
 			return 0;
 		}
-	}
-	
-	private static Method refreshLocation = new Method(Method.REFRESHLOCATION);
-	
-	public static void register (LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Player.class, metatable);
-	}
+	};
 	
 	public Player() {
 		super(true);

@@ -26,6 +26,7 @@ import se.krka.kahlua.vm.JavaFunction;
 import se.krka.kahlua.vm.LuaCallFrame;
 import se.krka.kahlua.vm.LuaState;
 import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.LuaTableImpl;
 
 public final class TableLib implements JavaFunction {
 
@@ -33,10 +34,9 @@ public final class TableLib implements JavaFunction {
 	private static final int INSERT = 1;
 	private static final int REMOVE = 2;
 	private static final int MAXN = 3;
-	private static final int SORT = 4;
-	private static final int NUM_FUNCTIONS = 5;
+	private static final int NUM_FUNCTIONS = 4;
 	
-	private static String[] names;
+	private static final String[] names;
 	private static TableLib[] functions;
 
 	static {
@@ -45,7 +45,6 @@ public final class TableLib implements JavaFunction {
 		names[INSERT] = "insert";
 		names[REMOVE] = "remove";
 		names[MAXN] = "maxn";
-		names[SORT] = "sort";
 	}
 	
 	private int index;
@@ -56,7 +55,7 @@ public final class TableLib implements JavaFunction {
 
 	public static void register (LuaState state) {
 		initFunctions();
-		LuaTable table = new LuaTable();
+		LuaTable table = new LuaTableImpl();
 		state.getEnvironment().rawset("table", table);
 
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
@@ -169,7 +168,7 @@ public final class TableLib implements JavaFunction {
 		state.tableSet(table, LuaState.toDouble(len), null);
 		return ret;
 	}
-
+	
 	public static void removeItem (LuaTable table, Object item) {
 		if (item == null) return;
 		Object key = null;
@@ -206,7 +205,7 @@ public final class TableLib implements JavaFunction {
 		callFrame.push(LuaState.toDouble(max));
 		return 1;
 	}
-
+	
 	public static Object find (LuaTable table, Object item) {
 		if (item == null) return null;
 		Object key = null;

@@ -124,8 +124,8 @@ public class Engine implements Runnable {
 				closure = null;
 
 				write("Setting remaining properties...\n");
-				player.setprop("CompletionCode", gwcfile.code.intern());
-				player.setprop("Name", gwcfile.member.intern());
+				player.rawset("CompletionCode", gwcfile.code.intern());
+				player.rawset("Name", gwcfile.member.intern());
 				log = l;
 
 				write("Starting game...\n");

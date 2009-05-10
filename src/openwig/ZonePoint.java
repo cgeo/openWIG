@@ -4,81 +4,11 @@ import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.stdlib.MathLib;
 
-public class ZonePoint {
+public class ZonePoint implements LuaTable {
 	public double latitude;
 	public double longitude;
 	//public double altitude;
-	public Distance altitude;
-	
-	private static class Method implements JavaFunction {
-
-		private static final int LEN = 0;
-		private static final int INDEX = 1;
-		private static final int NEWINDEX = 2;
-		private int index;
-
-		public Method(int index) {
-			this.index = index;
-		}
-
-		private int len(LuaCallFrame frame, int n) {
-			frame.push(LuaState.toDouble(3));
-			return 1;
-		}
-
-		private int index(LuaCallFrame frame, int n) {
-			BaseLib.luaAssert(n >= 2, "not enough parameters");
-			ZonePoint z = (ZonePoint) frame.get(0);
-			String name = (String) frame.get(1);
-			Object ret = null;
-			if ("latitude".equals(name))
-				ret = LuaState.toDouble(z.latitude);
-			else if ("longitude".equals(name))
-				ret = LuaState.toDouble(z.longitude);
-			else if ("altitude".equals(name))
-				ret = z.altitude;
-				// ret = LuaState.toDouble(z.altitude);
-			frame.push(ret);
-			return 1;
-		}
-
-		private int newindex(LuaCallFrame frame, int n) {
-			BaseLib.luaAssert(n >= 3, "not enough parameters");
-			ZonePoint z = (ZonePoint) frame.get(0);
-			String name = (String) frame.get(1);
-			Object value = frame.get(2);
-			if ("latitude".equals(name))
-				z.latitude = LuaState.fromDouble(value);
-			else if ("longitude".equals(name))
-				z.longitude = LuaState.fromDouble(value);
-			else if ("altitude".equals(name))
-				BaseLib.luaAssert(value.getClass() == Distance.class, "invalid value for altitude");
-				z.altitude = (Distance)value;
-				// z.altitude = LuaState.fromDouble(value);
-			return 0;
-		}
-
-		public int call(LuaCallFrame callFrame, int nArguments) {
-			switch (index) {
-				case LEN: return len(callFrame, nArguments);
-				case INDEX: return index(callFrame, nArguments);
-				case NEWINDEX: return newindex(callFrame, nArguments);
-				default: return 0;
-			}
-		}
-	}
-	protected static LuaTable metatable;
-	
-	public static void register(LuaState state) {
-		if (metatable == null) {
-			metatable = new LuaTable();
-			metatable.rawset("__metatable", "restricted");
-			metatable.rawset("__len", new Method(Method.LEN));
-			metatable.rawset("__index", new Method(Method.INDEX));
-			metatable.rawset("__newindex", new Method(Method.NEWINDEX));
-		}
-		state.setUserdataMetatable(ZonePoint.class, metatable);
-	}	
+	public Distance altitude;	
 	
 	public static final double LATITUDE_COEF = 110940.00000395167;
 	public static final double METRE_COEF = 9.013881377e-6;
@@ -180,4 +110,34 @@ public class ZonePoint {
 	public static double azimuth2angle (double azim) {
 		return -(azim * PI_180) + PI_2;
 	}
+
+	public void setMetatable (LuaTable metatable) { }
+	public LuaTable getMetatable () { return null; }
+
+	public void rawset (Object key, Object value) {
+		if (key == null) return;
+		String name = key.toString();
+		if ("latitude".equals(name))
+			latitude = LuaState.fromDouble(value);
+		else if ("longitude".equals(name))
+			longitude = LuaState.fromDouble(value);
+		else if ("altitude".equals(name)) {
+			BaseLib.luaAssert(value.getClass() == Distance.class, "invalid value for altitude");
+			altitude = (Distance)value;
+		}
+	}
+
+	public Object rawget (Object key) {
+		if (key == null) return null;
+		String name = key.toString();
+		if ("latitude".equals(name)) return LuaState.toDouble(latitude);
+		if ("longitude".equals(name)) return LuaState.toDouble(longitude);
+		if ("altitude".equals(name)) return altitude;
+		return null;
+	}
+
+	public Object next (Object key) { return null; }
+	public int len () { return 3; }
+
+	public void updateWeakSettings (boolean weakKeys, boolean weakValues) { }
 }

@@ -8,10 +8,8 @@ public class Media extends EventTable implements PlayerListener {
 	
 	private static int media_no;
 
-	public static void register (LuaState state) {
+	public static void reset () {
 		media_no = 1;
-		EventTable.register(state);
-		state.setUserdataMetatable(Media.class, metatable);
 	}
 	
 	public int id;

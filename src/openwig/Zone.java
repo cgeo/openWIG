@@ -1,7 +1,6 @@
 package openwig;
 
 import gui.Midlet;
-import java.util.Vector;
 import se.krka.kahlua.vm.*;
 
 public class Zone extends Container {
@@ -37,11 +36,6 @@ public class Zone extends Container {
 	public double distance = Double.MAX_VALUE; // distance in metres
 	public double nearestX, nearestY;
 	private double distanceRange = -1, proximityRange = -1;
-	
-	public static void register(LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Zone.class, metatable);
-	}
 	
 	protected void setItem (String key, Object value) {
 		if ("Points".equals(key) && value != null) {

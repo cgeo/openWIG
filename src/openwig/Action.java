@@ -15,11 +15,6 @@ public class Action extends EventTable {
 	
 	public String text;
 	
-	public static void register (LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Action.class, metatable);
-	}
-	
 	public Action (LuaTable table) {
 		this.table = table; // XXX deep copy needed?
 		Object o = null;

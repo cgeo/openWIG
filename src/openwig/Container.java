@@ -5,47 +5,29 @@ import se.krka.kahlua.vm.*;
 
 public class Container extends EventTable {
 
-	public LuaTable inventory = new LuaTable();
+	public LuaTable inventory = new LuaTableImpl();
 	protected Container location = null;
 	
-	public static void register (LuaState state) {
-		EventTable.register(state);
-		state.setUserdataMetatable(Container.class, metatable);
-	}
-
-	private static class Method implements JavaFunction {
-		
-		private static final int MOVETO = 0;
-		private static final int CONTAINS = 1;
-		private int index;
-		
-		public Method(int i) {
-			index = i;
+	private static JavaFunction moveTo = new JavaFunction() {
+		public int call (LuaCallFrame callFrame, int nArguments) {
+			Container subject = (Container) callFrame.get(0);
+			Container target = (Container) callFrame.get(1);
+			subject.moveTo(target);
+			return 0;
 		}
-		
-		public int call(LuaCallFrame callFrame, int nArguments) {
-			switch (index) {
-				case CONTAINS:
-					Container p = (Container) callFrame.get(0);
-					Thing t = (Thing) callFrame.get(1);
-					callFrame.push(LuaState.toBoolean(p.contains(t)));
-					return 1;
-				case MOVETO:
-					Container subject = (Container) callFrame.get(0);
-					Container target = (Container) callFrame.get(1);
-					subject.moveTo(target);
-					return 0;
-				default:
-					return 0;
-			}
-		}
-	}
+	};
 	
-	private static Method moveto = new Method(Method.MOVETO);
-	private static Method contains = new Method(Method.CONTAINS);
+	private static JavaFunction contains = new JavaFunction() {
+		public int call (LuaCallFrame callFrame, int nArguments) {
+			Container p = (Container) callFrame.get(0);
+			Thing t = (Thing) callFrame.get(1);
+			callFrame.push(LuaState.toBoolean(p.contains(t)));
+			return 1;
+		}
+	};
 	
 	public Container() {
-		table.rawset("MoveTo", moveto);
+		table.rawset("MoveTo", moveTo);
 		table.rawset("Contains", contains);
 		table.rawset("Inventory", inventory);
 	}
