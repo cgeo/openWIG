@@ -18,7 +18,7 @@ public class Timer extends EventTable {
 	private static JavaFunction stop = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
 			Timer t = (Timer)callFrame.get(0);
-			t.start();
+			t.stop();
 			return 0;
 		}
 	};
