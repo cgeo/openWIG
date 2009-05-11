@@ -226,7 +226,9 @@ public final class BaseLib implements JavaFunction {
         		return 0;
         	}
         	LuaCallFrame parentCallFrame = callFrame.thread.getParent(level);
-        	luaAssert(parentCallFrame.isLua(), "No closure found at this level: " + level);
+        	if (!parentCallFrame.isLua()) {
+        		fail("No closure found at this level: " + level);
+        	}
 			closure = parentCallFrame.closure;
         }
 
@@ -379,8 +381,12 @@ public final class BaseLib implements JavaFunction {
 
 	public static void luaAssert(boolean b, String msg) {
 		if (!b) {
-			throw new RuntimeException(msg);
+			fail(msg);
 		}
+	}
+
+	public static void fail(String msg) {
+		throw new RuntimeException(msg);
 	}
 
 	public static String numberToString(Double num) {
@@ -434,9 +440,10 @@ public final class BaseLib implements JavaFunction {
 		if (type != null) {
 			// type checking
 			String isType = type(o);
-			luaAssert(type == isType,
-					"bad argument #" + n + " to '" + function +"' (" + type +
+			if (type != isType) {
+				fail("bad argument #" + n + " to '" + function +"' (" + type +
 					" expected, got " + isType + ")");
+			}
 		}
 		return o;
 
@@ -493,7 +500,7 @@ public final class BaseLib implements JavaFunction {
 
 		if (o instanceof LuaTable) {
 			to = (LuaTable) o;
-			oldMeta = to.metatable;
+			oldMeta = to.getMetatable();
 		} else {
 			co = o.getClass();
 			oldMeta = (LuaTable) state.userdataMetatables.rawget(co);
@@ -504,7 +511,7 @@ public final class BaseLib implements JavaFunction {
 		}
 
 		if (to != null) {
-			to.metatable = newMeta;
+			to.setMetatable(newMeta);
 			boolean weakKeys = false, weakValues = false;
 			if (newMeta != null) {
 				Object modeObj = newMeta.rawget(MODE_KEY);
@@ -694,15 +701,34 @@ public final class BaseLib implements JavaFunction {
 		}
 		return null;
 	}
-	
+
 	private static int bytecodeloader(LuaCallFrame callFrame, int nArguments) {
 		String modname = (String) getArg(callFrame, 1, "string", "loader");
 
-		LuaClosure closure = callFrame.thread.state.loadByteCodeFromResource(modname, callFrame.getEnvironment());
-		if (closure == null) {
-			return callFrame.push("Could not find the bytecode for '" + modname + "' in classpath");
+		LuaTable packageTable = (LuaTable) callFrame.getEnvironment().rawget("package");
+		String classpath = (String) packageTable.rawget("classpath");
+		
+		int index = 0;
+		while (index < classpath.length()) {
+			int nextIndex = classpath.indexOf(";", index);
+
+			if (nextIndex == -1) {
+				nextIndex = classpath.length();
+			}
+			
+			String path = classpath.substring(index, nextIndex);
+			if (path.length() > 0) {
+				if (!path.endsWith("/")) {
+					path = path + "/";
+				}
+				LuaClosure closure = callFrame.thread.state.loadByteCodeFromResource(path + modname, callFrame.getEnvironment());
+				if (closure != null) {
+					return callFrame.push(closure);
+				}
+			}
+			index = nextIndex;
 		}
-		return callFrame.push(closure);
+		return callFrame.push("Could not find the bytecode for '" + modname + "' in classpath");
 	}
 
 	

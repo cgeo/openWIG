@@ -25,6 +25,7 @@ import se.krka.kahlua.vm.JavaFunction;
 import se.krka.kahlua.vm.LuaCallFrame;
 import se.krka.kahlua.vm.LuaState;
 import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.LuaTableImpl;
 
 public final class StringLib implements JavaFunction {
 
@@ -85,7 +86,7 @@ public final class StringLib implements JavaFunction {
 	}
 
 	public static void register(LuaState state) {
-		LuaTable string = new LuaTable();
+		LuaTable string = new LuaTableImpl();
 		state.getEnvironment().rawset("string", string);
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
 			string.rawset(names[i], functions[i]);
@@ -123,7 +124,7 @@ public final class StringLib implements JavaFunction {
 	}
 	
 	private int format(LuaCallFrame callFrame, int nArguments) {
-		String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, "format");
+		String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, names[FORMAT]);
 
 		int len = f.length();
 		int argc = 2;
@@ -655,24 +656,32 @@ public final class StringLib implements JavaFunction {
 	}
 
 	private String getStringArg(LuaCallFrame callFrame, int argc) {
-		return (String) BaseLib.getArg(callFrame, argc, "string", "format");
+		return getStringArg(callFrame, argc, names[FORMAT]);
+	}
+	
+	private String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
+		return (String) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_STRING, funcname);
+	}
+	
+	private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
+		return getDoubleArg(callFrame, argc, names[FORMAT]);
 	}
 
-	private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
-		return (Double)BaseLib.getArg(callFrame, argc, "number", "format");
+	private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
+		return (Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
 	}
 
 	private int lower(LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-		String s = (String) callFrame.get(0);
-
+		String s = getStringArg(callFrame,1,names[LOWER]);
+		
 		callFrame.push(s.toLowerCase());
 		return 1;
 	}
 
 	private int upper(LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-		String s = (String) callFrame.get(0);
+		String s = getStringArg(callFrame,1,names[UPPER]);
 
 		callFrame.push(s.toUpperCase());
 		return 1;
@@ -680,7 +689,7 @@ public final class StringLib implements JavaFunction {
 
 	private int reverse(LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-		String s = (String) callFrame.get(0);
+		String s = getStringArg(callFrame, 1, names[REVERSE]);
 		s = new StringBuffer(s).reverse().toString();
 		callFrame.push(s);
 		return 1;
@@ -688,14 +697,14 @@ public final class StringLib implements JavaFunction {
 
 	private int stringByte(LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-		String s = (String) callFrame.get(0);
+		String s = getStringArg(callFrame, 1, names[BYTE]);
 
 		Double di = null;
 		Double dj = null;
 		if (nArguments >= 2) {
-			di = BaseLib.rawTonumber(callFrame.get(1));
+			di = getDoubleArg(callFrame, 2, names[BYTE]);
 			if (nArguments >= 3) {
-				dj = BaseLib.rawTonumber(callFrame.get(2));
+				dj = getDoubleArg(callFrame, 3, names[BYTE]);
 			}
 		}
 		double di2 = 1;
@@ -738,19 +747,18 @@ public final class StringLib implements JavaFunction {
 	private int stringChar(LuaCallFrame callFrame, int nArguments) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < nArguments; i++) {
-			double d = LuaState.fromDouble(callFrame.get(i));
-			int num = (int) d;
+			int num = getDoubleArg(callFrame, 1, names[CHAR]).intValue();
 			sb.append((char) num);
 		}
 		return callFrame.push(sb.toString());
 	}
 
 	private int sub(LuaCallFrame callFrame, int nArguments) {
-		String s = (String) callFrame.get(0);
-		double start = LuaState.fromDouble(callFrame.get(1));
+		String s = getStringArg(callFrame, 1, names[SUB]);
+		double start = getDoubleArg(callFrame, 2, names[SUB]).doubleValue();
 		double end = -1;
 		if (nArguments >= 3) {
-			end = LuaState.fromDouble(callFrame.get(2));
+			end = getDoubleArg(callFrame, 3, names[SUB]).doubleValue();
 		}
 		String res;
 		int istart = (int) start;
@@ -1383,10 +1391,11 @@ public final class StringLib implements JavaFunction {
 		}
 
 		String replType = BaseLib.type(repl);
-		BaseLib.luaAssert(replType == BaseLib.TYPE_FUNCTION ||
-				replType == BaseLib.TYPE_STRING || 
-				replType == BaseLib.TYPE_TABLE, 
-				"string/function/table expected, got "+replType);
+		if (!(replType == BaseLib.TYPE_FUNCTION ||
+						replType == BaseLib.TYPE_STRING || 
+						replType == BaseLib.TYPE_TABLE)) {
+			BaseLib.fail(("string/function/table expected, got "+replType));
+		}
 
 		MatchState ms = new MatchState ();
 		ms.callFrame = cf;
