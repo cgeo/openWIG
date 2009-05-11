@@ -183,7 +183,7 @@ public class Zone extends Container {
 		//tick();
 	}
 
-	private boolean showThings () {
+	public boolean showThings () {
 		if (!active) return false;
 		switch (showObjects) {
 			case S_ALWAYS: return true;

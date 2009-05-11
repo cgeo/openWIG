@@ -278,6 +278,7 @@ public class BLUElet  implements CommandListener
     public void inquiryCompleted(int complete)
     {
       deviceReturnCode = complete;
+      if (display.getCurrent() != remotedeviceui) return;
 
       if ( devices.size() == 0 )
       {

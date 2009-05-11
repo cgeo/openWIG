@@ -13,38 +13,41 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	private Media[] media;
 	private int page = -1;
 	
-	private static Command CMD_OK = new Command("OK", Command.SCREEN, 1);
-	private static Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
+	private Command BTN1 = null;
+	private Command BTN2 = null;
 	
 	private LuaClosure callback;
-
-	public Dialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
-		super("dialog");
+	private Displayable parent;
+	
+	public Dialog () {
+		super("");
 		append(image);
 		append(content);
 		setCommandListener(this);
-		if (button1 != null) {
-			addCommand(new Command(button1, Command.SCREEN, 1));
-		} else {
-			addCommand(CMD_OK);
-		}
+	}
+
+	public Dialog reset (String[] texts, Media[] media, String button1, String button2, LuaClosure callback, Displayable parent) {
+		removeCommand(BTN1);
+		removeCommand(BTN2);
+		if (button1 == null) button1 = "OK";
+		addCommand(BTN1 = new Command(button1, Command.SCREEN, 1));
 		if (button2 != null) {
-			addCommand(new Command(button2, Command.BACK, 2));
-		} else {
-			addCommand(CMD_CANCEL);
+			addCommand(BTN2 = new Command(button2, Command.SCREEN, 2));
 		}
 		this.texts = texts;
 		this.media = media;
 		this.callback = callback;
+		this.parent = parent;
 		nextPage();
+		return this;
 	}
 
 	private void nextPage() {
 		page++;
 		if (page >= texts.length) {
+			Midlet.push(parent);
 			if (callback != null) Engine.invokeCallback(callback, "Button1");
 			callback = null;
-			Midlet.popDialog(this);
 			return;
 		}
 		Media m = media[page];
@@ -61,19 +64,17 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.SCREEN:
-				nextPage();
-				break;
-			case Command.CANCEL: case Command.BACK:
-				Midlet.popDialog(this);
-			default:
-				return;
+		if (cmd == BTN1) {
+			nextPage();
+		} else if (cmd == BTN2) {
+			Midlet.push(parent);
+			if (callback != null) Engine.invokeCallback(callback, "Button2");
+			callback = null;
 		}
 	}
 
-	public void cancel() {
-		if (callback != null) Engine.invokeCallback(callback, "Button2");
-							// XXX always Button2 on Cancel? or can it be nil?
+	public Displayable cancel() {
+		if (callback != null) Engine.invokeCallback(callback, null);
+		return parent;
 	}
 }

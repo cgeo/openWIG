@@ -15,17 +15,29 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	private TextField answer = null;
 	private ChoiceGroup choice = null;
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
+	private StringItem name = new StringItem(null, null);
 	
 	private static final int TEXT = 0;
 	private static final int MULTI = 1;
 	private int mode = TEXT;
 	
 	private EventTable input;
-	private boolean eventCalled = false;
+	private Displayable parent;
 	
-	public Input (EventTable input) {
-		super(input.name);
+	public Input () {
+		super("");
+		append(name);
+		append(image);
+		addCommand(CMD_ANSWER);
+		addCommand(Midlet.CMD_BACK);
+		setCommandListener(this);		
+	}
+	
+	public Input reset (EventTable input, Displayable parent) {
+		setTitle(input.name);
+		name.setLabel(input.name);
 		this.input = input;
+		this.parent = parent;
 		
 		Media m = (Media)input.table.rawget("Media");
 		if (m != null) {
@@ -36,7 +48,6 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 				image.setImage(i);
 			} catch (Exception e) { }
 		}
-		append(image);
 		
 		String text = Engine.removeHtml((String)input.table.rawget("Text"));
 		if (text != null && text.length() > 0) {
@@ -65,9 +76,7 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 			append(choice);
 			mode = MULTI;
 		}
-		addCommand(CMD_ANSWER);
-		addCommand(Midlet.CMD_BACK);
-		setCommandListener(this);
+		return this;
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
@@ -79,13 +88,13 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 			} else {
 				Engine.callEvent(input, "OnGetInput", null);
 			}
-			eventCalled = true;
 		}
-		Midlet.popDialog(this);
+		Midlet.push(parent);
 	}
 
-	public void cancel() {
-		if (!eventCalled) Engine.callEvent(input, "OnGetInput", null);
+	public Displayable cancel() {
+		Engine.callEvent(input, "OnGetInput", null);
+		return parent;
 	}
 
 	public void commandAction(Command cmd, Item it) {

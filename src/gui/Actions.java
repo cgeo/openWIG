@@ -8,12 +8,16 @@ import openwig.Action;
 public class Actions extends ListOfStuff {
 
 	private Thing thing;
-	private Things parent;
+	
+	public Actions () {
+		super("");
+		parent = Midlet.details;
+	}
 
-	public Actions(String title, Thing what, Things where) {
-		super(title);
+	public Actions reset(String title, Thing what) {
+		setTitle(title);
 		thing = what;
-		parent = where;
+		return this;
 	}
 
 	protected void callStuff(Object what) {
@@ -21,14 +25,16 @@ public class Actions extends ListOfStuff {
 		String eventName = "On" + z.getName();
 
 		if (z.hasParameter()) {
-			Midlet.push(new Targets(thing.name + ": " + z.text, z, parent));
+			Midlet.push(Midlet.targets.reset(thing.name + ": " + z.text, z, thing));
 		} else {
+			Midlet.push(parent);
 			Engine.callEvent(thing, eventName, null);
 		}
 	}
 
 	protected boolean stillValid() {
-		return parent == null || parent.isPresent(thing);
+		if (!thing.visibleToPlayer()) return false;
+		return thing.visibleActions() > 0;
 	}
 
 	protected Vector getValidStuff() {

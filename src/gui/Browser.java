@@ -33,8 +33,9 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 		setCommandListener(this);
 	}
 
-	public void prepare() {
+	public void push () {
 		start();
+		// XXX TODO not refresh when returning from details
 	}
 
 	public void chdir(String where) 
@@ -63,6 +64,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	private Thread thread = null;
 
 	private void start() {
+		if (thread != null) return;
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -90,7 +92,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			Midlet.error("you need to allow me to access your files!");
 		}
 		
-		while (thread != null) {
+		while (thread == Thread.currentThread()) {
 			try {
 				if (up) {
 					if ("".equals(currentPath) || currentPath.lastIndexOf('/', currentPath.length() - 2) == -1) {
@@ -121,7 +123,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 							if (!fc.exists()) fc.create();
 							os = fc.openOutputStream(fc.fileSize());
 						} catch (Exception e) { e.printStackTrace(); }
-						Midlet.push(new CartridgeDetails(cf, os));
+						Midlet.push(Midlet.cartridgeDetails.reset(cf, os));
 						stop();
 					} catch (IOException e) {
 						Midlet.error("Failed to load cartridge:\n" + e.getMessage());
@@ -137,16 +139,20 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			
 			setTitle(currentPath);
 
+			if (thread != Thread.currentThread()) break;
 			try { wait(); } catch (InterruptedException e) { }
 		}
-		} catch (Throwable t) { Midlet.error("browser:"+currentPath+t.toString()); }
+		} catch (Throwable t) {
+			Midlet.error("browser:"+currentPath+"\n"+t.toString());
+			t.printStackTrace();
+		}
 	}
 
 	synchronized public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == Midlet.CMD_BACK) {
 			stop();
 			notify();
-			Midlet.pop(this);
+			Midlet.push(Midlet.baseMenu);
 		} else if (cmd == Midlet.CMD_SELECT) {
 			String sel = getString(getSelectedIndex());
 			if ("..".equals(sel)) {

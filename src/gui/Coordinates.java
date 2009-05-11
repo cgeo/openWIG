@@ -31,6 +31,14 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		addCommand(Midlet.CMD_BACK);
 	}
 	
+	private Displayable parent;
+	private Displayable errorParent;
+	
+	public Coordinates reset (Displayable parent) {
+		this.parent = parent;
+		return this;
+	}
+	
 	private void setMode () {
 		deleteAll();
 		append(lblGps);
@@ -61,7 +69,11 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		}
 	}
 	
-	public void prepare () {
+	public void push () {
+		refresh();
+	}
+	
+	public void refresh () {
 		setMode();
 		if (Midlet.gps != this && Midlet.gps.getState() != LocationService.OFFLINE) {
 			start();
@@ -88,7 +100,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		while (running) {
 			updateScreen();
 			try { Thread.sleep(1000); } catch (InterruptedException e) { }
-			if (Midlet.getCurrentScreen() != this) stop();
+			if (Midlet.display.getCurrent() != this) stop();
 		}
 	}
 	
@@ -183,32 +195,33 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 				lat = scandbl(latitude.getString());
 				lon = scandbl(longitude.getString());
 			} else if (cmd == Midlet.CMD_BACK) {
-				Midlet.pop(this);
+				Midlet.push(parent);
 			}
 		} else if (disp == gpsError) {
 			if (cmd.getCommandType() == Command.OK) {
 				Midlet.gps.connect();
-				Midlet.display.setCurrent(Midlet.getCurrentScreen());
+				Midlet.display.setCurrent(errorParent);
 			} else {
-				Midlet.showScreen(Midlet.COORDSCREEN, null);
+				Midlet.push(this.reset(errorParent));
 			}
 		}
 	}
 	
 	public void gpsConnected () {
-		updateScreen();
+		refresh();
 	}
 	
 	public void gpsDisconnected () {
-		prepare();
+		refresh();
 	}
 	
 	public void fixChanged (boolean fix) {
-		prepare();
+		refresh();
 	}
 	
 	public void gpsError (String error) {
 		gpsDisconnected();
+		errorParent = Midlet.display.getCurrent();
 		gpsError = new Alert("GPS connection failed", error+"\nTry to reconnect?",
 			null, AlertType.CONFIRMATION);
 		gpsError.addCommand(new Command("Yes", Command.OK, 1));

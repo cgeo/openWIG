@@ -20,15 +20,19 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	
 	private static final int STEPS = 4;
 	
-	public Navigation (ZonePoint point) {
+	private Displayable parent;
+	
+	public Navigation reset (Displayable parent, ZonePoint point) {
+		this.parent = parent;
 		target = point;
-		prepare();
+		return this;
 	}
 	
-	public Navigation (Zone z) {
+	public Navigation reset (Displayable parent, Zone z) {
+		this.parent = parent;
 		zone = z;
 		target = new ZonePoint(0,0,0);
-		prepare();
+		return this;
 	}
 
 	synchronized protected void paint(Graphics screen) {
@@ -62,9 +66,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		screen.drawString("Azim: "+azimuth, 5, getHeight() - h, Graphics.LEFT | Graphics.TOP);
 	}
 
-	public void prepare() {
+	public void push() {
 		if (zone != null && !zone.isVisible()) {
-			Midlet.pop(this);
+			Midlet.push(parent);
 			return;
 		}
 		addCommand(Midlet.CMD_BACK);
@@ -179,9 +183,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop(this);
+			Midlet.push(parent);
 		} else if (cmd == MainMenu.CMD_GPS) {
-			Midlet.push(Midlet.coordinates);
+			Midlet.push(Midlet.coordinates.reset(this));
 		}
 	}
 }

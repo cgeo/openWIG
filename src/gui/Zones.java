@@ -10,7 +10,7 @@ public class Zones extends List implements CommandListener, Pushable {
 	private Vector zones = new Vector();
 		
 	public Zones () {
-		super("Zóny", IMPLICIT);
+		super("Locations", IMPLICIT);
 		addCommand(Midlet.CMD_BACK);
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
@@ -22,19 +22,16 @@ public class Zones extends List implements CommandListener, Pushable {
 				int index = getSelectedIndex();
 				if (index >= 0 && index < zones.size()) {
 					Zone z = (Zone)zones.elementAt(index);
-					/*String name = (String)z.table.rawget("Name");
-					String description = (String)z.table.rawget("Description");
-					Midlet.display.setCurrent(new Alert(name, description, null, AlertType.INFO), disp);*/
-					Midlet.push(new Details(z, null));
+					Midlet.push(Midlet.details.reset(z, null));
 				}
 				break;
 			case Command.BACK:
-				Midlet.pop(this);
+				Midlet.push(Midlet.mainMenu);
 				break;
 		}
 	}
 
-	public void prepare() {
+	public void push () {
 		int index = getSelectedIndex();
 		deleteAll();
 		zones.removeAllElements();
@@ -43,7 +40,7 @@ public class Zones extends List implements CommandListener, Pushable {
 			Zone z = (Zone)v.elementAt(i);
 			if (z.isVisible()) {
 				zones.addElement(z);
-				append((String)z.table.rawget("Name"), null);
+				append(z.name, null);
 			}
 		}
 		int s = size();

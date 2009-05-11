@@ -7,7 +7,7 @@ import openwig.Engine;
 import openwig.ZonePoint;
 import util.Config;
 
-public class CartridgeDetails extends Form implements CommandListener, Runnable {
+public class CartridgeDetails extends Form implements CommandListener, Pushable, Runnable {
 	
 	private static final Command CMD_START = new Command("Start", Command.SCREEN, 0);
 	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 1);
@@ -21,17 +21,11 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 	private OutputStream logfile;
 	private ZonePoint startPoint;
 	
-	public CartridgeDetails (CartridgeFile what, OutputStream log) {
-		super(what.name);
-		cartridge = what;
-		logfile = log;
-		startPoint = new ZonePoint(cartridge.latitude, cartridge.longitude, 0);
+	public CartridgeDetails () {
+		super("");
 		name.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		image.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 		description.setLayout(Item.LAYOUT_NEWLINE_AFTER);
-		
-		name.setLabel(cartridge.name);
-		description.setText(Engine.removeHtml(cartridge.description));
 		
 		append(name);
 		append(image);
@@ -42,6 +36,16 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 		addCommand(CMD_START);
 		addCommand(CMD_NAVIGATE);
 		addCommand(Midlet.CMD_BACK);
+	}
+	
+	public CartridgeDetails reset (CartridgeFile what, OutputStream log) {
+		setTitle(what.name);
+		cartridge = what;
+		logfile = log;
+		startPoint = new ZonePoint(cartridge.latitude, cartridge.longitude, 0);
+		
+		name.setLabel(cartridge.name);
+		description.setText(Engine.removeHtml(cartridge.description));
 		
 		try {
 			byte[] is = cartridge.getFile(cartridge.splashId);
@@ -49,20 +53,18 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 			image.setImage(i);
 		} catch (Exception e) { }
 		
-		updateNavi();
-		start();
+		return this;
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_START) {
-			Midlet.loadCartridge(cartridge, logfile);
 			stop();
+			Midlet.loadCartridge(cartridge, logfile);
 		} else if (cmd == CMD_NAVIGATE) {
-			Midlet.push(new Navigation(startPoint));
+			Midlet.push(Midlet.navigation.reset(this, startPoint));
 		} else if (cmd == Midlet.CMD_BACK) {
 			stop();
-			Midlet.pop(this);
-			Midlet.browser.prepare();
+			Midlet.push(Midlet.browser);
 		}
 	}
 	
@@ -70,22 +72,25 @@ public class CartridgeDetails extends Form implements CommandListener, Runnable 
 		distance.setText(startPoint.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude()));
 	}
 	
-	private boolean running = false;
+	private Thread thread = null;
 	synchronized private void start() {
-		if (running) return;
-		running = true;
-		new Thread(this).start();
+		thread = new Thread(this);
+		thread.start();
 	}
 	
 	synchronized private void stop() {
-		running = false;
+		thread = null;
 	}
 	
 	public void run () {
-		while (running) {
+		while (thread == Thread.currentThread()) {
 			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }
 			updateNavi();
 		}
 	}
 	
+	public void push () {
+		updateNavi();
+		start();
+	}
 }

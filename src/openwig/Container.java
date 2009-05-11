@@ -44,4 +44,14 @@ public class Container extends EventTable {
 	public boolean contains (Thing t) {
 		return TableLib.contains(inventory, t);
 	}
+	
+	public boolean visibleToPlayer () {
+		if (!isVisible()) return false;
+		if (location == Engine.instance.player) return true;
+		if (location instanceof Zone) {
+			Zone z = (Zone)location;
+			return z.showThings();
+		}
+		return false;
+	}
 }

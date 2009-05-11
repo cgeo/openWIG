@@ -5,7 +5,8 @@ import javax.microedition.lcdui.*;
 
 abstract public class ListOfStuff extends List implements Pushable, CommandListener {
 	
-	Vector stuff = new Vector();
+	protected Vector stuff = new Vector();
+	protected Displayable parent = Midlet.mainMenu;
 	
 	public ListOfStuff (String title) {
 		super(title, List.IMPLICIT);
@@ -31,13 +32,13 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 			}
 			if (s != null) callStuff(s);
 		} else if (cmd == Midlet.CMD_BACK) {
-			Midlet.pop(this);
+			Midlet.push(parent);
 		}
 	}
 
-	public void prepare() {
+	public void push () {
 		if (! stillValid()) {
-			Midlet.pop(this);
+			Midlet.push(parent);
 			return;
 		}
 		

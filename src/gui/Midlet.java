@@ -18,24 +18,39 @@ import util.Config;
 
 public class Midlet extends MIDlet implements CommandListener {
 	
+	// basemenu screens
 	public static Coordinates coordinates;
 	public static Options options;
+	public static Browser browser;
+	public static List baseMenu;
+	public static Navigation navigation; // not mainmenu, but used by browser
+	public static CartridgeDetails cartridgeDetails;
+	
+	private static final int MNU_START = 0;
+	private static final int MNU_GPS = 1;
+	private static final int MNU_OPTIONS = 2;
+	private static final int MNU_END = 3;	
+	
+	// main in-game menu screens
+	public static MainMenu mainMenu;
 	public static Zones zones;
 	public static Things inventory, surroundings;
 	public static Tasks tasks;
-	public static MainMenu mainMenu;
-	public static Browser browser;
+	
+	// detail screens
+	public static Actions actions;
+	public static Details details;
+	public static Targets targets;
+	
+	// cancellable screens
+	public static Dialog dialog;
+	public static Input input;
 	
 	public static StringItem engineOutput = null;
 	
 	public static StringBuffer backlog = new StringBuffer();
 	
-	private static List baseMenu;
-	private static final int MNU_START = 0;
-	private static final int MNU_GPS = 1;
-	private static final int MNU_OPTIONS = 2;
-	private static final int MNU_END = 3;
-	
+	// showScreen codes
 	public static final int MAINSCREEN = 0;
 	public static final int DETAILSCREEN = 1;
 	public static final int INVENTORYSCREEN = 2;
@@ -52,12 +67,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static Midlet instance = null;
 	public static Display display;
 	public static Config config;
-	
-	private static Cancellable currentDialog = null;
-	private static Vector screens = new Vector();
-	private static Displayable currentScreen = null;
-	
-	public static Displayable getCurrentScreen () { return currentScreen; }
 	
 	public static LocationService gps;
 	public static final int GPS_MANUAL = 0;
@@ -88,6 +97,9 @@ public class Midlet extends MIDlet implements CommandListener {
 			coordinates = new Coordinates();
 			options = new Options();
 			browser = new Browser();
+			
+			navigation = new Navigation();
+			cartridgeDetails = new CartridgeDetails();
 
 			resetGps();
 
@@ -100,6 +112,7 @@ public class Midlet extends MIDlet implements CommandListener {
 
 	public void destroyApp(boolean unconditional) {
 		Engine.kill();
+		instance = null;
 		notifyDestroyed();
 	}
 
@@ -112,11 +125,11 @@ public class Midlet extends MIDlet implements CommandListener {
 						break;
 						
 					case MNU_GPS:
-						push(coordinates);
+						push(coordinates.reset(baseMenu));
 						break;
 						
 					case MNU_OPTIONS:
-						push(options);
+						push(options.reset());
 						break;
 						
 					case MNU_END:
@@ -139,66 +152,32 @@ public class Midlet extends MIDlet implements CommandListener {
 		display.setCurrent(a, display.getCurrent());
 	}
 	
-	public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
-		Dialog d = new Dialog(texts, media, button1, button2, callback);
+	synchronized public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
+		Displayable parent = display.getCurrent();
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
+		}
+		dialog.reset(texts, media, button1, button2, callback, parent);
+		push(dialog);
+		System.out.println("parent of dialog is "+parent.toString());
 
 //		display.flashBacklight(500);
 //		display.vibrate(500);
-	
-		synchronized (Midlet.class) {
-			popCurrentDialog();
-			currentDialog = d;
-			push(d);
-		}
 	}
 	
-	public static void pushInput(EventTable input) {
-		Input i = new Input(input);
-		synchronized (Midlet.class) {
-			popCurrentDialog();
-			currentDialog = i;
-			push(i);
+	synchronized public static void pushInput(EventTable table) {
+		Displayable parent = display.getCurrent();
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
 		}
-	}
-	
-	synchronized public static void popCurrentDialog () {
-		if (currentDialog != null) popDialog(currentDialog);
-	}
-	
-	public static void popDialog(Cancellable d) {
-		d.cancel();
-		pop((Displayable)d);
-		synchronized (Midlet.class) {
-			if (currentDialog == d) currentDialog = null;
-		}
+		input.reset(table, parent);
+		push(input);
 	}
 	
 	public static void push (Displayable d) {
-		if (d instanceof Pushable) ((Pushable)d).prepare();
-		synchronized (Midlet.class) {
-			screens.addElement(d);
-			currentScreen = d;
-			display.setCurrent(d);
-		}
-	}
-	
-	synchronized public static void pop (Displayable disp) {
-		int ss = screens.size();
-		for (int i = ss-1; i >= 0; i--) {
-			Object o = screens.elementAt(i);
-			if (o == disp) {
-				screens.removeElementAt(i);
-				ss--;
-				break;
-			}
-		}
-		if (ss == 0) {
-			screens.addElement(baseMenu);
-			ss = 1;
-		}
-		
-		currentScreen = (Displayable)screens.elementAt(ss-1);
-		display.setCurrent(currentScreen);
+		System.out.println("pushing "+d.toString());
+		if (d instanceof Pushable) ((Pushable)d).push();
+		display.setCurrent(d);
 	}
 	
 	/////////////////
@@ -249,51 +228,56 @@ public class Midlet extends MIDlet implements CommandListener {
 	
 	public static void start () {
 		mainMenu = new MainMenu();
+		
 		zones = new Zones();
 		inventory = new Things("Inventory", Things.INVENTORY);
 		surroundings = new Things("You see", Things.SURROUNDINGS);
 		tasks = new Tasks();
-		synchronized (Midlet.class) {
-			popCurrentDialog();
-			while (currentScreen != baseMenu) pop(currentScreen);
-		}
+		
+		// ordering is important! some of those set parents in constructor
+		details = new Details();
+		actions = new Actions();
+		targets = new Targets();
+		
+		dialog = new Dialog();
+		input = new Input();
+		
 		push(mainMenu);
 	}
 	
 	public static void end () {
 		Engine.kill();
-		mainMenu = null; zones = null; inventory = null; surroundings = null; tasks = null;
-		synchronized (Midlet.class) {
-			popCurrentDialog();
-			while (currentScreen != baseMenu) pop(currentScreen);
-		}
+		mainMenu = null;
+		zones = null; inventory = null; surroundings = null; tasks = null;
+		actions = null; details = null; dialog = null; input = null; targets = null;
+		
+		push(baseMenu);
 	}
 	
 	public static void refresh () {
-		Vector p = new Vector();
-		synchronized (Midlet.class) {
-			int ss = screens.size();
-			for (int i = 0; i < ss; i++) {
-				Object d = screens.elementAt(i);
-				if (d instanceof Pushable) p.addElement(d);
-			}
-		}
-		for (int i = 0; i < p.size(); i++) {
-			Pushable pp = (Pushable)p.elementAt(i);
-			pp.prepare();
-		}
+		/*mainMenu.refresh();
+		zones.refresh();
+		inventory.refresh();
+		surroundings.refresh();
+		tasks.refresh();
+		actions.refresh();
+		details.refresh();
+		targets.refresh();*/
+		Displayable d = display.getCurrent();
+		if (d instanceof Pushable && ! (d instanceof Cancellable))
+			((Pushable)d).push();
 	}
 	
-	public static void showScreen (int which, EventTable details) {
-		synchronized (Midlet.class) {
-			popCurrentDialog();
-			while (currentScreen != mainMenu && screens.size() > 1) pop(currentScreen);
+	public static void showScreen (int which, EventTable param) {
+		Displayable parent = display.getCurrent();
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
 		}
 		switch (which) {
 			case MAINSCREEN:
 				return;
 			case DETAILSCREEN:
-				push(new Details(details, null));
+				push(details.reset(param, parent));
 				return;
 			case INVENTORYSCREEN:
 				push(inventory);
@@ -308,7 +292,7 @@ public class Midlet extends MIDlet implements CommandListener {
 				push(tasks);
 				return;
 			case COORDSCREEN:
-				push(coordinates);
+				push(coordinates.reset(parent));
 				return;
 		}
 	}

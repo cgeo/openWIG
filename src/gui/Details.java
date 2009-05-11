@@ -24,42 +24,58 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private static final String[] taskStates = { "pending", "finished", "failed" };
 	
 	private EventTable thing;
-	private Things parent;
+	private Displayable parent;
 	
-	public Details (EventTable t, Things where) {
-		super(t.name);
-		thing = t;
-		parent = where;
+	public Details () {
+		super("");
 		append(name);
 		append(image);
 		append(description);
+		append(state);
+		append(distance);
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
-		
-		if (t instanceof Task) {
-			append(state);
-		} else if (t instanceof Zone) {
-			append(state);
-			append(distance);
-		}
+	}
+	
+	public Details reset (EventTable t, Displayable where) {
+		setTitle(t.name);
+		thing = t;
+		parent = where;
+		return this;
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
+		stop();
 		if (cmd == CMD_ACTIONS) {
-			Midlet.push(new Actions(thing.name, (Thing)thing, parent));
+			Midlet.push(Midlet.actions.reset(thing.name, (Thing)thing));
 		} else if (cmd == CMD_NAVIGATE) {
-			if (thing instanceof Zone) Midlet.push(new Navigation((Zone)thing));
-			else if (thing.isLocated()) Midlet.push(new Navigation(thing.position));
-		} else if (cmd == Midlet.CMD_BACK) {
-			stop();
-			Midlet.pop(this);
+			if (thing instanceof Zone) Midlet.push(Midlet.navigation.reset(this, (Zone)thing));
+			else if (thing.isLocated()) Midlet.push(Midlet.navigation.reset(this, thing.position));
+		} else {
+			pop();
 		}
 	}
+	
+	private void pop () {
+		stop();
+		if (parent != null)
+			Midlet.push(parent);
+		else if (thing instanceof Zone)
+			Midlet.push(Midlet.zones);
+		else if (thing instanceof Task)
+			Midlet.push(Midlet.tasks);
+		else
+			Midlet.push(Midlet.mainMenu);
+	}
+	
+	public boolean stillValid () {
+		if (thing instanceof Thing) return ((Thing)thing).visibleToPlayer();
+		return thing.isVisible();
+	}
 
-	public void prepare() {
-		if (!thing.isVisible() || (thing instanceof Thing && parent != null && !parent.isPresent((Thing)thing))) {
-			stop();
-			Midlet.pop(this);
+	public void push () {
+		if (!stillValid()) {
+			pop();
 			return;
 		}
 		
@@ -85,13 +101,19 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			int actions = t.visibleActions() + Engine.instance.cartridge.visibleUniversalActions();
 			if (actions > 0) addCommand(CMD_ACTIONS);
 			else removeCommand(CMD_ACTIONS);
+			state.setText(null);
+			distance.setText(null);
 		} else if (thing instanceof Task) {
 			Task t = (Task)thing;
 			state.setText(taskStates[t.state()]);
+			distance.setText(null);
 		} else if (thing instanceof Zone) {
 			updateNavi();
 			start();
 			//updateNavi();
+		} else {
+			state.setText(null);
+			distance.setText(null);
 		}
 		
 		if (thing.isLocated()) addCommand(CMD_NAVIGATE);
@@ -115,19 +137,18 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		}
 	}
 	
-	private boolean running = false;
+	private Thread thread = null;
 	synchronized private void start() {
-		if (running) return;
-		running = true;
-		new Thread(this).start();
+		thread = new Thread(this);
+		thread.start();
 	}
 	
 	synchronized private void stop() {
-		running = false;
+		thread = null;
 	}
 	
 	public void run () {
-		while (running) {
+		while (thread == Thread.currentThread()) {
 			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }
 			updateNavi();
 		}

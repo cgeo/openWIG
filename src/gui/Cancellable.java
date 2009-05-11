@@ -1,5 +1,7 @@
 package gui;
 
+import javax.microedition.lcdui.Displayable;
+
 public interface Cancellable {
-	public void cancel();
+	public Displayable cancel();
 }

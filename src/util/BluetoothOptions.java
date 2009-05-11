@@ -24,7 +24,7 @@ public class BluetoothOptions implements CommandListener {
 			if (cmd == BLUElet.SELECTED) {
 				// do nothing
 			} else if (cmd == BLUElet.COMPLETED) {
-				Midlet.pop(bluelet.getUI());				
+				Midlet.push(Midlet.options);
 				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
 				bluelet = null;
 				String name;
@@ -39,9 +39,11 @@ public class BluetoothOptions implements CommandListener {
 				// XXX this breaks "Save/Back" logic
 				Midlet.options.gpsDevice.setText(name);
 			} else if (cmd == BLUElet.BACK) {
-				Midlet.pop(bluelet.getUI());
+				Midlet.push(Midlet.options);
 				bluelet = null;
 			}
+		} else {
+			Midlet.push(Midlet.options);
 		}
 	}
 }

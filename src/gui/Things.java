@@ -30,7 +30,7 @@ public class Things extends ListOfStuff {
 
 	protected void callStuff(Object what) {
 		Thing t = (Thing)what;
-		Midlet.push(new Details(t, this));
+		Midlet.push(Midlet.details.reset(t, this));
 	}
 
 	protected boolean stillValid() {

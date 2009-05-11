@@ -9,23 +9,29 @@ import se.krka.kahlua.vm.LuaTable;
 public class Targets extends ListOfStuff {
 
 	private Action action;
-	private Things parent;
+	private Thing thing;
+	
+	public Targets () {
+		super("");
+		parent = Midlet.actions;
+	}
 
-	public Targets(String title, Action what, Things parent) {
-		super(title);
+	public Targets reset (String title, Action what, Thing actor) {
+		setTitle(title);
 		action = what;
-		this.parent = parent;
+		thing = actor;
+		return this;
 	}
 
 	protected void callStuff(Object what) {
-		Midlet.pop(this);
+		Midlet.push(Midlet.details);
 		Thing t = (Thing) what;
 		String eventName = "On"+action.getName();
 		Engine.callEvent(action.getActor(), eventName, t);
 	}
 
 	protected boolean stillValid() {
-		return parent == null || parent.isPresent(action.getActor());
+		return thing.visibleToPlayer();
 	}
 
 	protected Vector getValidStuff() {

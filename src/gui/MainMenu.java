@@ -26,7 +26,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
 		
-		append("zones", null);
+		append("locations", null);
 		append("inventory", null);
 		append("you see", null);
 		append("tasks", null);
@@ -54,17 +54,15 @@ public class MainMenu extends List implements CommandListener, Pushable {
 					break;
 				case Command.SCREEN:
 					if (cmd == CMD_GPS) {
-						Midlet.push(Midlet.coordinates);
+						Midlet.push(Midlet.coordinates.reset(this));
 					}
 					break;
 				case Command.EXIT:
-					//Midlet.instance.destroyApp(false);
 					Midlet.display.setCurrent(reallyexit,this);
 					break;
 			}
 		} else if (disp == reallyexit) {
 			if (cmd.getCommandType() == Command.OK) {
-				// Midlet.instance.destroyApp(false);
 				Midlet.end();
 			} else if (cmd.getCommandType() == Command.CANCEL) {
 				Midlet.display.setCurrent(this);
@@ -72,12 +70,12 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		}
 	}
 
-	public void prepare() {
+	public void push () {
 		int zones = Engine.instance.cartridge.visibleZones();
 		int items = Engine.instance.player.visibleThings();
 		int things = Engine.instance.cartridge.visibleThings();
 		int tasks = Engine.instance.cartridge.visibleTasks();
-		set(ZONES, "Zones ("+zones+")", null);
+		set(ZONES, "Locations ("+zones+")", null);
 		set(INVENTORY, "Inventory ("+items+")", null);
 		set(LOCATION, "You see ("+things+")", null);
 		set(TASKS, "Tasks ("+tasks+")", null);

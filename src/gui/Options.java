@@ -146,7 +146,7 @@ public class Options extends Form implements Pushable, CommandListener,
 				}
 				Midlet.resetGps();
 			}
-			Midlet.pop(this);
+			Midlet.push(Midlet.baseMenu);
 			
 		} else if (disp == comPorts) {
 			if (cmd == Midlet.CMD_SELECT) {
@@ -154,18 +154,25 @@ public class Options extends Form implements Pushable, CommandListener,
 				Midlet.config.set(Config.GPS_SERIAL_PORT, com);
 				gpsDevice.setText(com);
 			}
-			Midlet.pop(comPorts);
+			Midlet.push(this);
 
 		} else if (disp == tcpPort) {
 			if (cmd == CMD_SAVE) {
 				Midlet.config.set(Config.GPS_TCP_PORT, tcpPort.getString());
 				gpsDevice.setText(tcpPort.getString());
 			}
-			Midlet.pop(tcpPort);
+			Midlet.push(this);
 		}
 	}
+	
+	public void push () { }
+	
+	public Options reset () {
+		refresh();
+		return this;
+	}
 
-	public void prepare() {
+	private void refresh () {
 		gpstype = Midlet.config.getInt(Config.GPS_TYPE);
 		gpsBtUrl = Midlet.config.get(Config.GPS_BT_URL);
 		gpsComPort = Midlet.config.get(Config.GPS_SERIAL_PORT);
