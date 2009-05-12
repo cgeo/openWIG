@@ -149,11 +149,11 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void error (String text) {
 		Alert a = new Alert("error",text,null,AlertType.ERROR);
 		a.setTimeout(Alert.FOREVER);
-		display.setCurrent(a, display.getCurrent());
+		display.setCurrent(a, currentDisplay);
 	}
 	
 	synchronized public static void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
-		Displayable parent = display.getCurrent();
+		Displayable parent = currentDisplay;
 		if (parent instanceof Cancellable) {
 			parent = ((Cancellable)parent).cancel();
 		}
@@ -166,7 +166,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	synchronized public static void pushInput(EventTable table) {
-		Displayable parent = display.getCurrent();
+		Displayable parent = currentDisplay;
 		if (parent instanceof Cancellable) {
 			parent = ((Cancellable)parent).cancel();
 		}
@@ -177,6 +177,11 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static void push (Displayable d) {
 		System.out.println("pushing "+d.toString());
 		if (d instanceof Pushable) ((Pushable)d).push();
+		else show(d);
+	}
+	
+	synchronized public static void show (Displayable d) {
+		currentDisplay = d;
 		display.setCurrent(d);
 	}
 	
@@ -217,7 +222,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		f.append(engineOutput = new StringItem(null, "Creating engine..."));
 		f.addCommand(CMD_EXIT);
 		f.setCommandListener(instance);
-		Display.getDisplay(instance).setCurrent(f);
+		show(f);
 
 		Thread t = new Thread(new Engine(cf, log));
 		t.start();
@@ -254,6 +259,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		push(baseMenu);
 	}
 	
+	public static Displayable currentDisplay;
 	public static void refresh () {
 		/*mainMenu.refresh();
 		zones.refresh();
@@ -263,13 +269,13 @@ public class Midlet extends MIDlet implements CommandListener {
 		actions.refresh();
 		details.refresh();
 		targets.refresh();*/
-		Displayable d = display.getCurrent();
+		Displayable d = currentDisplay;
 		if (d instanceof Pushable && ! (d instanceof Cancellable))
 			((Pushable)d).push();
 	}
 	
 	public static void showScreen (int which, EventTable param) {
-		Displayable parent = display.getCurrent();
+		Displayable parent = currentDisplay;
 		if (parent instanceof Cancellable) {
 			parent = ((Cancellable)parent).cancel();
 		}

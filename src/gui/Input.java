@@ -12,10 +12,10 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	private static Command CMD_ANSWER = new Command("Answer", Command.SCREEN, 0);
 	private static Command CMD_SHOWFULL = new Command("Show", Command.ITEM, 1);
 
-	private TextField answer = null;
-	private ChoiceGroup choice = null;
+	private TextField answer = new TextField("Answer: ", null, 500, TextField.ANY);
+	private ChoiceGroup choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
-	private StringItem name = new StringItem(null, null);
+	private StringItem question = new StringItem(null, null);
 	
 	private static final int TEXT = 0;
 	private static final int MULTI = 1;
@@ -25,17 +25,23 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	private Displayable parent;
 	
 	public Input () {
-		super("");
-		append(name);
+		super("Question");
 		append(image);
+		append(question);
+		append(answer);
+		
+		choice.setFitPolicy(Choice.TEXT_WRAP_ON);
+		if (Midlet.config.getInt(Config.CHOICE_SHOWFULL) > 0) {
+			choice.addCommand(CMD_SHOWFULL);
+			choice.setItemCommandListener(this);
+		}
+		
 		addCommand(CMD_ANSWER);
 		addCommand(Midlet.CMD_BACK);
 		setCommandListener(this);		
 	}
 	
 	public Input reset (EventTable input, Displayable parent) {
-		setTitle(input.name);
-		name.setLabel(input.name);
 		this.input = input;
 		this.parent = parent;
 		
@@ -50,36 +56,30 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 		}
 		
 		String text = Engine.removeHtml((String)input.table.rawget("Text"));
-		if (text != null && text.length() > 0) {
-			StringItem question = new StringItem(null, text);
-			append(question);
-		}
+		question.setText(text);
 		
 		String type = (String)input.table.rawget("InputType");
 		if ("Text".equals(type)) {
-			answer = new TextField("Answer:", null, 500, TextField.ANY);
-			append(answer);
+			answer.setString(null);
+			if (mode != TEXT) set(2, answer);
 			mode = TEXT;
 		} else if ("MultipleChoice".equals(type)) {
-			choice = new ChoiceGroup("Answer:", ChoiceGroup.EXCLUSIVE);
-			choice.setFitPolicy(Choice.TEXT_WRAP_ON);
-			if (Midlet.config.getInt(Config.CHOICE_SHOWFULL) > 0) {
-				choice.addCommand(CMD_SHOWFULL);
-				choice.setItemCommandListener(this);
-			}
 			// XXX class Input with this in interface would be more appropriate?
+			choice.deleteAll();
 			LuaTable choices = (LuaTable)input.table.rawget("Choices");
 			int n = choices.len();
 			for (int i = 1; i <= n; i++) {
 				choice.append((String)choices.rawget(new Double(i)), null);
 			}
-			append(choice);
+			if (mode != MULTI) set(2, choice);
 			mode = MULTI;
 		}
+		Midlet.display.setCurrentItem(image);
 		return this;
 	}
 
 	public void commandAction(Command cmd, Displayable disp) {
+		Midlet.push(parent);		
 		if (cmd == CMD_ANSWER) {
 			if (mode == TEXT) {
 				Engine.callEvent(input, "OnGetInput", answer.getString());
@@ -89,7 +89,6 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 				Engine.callEvent(input, "OnGetInput", null);
 			}
 		}
-		Midlet.push(parent);
 	}
 
 	public Displayable cancel() {

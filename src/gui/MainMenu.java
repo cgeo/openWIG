@@ -79,6 +79,8 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		set(INVENTORY, "Inventory ("+items+")", null);
 		set(LOCATION, "You see ("+things+")", null);
 		set(TASKS, "Tasks ("+tasks+")", null);
+		
+		Midlet.show(this);
 	}
 	
 }

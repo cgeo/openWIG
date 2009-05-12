@@ -66,5 +66,7 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 				}
 			}
 		}
+		
+		Midlet.show(this);
 	}
 }

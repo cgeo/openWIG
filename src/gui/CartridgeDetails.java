@@ -92,5 +92,7 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 	public void push () {
 		updateNavi();
 		start();
+		Midlet.show(this);
+		Midlet.display.setCurrentItem(name);
 	}
 }

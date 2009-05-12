@@ -41,6 +41,21 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		setTitle(t.name);
 		thing = t;
 		parent = where;
+		
+		if (t instanceof Zone) {
+			state.setLabel("State: ");
+			distance.setLabel("Distance: ");
+		} else if (t instanceof Task) {
+			state.setLabel("State: ");
+			distance.setLabel(null);
+			distance.setText(null);
+		} else {
+			state.setLabel(null);
+			distance.setLabel(null);
+			state.setText(null);
+			distance.setText(null);
+		}
+
 		return this;
 	}
 
@@ -96,28 +111,24 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			image.setImage(null);
 		}
 		
+		removeCommand(CMD_ACTIONS);
 		if (thing instanceof Thing) {
 			Thing t = (Thing)thing;
 			int actions = t.visibleActions() + Engine.instance.cartridge.visibleUniversalActions();
 			if (actions > 0) addCommand(CMD_ACTIONS);
-			else removeCommand(CMD_ACTIONS);
-			state.setText(null);
-			distance.setText(null);
 		} else if (thing instanceof Task) {
 			Task t = (Task)thing;
 			state.setText(taskStates[t.state()]);
-			distance.setText(null);
 		} else if (thing instanceof Zone) {
 			updateNavi();
 			start();
-			//updateNavi();
-		} else {
-			state.setText(null);
-			distance.setText(null);
 		}
 		
 		if (thing.isLocated()) addCommand(CMD_NAVIGATE);
 		else removeCommand(CMD_NAVIGATE);
+		
+		Midlet.show(this);
+		Midlet.display.setCurrentItem(name);
 	}
 	
 	private void updateNavi () {

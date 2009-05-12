@@ -165,7 +165,9 @@ public class Options extends Form implements Pushable, CommandListener,
 		}
 	}
 	
-	public void push () { }
+	public void push () {
+		Midlet.show(this);
+	}
 	
 	public Options reset () {
 		refresh();

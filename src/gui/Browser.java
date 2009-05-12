@@ -36,6 +36,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	public void push () {
 		start();
 		// XXX TODO not refresh when returning from details
+		Midlet.show(this);
 	}
 
 	public void chdir(String where) 

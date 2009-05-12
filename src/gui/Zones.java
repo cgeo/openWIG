@@ -49,6 +49,7 @@ public class Zones extends List implements CommandListener, Pushable {
 			if (index < 0) index = 0;
 			setSelectedIndex(index, true);
 		}
+		Midlet.show(this);
 	}
 	
 }

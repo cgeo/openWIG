@@ -38,6 +38,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 		this.media = media;
 		this.callback = callback;
 		this.parent = parent;
+		page = -1;
 		nextPage();
 		return this;
 	}
@@ -60,6 +61,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 			image.setImage(null);
 		}
 		content.setText(texts[page]);
+
 		Midlet.display.setCurrentItem(image);
 	}
 

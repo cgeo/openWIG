@@ -75,6 +75,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		addCommand(MainMenu.CMD_GPS);
 		setCommandListener(this);
 		updateNavi();
+		Midlet.show(this);
 	}
 	
 	protected void sizeChanged (int w, int h) {

@@ -71,6 +71,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void push () {
 		refresh();
+		Midlet.show(this);
 	}
 	
 	public void refresh () {
@@ -100,7 +101,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		while (running) {
 			updateScreen();
 			try { Thread.sleep(1000); } catch (InterruptedException e) { }
-			if (Midlet.display.getCurrent() != this) stop();
+			if (Midlet.currentDisplay != this) stop();
 		}
 	}
 	
@@ -200,7 +201,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 		} else if (disp == gpsError) {
 			if (cmd.getCommandType() == Command.OK) {
 				Midlet.gps.connect();
-				Midlet.display.setCurrent(errorParent);
+				Midlet.show(errorParent);
 			} else {
 				Midlet.push(this.reset(errorParent));
 			}
@@ -221,7 +222,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	
 	public void gpsError (String error) {
 		gpsDisconnected();
-		errorParent = Midlet.display.getCurrent();
+		errorParent = Midlet.currentDisplay;
 		gpsError = new Alert("GPS connection failed", error+"\nTry to reconnect?",
 			null, AlertType.CONFIRMATION);
 		gpsError.addCommand(new Command("Yes", Command.OK, 1));
