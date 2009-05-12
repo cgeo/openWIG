@@ -35,7 +35,7 @@ class CallbackCaller implements Caller {
 	
 	public CallbackCaller (LuaClosure callback, Object value) {
 		this.callback = callback;
-		this.value = value;
+		this.value = value == null ? "(cancel)" : value;
 	}
 	
 	public void call () {
