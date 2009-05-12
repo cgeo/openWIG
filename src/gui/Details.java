@@ -160,8 +160,10 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	public void run () {
 		while (thread == Thread.currentThread()) {
-			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }
+			EventTable thing = this.thing;
+			if (!(thing instanceof Zone)) break;
 			updateNavi();
+			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }
 		}
 	}
 	
