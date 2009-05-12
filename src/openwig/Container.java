@@ -32,15 +32,19 @@ public class Container extends EventTable {
 		table.rawset("Inventory", inventory);
 	}
 	
-	public void moveTo (Container c) {
+	public void moveTo(Container c) {
 		if (location != null) TableLib.removeItem(location.inventory, this);
-			// location.things.removeElement(this);
-		if (c != null) Engine.tableInsert(c.inventory, this);
-			// c.things.addElement(this);
-		location = c;
-		table.rawset("Container", c);
+		// location.things.removeElement(this);
+		if (c != null) {
+			Engine.tableInsert(c.inventory, this);
+			location = c;
+			table.rawset("Container", c);
+		} else {
+			location = null;
+			table.rawset("Container", LuaState.toBoolean(false));
+		}
 	}
-	
+
 	public boolean contains (Thing t) {
 		return TableLib.contains(inventory, t);
 	}
