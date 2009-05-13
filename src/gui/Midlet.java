@@ -260,7 +260,7 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	public static Displayable currentDisplay;
-	public static void refresh () {
+	synchronized public static void refresh () {
 		/*mainMenu.refresh();
 		zones.refresh();
 		inventory.refresh();
@@ -269,9 +269,8 @@ public class Midlet extends MIDlet implements CommandListener {
 		actions.refresh();
 		details.refresh();
 		targets.refresh();*/
-		Displayable d = currentDisplay;
-		if (d instanceof Pushable && ! (d instanceof Cancellable))
-			((Pushable)d).push();
+		if (currentDisplay instanceof Pushable && ! (currentDisplay instanceof Cancellable))
+			((Pushable)currentDisplay).push();
 	}
 	
 	public static void showScreen (int which, EventTable param) {

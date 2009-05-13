@@ -25,6 +25,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	public Navigation reset (Displayable parent, ZonePoint point) {
 		this.parent = parent;
 		target = point;
+		zone = null;
 		return this;
 	}
 	
@@ -96,6 +97,15 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	}
 	
 	synchronized private boolean updateNavi() {
+		// first calculate distance
+		String ndistance;
+		if (zone != null) {
+			if (zone.ncontain == Zone.INSIDE) ndistance = "inside";
+			else ndistance = ZonePoint.makeFriendlyDistance(zone.distance);
+		}
+		else ndistance = target.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
+		
+		// then determine nearest point
 		if (zone != null) {
 			target.latitude = zone.nearestX;
 			target.longitude = zone.nearestY;
@@ -113,7 +123,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			tangle = nangle;
 			astep = round(nangle - angle) / STEPS;
 		}
-		if (theading == heading && tangle == angle) return false;
+		
+		if (theading == heading && tangle == angle && ndistance.equals(distance)) return false;
+		distance = ndistance;
 		
 		double a = Math.abs(round(heading - theading));
 		if (hstep != 0 && a >= Math.abs(hstep)) {
@@ -129,12 +141,6 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			angle = tangle;
 			astep = 0;
 		}
-		
-		if (zone != null) {
-			if (zone.ncontain == Zone.INSIDE) distance = "inside";
-			else distance = ZonePoint.makeFriendlyDistance(zone.distance);
-		}
-		else distance = target.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
 
 		long part = (long)(ZonePoint.angle2azimuth(bearing) * 100);
 		double d = part/100;
