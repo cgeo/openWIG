@@ -159,7 +159,6 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 		dialog.reset(texts, media, button1, button2, callback, parent);
 		push(dialog);
-		System.out.println("parent of dialog is "+parent.toString());
 
 //		display.flashBacklight(500);
 //		display.vibrate(500);
@@ -175,7 +174,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	public static void push (Displayable d) {
-		System.out.println("pushing "+d.toString());
 		if (d instanceof Pushable) ((Pushable)d).push();
 		else show(d);
 	}
@@ -273,13 +271,14 @@ public class Midlet extends MIDlet implements CommandListener {
 			((Pushable)currentDisplay).push();
 	}
 	
-	public static void showScreen (int which, EventTable param) {
+	synchronized public static void showScreen (int which, EventTable param) {
 		Displayable parent = currentDisplay;
 		if (parent instanceof Cancellable) {
 			parent = ((Cancellable)parent).cancel();
 		}
 		switch (which) {
 			case MAINSCREEN:
+				push(mainMenu);
 				return;
 			case DETAILSCREEN:
 				push(details.reset(param, parent));

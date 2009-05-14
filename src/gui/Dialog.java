@@ -21,6 +21,8 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 	
 	public Dialog () {
 		super("");
+		image.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		content.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_LEFT);
 		append(image);
 		append(content);
 		setCommandListener(this);

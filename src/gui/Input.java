@@ -26,6 +26,10 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 	
 	public Input () {
 		super("Question");
+
+		image.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		question.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_LEFT);
+
 		append(image);
 		append(question);
 		append(answer);

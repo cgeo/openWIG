@@ -19,7 +19,7 @@ public class Tasks extends ListOfStuff {
 	}
 	
 	public Tasks () {
-		super("Úkoly");
+		super("Tasks");
 	}
 
 	protected void callStuff(Object what) {

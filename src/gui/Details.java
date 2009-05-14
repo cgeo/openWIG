@@ -28,11 +28,18 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	public Details () {
 		super("");
+		
+		name.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		image.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		description.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_LEFT);
+		state.setLayout(Item.LAYOUT_NEWLINE_AFTER);
+				
 		append(name);
 		append(image);
 		append(description);
 		append(state);
 		append(distance);
+		
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
 	}
@@ -97,7 +104,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		setTitle(thing.name);
 		name.setLabel(thing.name);
 		description.setText(thing.description);
-		
 				
 		Media m = (Media)thing.table.rawget("Media");
 		if (m != null) {
@@ -132,6 +138,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	}
 	
 	private void updateNavi () {
+		if (!(thing instanceof Zone)) return;
 		Zone z = (Zone)thing;
 		String ss = "(nothing)";
 		switch (z.contain) {
@@ -160,7 +167,6 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	
 	public void run () {
 		while (thread == Thread.currentThread()) {
-			EventTable thing = this.thing;
 			if (!(thing instanceof Zone)) break;
 			updateNavi();
 			try { Thread.sleep(Midlet.config.getInt(Config.REFRESH_INTERVAL) * 1000); } catch (Exception e) { }

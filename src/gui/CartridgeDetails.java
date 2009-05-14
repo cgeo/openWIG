@@ -23,9 +23,9 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 	
 	public CartridgeDetails () {
 		super("");
-		name.setLayout(Item.LAYOUT_NEWLINE_AFTER);
-		image.setLayout(Item.LAYOUT_NEWLINE_AFTER);
-		description.setLayout(Item.LAYOUT_NEWLINE_AFTER);
+		name.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		image.setLayout(Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_CENTER);
+		description.setLayout(Item.LAYOUT_NEWLINE_AFTER | Item.LAYOUT_LEFT);
 		
 		append(name);
 		append(image);
