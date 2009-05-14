@@ -103,6 +103,7 @@ public class Timer extends EventTable {
 		Engine.callEvent(this, "OnTick", null);
 		lastTick = System.currentTimeMillis();
 		updateRemaining();
+		if (type == COUNTDOWN) task = null;
 	}
 	
 	public void updateRemaining () {
