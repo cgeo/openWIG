@@ -14,13 +14,13 @@ public class LuaInterface implements JavaFunction {
 	private static final int MESSAGEBOX = 4;
 	private static final int ZONE = 5;
 	private static final int DIALOG = 6;
-	private static final int CHARACTER = 7;
-	private static final int ITEM = 8;
-	private static final int COMMAND = 9;
-	private static final int MEDIA = 10;
-	private static final int INPUT = 11;
-	private static final int TIMER = 12;
-	private static final int TASK = 13;
+	private static final int ZCHARACTER = 7;
+	private static final int ZITEM = 8;
+	private static final int ZCOMMAND = 9;
+	private static final int ZMEDIA = 10;
+	private static final int ZINPUT = 11;
+	private static final int ZTIMER = 12;
+	private static final int ZTASK = 13;
 	private static final int AUDIO = 14;
 	private static final int GETINPUT = 15;
 	private static final int NOCASEEQUALS = 16;
@@ -28,8 +28,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int TRANSLATEPOINT = 18;
 	private static final int SHOWSTATUSTEXT = 19;
 	private static final int VECTORTOPOINT = 20;
+	private static final int COMMAND = 21; // Wherigo.Command
 	
-	private static final int NUM_FUNCTIONS = 21;
+	private static final int NUM_FUNCTIONS = 22;
 	
 	private static final String[] names;
 	static {
@@ -41,13 +42,13 @@ public class LuaInterface implements JavaFunction {
 		names[MESSAGEBOX] = "MessageBox";
 		names[ZONE] = "Zone";
 		names[DIALOG] = "Dialog";
-		names[CHARACTER] = "ZCharacter";
-		names[ITEM] = "ZItem";
-		names[COMMAND] = "ZCommand";
-		names[MEDIA] = "ZMedia";
-		names[INPUT] = "ZInput";
-		names[TIMER] = "ZTimer";
-		names[TASK] = "ZTask";
+		names[ZCHARACTER] = "ZCharacter";
+		names[ZITEM] = "ZItem";
+		names[ZCOMMAND] = "ZCommand";
+		names[ZMEDIA] = "ZMedia";
+		names[ZINPUT] = "ZInput";
+		names[ZTIMER] = "ZTimer";
+		names[ZTASK] = "ZTask";
 		names[AUDIO] = "PlayAudio";
 		names[GETINPUT] = "GetInput";
 		names[NOCASEEQUALS] = "NoCaseEquals";
@@ -55,6 +56,7 @@ public class LuaInterface implements JavaFunction {
 		names[TRANSLATEPOINT] = "TranslatePoint";
 		names[SHOWSTATUSTEXT] = "ShowStatusText";
 		names[VECTORTOPOINT] = "VectorToPoint";
+		names[COMMAND] = "Command";
 	}
 
 	private int index;
@@ -122,23 +124,25 @@ public class LuaInterface implements JavaFunction {
 			case MESSAGEBOX: return messageBox(callFrame, nArguments);
 			case ZONE: return zone(callFrame, nArguments);
 			case DIALOG: return dialog(callFrame, nArguments);
-			case ITEM: return item(callFrame, nArguments, false);
-			case CHARACTER: return item(callFrame, nArguments, true);
-			case COMMAND: return command(callFrame, nArguments);
-			case MEDIA: return media(callFrame, nArguments);
-			case INPUT:
+			case ZITEM: return item(callFrame, nArguments, false);
+			case ZCHARACTER: return item(callFrame, nArguments, true);
+			case ZCOMMAND: return command(callFrame, nArguments);
+			case ZMEDIA: return media(callFrame, nArguments);
+			case ZINPUT:
 				EventTable et = new EventTable();
 				Engine.instance.cartridge.addObject(et);
 				callFrame.push(et);
 				return 1;
-			case TIMER: return timer(callFrame, nArguments);
-			case TASK: return task(callFrame, nArguments);
+			case ZTIMER: return timer(callFrame, nArguments);
+			case ZTASK: return task(callFrame, nArguments);
 			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
 			case GETINPUT: return getinput(callFrame, nArguments);
 			case SHOWSCREEN: return showscreen(callFrame, nArguments);
 			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
 			case AUDIO: return playAudio(callFrame, nArguments);
 			case VECTORTOPOINT: return vectorToPoint(callFrame, nArguments);
+			case COMMAND:
+				return 0;
 			default: return 0;
 		}
 	}
