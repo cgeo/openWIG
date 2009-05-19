@@ -40,15 +40,17 @@ public class Media extends EventTable implements PlayerListener {
 	}
 	
 	public void play () {
+		javax.microedition.media.Player p = null;
 		try {
 			ByteArrayInputStream bis = new ByteArrayInputStream(Engine.mediaFile(this));
 			String mime = null;
 			if ("wav".equals(type)) mime = "audio/x-wav";
 			else if ("mp3".equals(type)) mime = "audio/mpeg";
-			javax.microedition.media.Player p = javax.microedition.media.Manager.createPlayer(bis,mime);
+			p = javax.microedition.media.Manager.createPlayer(bis,mime);
 			p.addPlayerListener(this);
 			p.start();
 		} catch (Exception e) {
+			if (p != null) p.close();
 			e.printStackTrace();
 		}
 	}

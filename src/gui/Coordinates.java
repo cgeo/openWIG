@@ -35,7 +35,7 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	private Displayable errorParent;
 	
 	public Coordinates reset (Displayable parent) {
-		this.parent = parent;
+		if (parent != this) this.parent = parent;
 		return this;
 	}
 	

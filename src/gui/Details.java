@@ -47,7 +47,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	public Details reset (EventTable t, Displayable where) {
 		setTitle(t.name);
 		thing = t;
-		parent = where;
+		if (where != this) parent = where;
 		
 		if (t instanceof Zone) {
 			state.setLabel("State: ");
