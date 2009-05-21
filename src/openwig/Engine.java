@@ -35,11 +35,11 @@ class CallbackCaller implements Caller {
 	
 	public CallbackCaller (LuaClosure callback, Object value) {
 		this.callback = callback;
-		this.value = value == null ? "(cancel)" : value;
+		this.value = value;
 	}
 	
 	public void call () {
-		Engine.log("BTTN: " + value.toString() + " pressed");
+		Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed");
 		Engine.state.call(callback, value, null, null);
 	}
 }
