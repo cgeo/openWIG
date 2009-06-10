@@ -47,7 +47,12 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	public Details reset (EventTable t, Displayable where) {
 		setTitle(t.name);
 		thing = t;
-		if (where != this) parent = where;
+
+                if (where instanceof ListOfStuff) {
+                    parent = where;
+                } else {
+                    parent = Midlet.mainMenu;
+                }
 		
 		if (t instanceof Zone) {
 			state.setLabel("State: ");
