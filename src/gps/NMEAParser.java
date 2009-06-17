@@ -379,6 +379,7 @@ public class NMEAParser implements Runnable, LocationService {
 			} else {
 				extractData(param, 2, 3, 4, 5, 1);
 				fixSatellites = Integer.parseInt(param[7]);
+				fix = true;
 				if (param[9].length() > 0) {
 					altitude = Double.parseDouble(param[9]);
 				}
