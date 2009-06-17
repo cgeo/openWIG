@@ -272,6 +272,7 @@ public class LuaInterface implements JavaFunction {
 			Object o = callFrame.get(1);
 			if (o instanceof EventTable) et = (EventTable)o;
 		}
+		Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name));
 		Midlet.showScreen(screen, et);
 		return 0;
 	}

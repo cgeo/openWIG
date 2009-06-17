@@ -110,15 +110,19 @@ public class Zone extends Container {
 		}
 		switch (contain) {
 			case INSIDE:
+				Engine.log("ZONE: inside "+name);
 				Engine.callEvent(this, "OnEnter", null);
 				break;
 			case PROXIMITY:
+				Engine.log("ZONE: proximity "+name);
 				Engine.callEvent(this, "OnProximity", null);
 				break;
 			case DISTANT:
+				Engine.log("ZONE: distant "+name);
 				Engine.callEvent(this, "OnDistant", null);
 				break;
 			case NOWHERE:
+				Engine.log("ZONE: out-of-range "+name);
 				Engine.callEvent(this, "OnNotInRange", null);
 				break;
 			default:

@@ -212,6 +212,7 @@ public class Engine implements Runnable {
 
 	public static void message (LuaTable message) {
 		String[] texts = {removeHtml((String)message.rawget("Text"))};
+		log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())));
 		Media[] media = {(Media)message.rawget("Media")};
 		String button1 = null, button2 = null;
 		LuaTable buttons = (LuaTable)message.rawget("Buttons");
@@ -224,10 +225,14 @@ public class Engine implements Runnable {
 	}
 
 	public static void dialog (String[] texts, Media[] media) {
+		if (texts.length > 0) {
+			log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())));
+		}
 		Midlet.pushDialog(texts, media, null, null, null);
 	}
 
 	public static void input (EventTable input) {
+		log("CALL: GetInput - "+input.name);
 		Midlet.pushInput(input);
 	}
 
