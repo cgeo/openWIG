@@ -124,47 +124,41 @@ public class Engine implements Runnable {
 			CoroutineLib.register(state);
 			OsLib.register(state);*/
 
-			try {
-				write("Loading stdlib...");
-				InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
-				LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
-				write("calling...\n");
-				state.call(closure, null, null, null);
-				stdlib.close(); stdlib = null;
+			write("Loading stdlib...");
+			InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
+			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
+			write("calling...\n");
+			state.call(closure, null, null, null);
+			stdlib.close(); stdlib = null;
 
-				write("Registering WIG libs...\n");
-				LuaInterface.register(state);
+			write("Registering WIG libs...\n");
+			LuaInterface.register(state);
 				
-				write("Building event queue...\n");
-				eventQueue = new Vector(10);
-				eventRunner = new EventQueue();
+			write("Building event queue...\n");
+			eventQueue = new Vector(10);
+			eventRunner = new EventQueue();
 
-				write("Loading gwc...");
-				if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
-				if (gwcfile == null) throw new Exception("invalid cartridge file");
-				write("loading code...");
-				byte[] lbc = gwcfile.getBytecode();
+			write("Loading gwc...");
+			if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
+			if (gwcfile == null) throw new Exception("invalid cartridge file");
+			write("loading code...");
+			byte[] lbc = gwcfile.getBytecode();
 
-				PrintStream l = log; log = null; // prevent logging while loading
-				write("parsing...");
-				closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
-				write("calling...\n");
-				state.call(closure, null, null, null);
-				lbc = null;
-				closure = null;
+			PrintStream l = log; log = null; // prevent logging while loading
+			write("parsing...");
+			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+			write("calling...\n");
+			state.call(closure, null, null, null);
+			lbc = null;
+			closure = null;
 
-				write("Setting remaining properties...\n");
-				player.rawset("CompletionCode", gwcfile.code);
-				player.rawset("Name", gwcfile.member);
-				log = l;
+			write("Setting remaining properties...\n");
+			player.rawset("CompletionCode", gwcfile.code);
+			player.rawset("Name", gwcfile.member);
+			log = l;
 
-				write("Starting game...\n");
-				Midlet.start();
-
-			} catch (Exception e) {
-				Midlet.end();
-				stacktrace(e);
-			}
+			write("Starting game...\n");
+			Midlet.start();
 
 			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started\n-------------------");
 			player.refreshLocation();
@@ -188,6 +182,7 @@ public class Engine implements Runnable {
 			}
 			if (log != null) log.close();
 		} catch (Throwable t) {
+			Midlet.end();
 			Engine.stacktrace(t);
 		} finally {
 			instance = null;
