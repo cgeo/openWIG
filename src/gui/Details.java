@@ -19,7 +19,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private StringItem description = new StringItem(null, null);
 	private StringItem state = new StringItem("State: ", null);
 	private StringItem distance = new StringItem("Distance: ", null);
-	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_DEFAULT, null);
+	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_CENTER, null);
 	
 	private static final String[] taskStates = { "pending", "finished", "failed" };
 	
@@ -107,7 +107,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		}
 		
 		setTitle(thing.name);
-		name.setLabel(thing.name);
+		name.setText(thing.name);
 		description.setText(thing.description);
 				
 		Media m = (Media)thing.table.rawget("Media");
@@ -153,7 +153,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		}
 		state.setText(ss);
 		
-		if (z.ncontain == Zone.INSIDE) { 
+		if (z.contain == Zone.INSIDE) { 
 			distance.setText("inside");
 		} else {
 			distance.setText(ZonePoint.makeFriendlyDistance(z.distance));

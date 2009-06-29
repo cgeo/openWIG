@@ -22,16 +22,26 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 	
 	private Displayable parent;
 	
+	private static Command cmd_map = new Command("Map", Command.SCREEN, 3);
+
+	public Navigation () {
+		addCommand(Midlet.CMD_BACK);
+		addCommand(MainMenu.CMD_GPS);
+		setCommandListener(this);
+	}
+	
 	public Navigation reset (Displayable parent, ZonePoint point) {
 		this.parent = parent;
 		target = point;
 		zone = null;
+		removeCommand(cmd_map);
 		return this;
 	}
 	
 	public Navigation reset (Displayable parent, Zone z) {
 		this.parent = parent;
 		zone = z;
+		addCommand(cmd_map);
 		target = new ZonePoint(0,0,0);
 		return this;
 	}
@@ -72,9 +82,6 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			Midlet.push(parent);
 			return;
 		}
-		addCommand(Midlet.CMD_BACK);
-		addCommand(MainMenu.CMD_GPS);
-		setCommandListener(this);
 		updateNavi();
 		Midlet.show(this);
 	}
@@ -100,7 +107,7 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		// first calculate distance
 		String ndistance;
 		if (zone != null) {
-			if (zone.ncontain == Zone.INSIDE) ndistance = "inside";
+			if (zone.contain == Zone.INSIDE) ndistance = "inside";
 			else ndistance = ZonePoint.makeFriendlyDistance(zone.distance);
 		}
 		else ndistance = target.friendlyDistance(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
@@ -193,6 +200,8 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 			Midlet.push(parent);
 		} else if (cmd == MainMenu.CMD_GPS) {
 			Midlet.push(Midlet.coordinates.reset(this));
+		} else if (cmd == cmd_map) {
+			Midlet.push(ZoneMap.getInstance().reset(parent, zone));
 		}
 	}
 }

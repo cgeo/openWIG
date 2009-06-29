@@ -13,7 +13,7 @@ public class Zone extends Container {
 		return true;
 	}
 	
-	private ZonePoint[] points;
+	public ZonePoint[] points;
 	
 	private boolean active = false;
 	
@@ -23,8 +23,7 @@ public class Zone extends Container {
 	public static final int NOWHERE = -1;
 	
 	public int contain = NOWHERE;
-	public int ncontain = NOWHERE;
-	private int ticks = 0;
+	private int ncontain = NOWHERE;
 
 	public static final int S_ALWAYS = 0;
 	public static final int S_ONENTER = 1;
@@ -36,6 +35,14 @@ public class Zone extends Container {
 	public double distance = Double.MAX_VALUE; // distance in metres
 	public double nearestX, nearestY;
 	private double distanceRange = -1, proximityRange = -1;
+
+	public double bbTop, bbBottom, bbLeft, bbRight; // zone's bounding box
+	public double pbbTop, pbbBottom, pbbLeft, pbbRight; // pbb = proximity bounding box
+	private ZonePoint bbCenter = new ZonePoint(0,0,0);
+	private double diameter; // approximate zone diameter - distance from bounding-box center to farthest vertex
+	private double insideTolerance = 5, proximityTolerance = 10, distantTolerance = 20; // hysteresis tolerance
+
+	private static final double DEFAULT_PROXIMITY = 300.0;
 	
 	protected void setItem (String key, Object value) {
 		if ("Points".equals(key) && value != null) {
@@ -135,23 +142,45 @@ public class Zone extends Container {
 		if (!active || points == null || points.length == 0 || z == null) {
 			return;
 		}
-		
-		double x, y, dist, ndist = Double.MAX_VALUE;
-		double ax = points[0].latitude, ay = points[0].longitude;
-		double nx = ax, ny = ay;
-		int qtotal = 0, quad = ((ax > z.latitude) ? ((ay > z.longitude) ? 1 : 4) : ((ay > z.longitude) ? 2 : 3));
-		for (int i = 1; i <= points.length; i++) {
-			double bx = points[i % points.length].latitude, by = points[i % points.length].longitude;
-			int nextquad = ((bx > z.latitude) ? ((by > z.longitude) ? 1 : 4) : ((by > z.longitude) ? 2 : 3));
-			int qdif = nextquad - quad;
-			switch (qdif) {
-				case 2: case -2:
-					// find out where it passed
-					double xaxis = (bx - (((by - z.longitude) * (ax - bx)) / (ay - by)));
-					if (xaxis > z.latitude) qdif = -qdif;
-					break;
-				case 3: qdif = -1; break;
-				case -3: qdif = 1; break;
+
+		double dist = 0;
+		// are we inside proximity bounding-box?
+		if (z.latitude > pbbBottom && z.latitude < pbbTop && z.longitude > pbbLeft && z.longitude < pbbRight) {
+			ncontain = PROXIMITY;
+			// are we within zone bounding box?
+			if (z.latitude > bbBottom && z.latitude < bbTop && z.longitude > bbLeft && z.longitude < bbRight && points.length > 2) {
+				// yes, we need precise inside evaluation
+				// the following code is adapted from http://www.visibone.com/inpoly/
+				double xt = z.latitude, yt = z.longitude;
+				double ax = points[points.length - 1].latitude, ay = points[points.length - 1].longitude;
+				boolean inside = false;
+				for (int i = 0; i < points.length; i++) {
+					double bx = points[i].latitude, by = points[i].longitude;
+					double x1, y1, x2, y2;
+					if (bx > ax) {
+						x1 = ax; y1 = ay;
+						x2 = bx; y2 = by;
+					} else {
+						x1 = bx; y1 = by;
+						x2 = ax; y2 = ay;
+					}
+					if (x1 < xt && xt <= x2) { // consider!
+						if (ay > yt && by > yt) { // we're completely below -> flip
+							inside = !inside;
+						} else if (ay < yt && by < yt) { // we're completely above -> ignore
+							// ...
+						} else if ((yt - y1)*(x2 - x1) < (y2 - y1)*(xt - x1)) {
+							// we're below (hopefully)
+							inside = !inside;
+						}
+					}
+					ax = bx; ay = by;
+				}
+				if (inside) {
+					ncontain = INSIDE;
+					distance = dist = 0;
+					nearestX = z.latitude; nearestY = z.longitude;
+				}
 			}
 			qtotal += qdif; quad = nextquad;
 			
@@ -180,11 +209,15 @@ public class Zone extends Container {
 		nearestX = nx; nearestY = ny;
 		distance = z.distance(nx, ny);
 
-		if (qtotal == 4 || qtotal == -4) ncontain = INSIDE;
-		else if (distance < proximityRange) ncontain = PROXIMITY;
-		else if (distance < distanceRange || distanceRange < 0) ncontain = DISTANT;
-		else ncontain = NOWHERE;
-		//tick();
+		// account for tolerances (notice no breaks)
+		if (ncontain < contain) switch (contain) {
+			case DISTANT:
+				if (dist - distantTolerance < distanceRange) ncontain = DISTANT;
+			case PROXIMITY:
+				if (dist - proximityTolerance < proximityRange) ncontain = PROXIMITY;
+			case INSIDE:
+				if (dist - insideTolerance < 0)	ncontain = INSIDE;
+		}
 	}
 
 	public boolean showThings () {

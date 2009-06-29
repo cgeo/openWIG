@@ -44,7 +44,7 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 		logfile = log;
 		startPoint = new ZonePoint(cartridge.latitude, cartridge.longitude, 0);
 		
-		name.setLabel(cartridge.name);
+		name.setText(cartridge.name);
 		description.setText(Engine.removeHtml(cartridge.description));
 		
 		try {

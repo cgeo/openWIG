@@ -22,7 +22,7 @@ public class Zones extends List implements CommandListener, Pushable {
 				int index = getSelectedIndex();
 				if (index >= 0 && index < zones.size()) {
 					Zone z = (Zone)zones.elementAt(index);
-					Midlet.push(Midlet.details.reset(z, null));
+					Midlet.push(Midlet.details.reset(z, this));
 				}
 				break;
 			case Command.BACK:
