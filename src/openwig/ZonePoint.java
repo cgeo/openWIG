@@ -71,8 +71,16 @@ public class ZonePoint implements LuaTable {
 	}
 	
 	public double distance (double lat, double lon) {
-		double mx = Math.abs(ZonePoint.lat2m(lat - latitude));
-		double my = Math.abs(ZonePoint.lon2m(latitude, lon - longitude));
+		return distance(lat, lon, latitude, longitude);
+	}
+
+	public double distance (ZonePoint z) {
+		return distance(z.latitude, z.longitude, latitude, longitude);
+	}
+
+	public static double distance (double lat1, double lon1, double lat2, double lon2) {
+		double mx = Math.abs(ZonePoint.lat2m(lat1 - lat2));
+		double my = Math.abs(ZonePoint.lon2m(lat2, lon1 - lon2));
 		return Math.sqrt(mx * mx + my * my);
 	}
 	

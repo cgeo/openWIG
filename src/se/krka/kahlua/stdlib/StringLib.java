@@ -1431,13 +1431,26 @@ public final class StringLib implements JavaFunction {
 	private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
 		String type = BaseLib.type(repl);
 		if (type == BaseLib.TYPE_NUMBER || type == BaseLib.TYPE_STRING) {
-			b.append(addString (ms, repl, src, e));
-		} else if (type == BaseLib.TYPE_FUNCTION) {
-			Object res = ms.callFrame.thread.state.call(repl,ms.getCaptures());
-			b.append(res);
-		} else if (type == BaseLib.TYPE_TABLE) {
-			Object cap = ms.getCaptures()[0];
-			b.append(((LuaTable)repl).rawget(cap));
+			b.append(addString(ms, repl, src, e));
+		} else {
+			Object[] captures = ms.getCaptures();
+			if (captures.length == 0) {
+				// no captures, pass whole match
+				captures = new String[] {src.getString().substring(0, e.getIndex() - src.getIndex())};
+			}
+			Object res;
+			if (type == BaseLib.TYPE_FUNCTION) {
+				res = ms.callFrame.thread.state.call(repl, captures);
+			} else if (type == BaseLib.TYPE_TABLE) {
+				res = ((LuaTable)repl).rawget(captures[0]);
+			} else {
+				return;
+			}
+			String rtype = BaseLib.type(res);
+			if (rtype == BaseLib.TYPE_NUMBER || rtype == BaseLib.TYPE_STRING)
+				b.append(res);
+			else
+				b.append(e.getString());
 		}
 	}
 

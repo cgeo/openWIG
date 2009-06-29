@@ -30,7 +30,11 @@ public class Things extends ListOfStuff {
 
 	protected void callStuff(Object what) {
 		Thing t = (Thing)what;
-		Midlet.push(Midlet.details.reset(t, this));
+		if (t.hasEvent("OnClick")) {
+			Engine.callEvent(t, "OnClick", null);
+		} else {
+			Midlet.push(Midlet.details.reset(t, this));
+		}
 	}
 
 	protected boolean stillValid() {

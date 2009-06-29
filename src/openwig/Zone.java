@@ -54,6 +54,7 @@ public class Zone extends Container {
 				points[i-1] = zp;
 			}
 			if (active) {
+				preprocess();
 				walk(Engine.instance.player.position);
 				//setcontain();
 			}
@@ -61,6 +62,7 @@ public class Zone extends Container {
 			boolean a = LuaState.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
 			active = a;
+			if (a) preprocess();
 			if (active) {
 				walk(Engine.instance.player.position);
 				//setcontain();
@@ -74,10 +76,12 @@ public class Zone extends Container {
 			visible = a;
 		} else if ("DistanceRange".equals(key) && value instanceof Distance) {
 			distanceRange = ((Distance)value).getValue("meters");
+			preprocess();
 			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
 		} else if ("ProximityRange".equals(key) && value instanceof Distance) {
+			preprocess();
 			proximityRange = ((Distance)value).getValue("meters");
 		} else if ("ShowObjects".equals(key)) {
 			String v = (String)value;
@@ -95,13 +99,14 @@ public class Zone extends Container {
 	
 	public void tick () {
 		if (!active) return;
-		if (ncontain == contain) ticks = 0;
+		if (contain != ncontain) setcontain();
+		/*if (ncontain == contain) ticks = 0;
 		else if (ncontain > contain) setcontain();
 		else if (Midlet.gpsType == Midlet.GPS_MANUAL) setcontain();
 		else {
 			ticks ++;
 			if (ticks % 5 == 0) setcontain();
-		}
+		}*/
 	}
 	
 	private void setcontain () {
@@ -136,6 +141,45 @@ public class Zone extends Container {
 				return;
 		}
 		Midlet.refresh();
+	}
+
+	/** calculate bounding-box values */
+	private void preprocess () {
+		if (points == null || points.length == 0) return;
+
+		// first calculate bounding box for zone shape
+		bbTop = Double.NEGATIVE_INFINITY; bbBottom = Double.POSITIVE_INFINITY;
+		bbLeft = Double.POSITIVE_INFINITY; bbRight = Double.NEGATIVE_INFINITY;
+		for (int i = 0; i < points.length; i++) {
+			bbTop = Math.max(bbTop, points[i].latitude);
+			bbBottom = Math.min(bbBottom, points[i].latitude);
+			bbLeft = Math.min(bbLeft, points[i].longitude);
+			bbRight = Math.max(bbRight, points[i].longitude);
+		}
+		// its center point
+		bbCenter.latitude = bbBottom + ((bbTop - bbBottom) / 2);
+		bbCenter.longitude = bbLeft + ((bbRight - bbLeft) / 2);
+
+		// margins for proximity bounding box
+		double proximityX = ZonePoint.m2lat((proximityRange < 0) ? DEFAULT_PROXIMITY : proximityRange);
+		double proximityY = ZonePoint.m2lon(bbCenter.latitude, (proximityRange < 0) ? DEFAULT_PROXIMITY : proximityRange);
+		// and the box itself
+		pbbTop = bbTop + proximityX; pbbBottom = bbBottom - proximityX;
+		pbbLeft = bbLeft - proximityY; pbbRight = bbRight + proximityY;
+
+		// zone diameter
+		double dist = 0;
+		double xx = 0, yy = 0;
+		for (int i = 0; i < points.length; i++) {
+			double x = points[i].latitude - bbCenter.latitude;
+			double y = points[i].longitude - bbCenter.longitude;
+			double dd = x*x + y*y;
+			if (dd > dist) {
+				xx = x; yy = y;
+				dist = dd;
+			}
+		}
+		diameter = bbCenter.distance(xx, yy);
 	}
 	
 	public void walk (ZonePoint z) {
@@ -182,32 +226,61 @@ public class Zone extends Container {
 					nearestX = z.latitude; nearestY = z.longitude;
 				}
 			}
-			qtotal += qdif; quad = nextquad;
-			
-			// find distance to vertex (ax,ay)-(bx,by)
-			double dot_ta = (z.latitude - ax) * (bx - ax) + (z.longitude - ay) * (by - ay);
-			if (dot_ta <= 0) {// IT IS OFF THE AVERTEX
-				x = ax;
-				y = ay;
-			} else {
-				double dot_tb = (z.latitude - bx) * (ax - bx) + (z.longitude - by) * (ay - by);
-				if (dot_tb <= 0) { // SEE IF b IS THE NEAREST POINT - ANGLE IS OBTUSE
-					x = bx;
-					y = by;
-				} else {
-					// FIND THE REAL NEAREST POINT ON THE LINE SEGMENT - BASED ON RATIO
-					x = ax + ((bx - ax) * dot_ta) / (dot_ta + dot_tb);
-					y = ay + ((by - ay) * dot_ta) / (dot_ta + dot_tb);
+			if (ncontain != INSIDE) {
+				// now we need precise distance calculation
+				double ax = points[points.length - 1].latitude, ay = points[points.length - 1].longitude;
+				double x, y;
+				double nx = ax, ny = ay;
+				double ndist = Double.POSITIVE_INFINITY;
+				for (int i = 0; i < points.length; i++) {
+					double bx = points[i].latitude, by = points[i].longitude;
+					// find distance to vertex (ax,ay)-(bx,by)
+					double dot_ta = (z.latitude - ax) * (bx - ax) + (z.longitude - ay) * (by - ay);
+					if (dot_ta <= 0) {// IT IS OFF THE AVERTEX
+						x = ax;
+						y = ay;
+					} else {
+						double dot_tb = (z.latitude - bx) * (ax - bx) + (z.longitude - by) * (ay - by);
+						if (dot_tb <= 0) { // SEE IF b IS THE NEAREST POINT - ANGLE IS OBTUSE
+							x = bx;
+							y = by;
+						} else {
+							// FIND THE REAL NEAREST POINT ON THE LINE SEGMENT - BASED ON RATIO
+							x = ax + ((bx - ax) * dot_ta) / (dot_ta + dot_tb);
+							y = ay + ((by - ay) * dot_ta) / (dot_ta + dot_tb);
+						}
+					}
+					double dd = (x - z.latitude) * (x - z.latitude) + (y - z.longitude) * (y - z.longitude);
+					if (dd < ndist) {
+						nx = x;
+						ny = y;
+						ndist = dd;
+					}
+					ax = bx;
+					ay = by;
 				}
+				nearestX = nx;
+				nearestY = ny;
+				distance = dist = z.distance(nx, ny);
+
+				if (distance < proximityRange || proximityRange < 0)
+					ncontain = PROXIMITY;
+				else if (distance < distanceRange || distanceRange < 0)
+					ncontain = DISTANT;
+				else
+					ncontain = NOWHERE;
 			}
-			dist = (x-z.latitude)*(x-z.latitude) + (y-z.longitude)*(y-z.longitude);
-			if (dist < ndist) {
-				nx = x; ny = y; ndist = dist;
-			}
-			ax = bx; ay = by;
+		} else {
+			// only need to calculate distance to center + diameter
+			distance = bbCenter.distance(z); // display distance, definitely bigger than precise distance
+			dist = distance - diameter; // calc distance approximation
+			nearestX = bbCenter.latitude; nearestY = bbCenter.longitude;
+			if (dist < distanceRange || distanceRange < 0)
+				ncontain = DISTANT;
+			else
+				ncontain = NOWHERE;
+			// account for tolerances
 		}
-		nearestX = nx; nearestY = ny;
-		distance = z.distance(nx, ny);
 
 		// account for tolerances (notice no breaks)
 		if (ncontain < contain) switch (contain) {
