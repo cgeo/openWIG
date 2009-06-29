@@ -1434,9 +1434,10 @@ public final class StringLib implements JavaFunction {
 			b.append(addString(ms, repl, src, e));
 		} else {
 			Object[] captures = ms.getCaptures();
+			String match = src.getString().substring(0, e.getIndex() - src.getIndex());
 			if (captures.length == 0) {
 				// no captures, pass whole match
-				captures = new String[] {src.getString().substring(0, e.getIndex() - src.getIndex())};
+				captures = new String[] {match};
 			}
 			Object res;
 			if (type == BaseLib.TYPE_FUNCTION) {
@@ -1447,10 +1448,20 @@ public final class StringLib implements JavaFunction {
 				return;
 			}
 			String rtype = BaseLib.type(res);
-			if (rtype == BaseLib.TYPE_NUMBER || rtype == BaseLib.TYPE_STRING)
+			if (rtype == BaseLib.TYPE_NUMBER )
+				b.append(doubleToString((Double)res));
+			else if (rtype == BaseLib.TYPE_STRING)
 				b.append(res);
 			else
-				b.append(e.getString());
+				b.append(match);
+		}
+	}
+
+	public static String doubleToString(Double doubleValue) {
+		if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
+			return String.valueOf(doubleValue.intValue());
+		} else {
+			return String.valueOf(doubleValue.doubleValue());
 		}
 	}
 
@@ -1475,12 +1486,7 @@ public final class StringLib implements JavaFunction {
 				} else {
 					Object o = ms.getCaptures()[replStr.getChar(i) - '1'];
 					if(o instanceof Double) {
-						Double doubleValue = ((Double)o);
-						if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
-							buf.append(String.valueOf(((Double)o).intValue())); 
-						} else {
-							buf.append(String.valueOf(((Double)o).doubleValue()));
-						}
+						buf.append(doubleToString((Double)o));
 					} else {
 						buf.append(o);
 					}
