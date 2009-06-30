@@ -1448,20 +1448,10 @@ public final class StringLib implements JavaFunction {
 				return;
 			}
 			String rtype = BaseLib.type(res);
-			if (rtype == BaseLib.TYPE_NUMBER )
-				b.append(doubleToString((Double)res));
-			else if (rtype == BaseLib.TYPE_STRING)
-				b.append(res);
+			if (rtype == BaseLib.TYPE_NUMBER || rtype == BaseLib.TYPE_STRING)
+				b.append(BaseLib.rawTostring(res));
 			else
 				b.append(match);
-		}
-	}
-
-	public static String doubleToString(Double doubleValue) {
-		if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
-			return String.valueOf(doubleValue.intValue());
-		} else {
-			return String.valueOf(doubleValue.doubleValue());
 		}
 	}
 
@@ -1485,11 +1475,7 @@ public final class StringLib implements JavaFunction {
 					buf.append(str.substring(0, len));
 				} else {
 					Object o = ms.getCaptures()[replStr.getChar(i) - '1'];
-					if(o instanceof Double) {
-						buf.append(doubleToString((Double)o));
-					} else {
-						buf.append(o);
-					}
+					buf.append(BaseLib.rawTostring(o));
 				}
 			}
 		}

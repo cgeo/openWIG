@@ -1,5 +1,6 @@
 package openwig;
 
+import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
 public class EventTable implements LuaTable {
@@ -23,9 +24,9 @@ public class EventTable implements LuaTable {
 
 	protected void setItem(String key, Object value) {
 		if ("Name".equals(key)) {
-			name = (String)value;
+			name = BaseLib.rawTostring(value);
 		} else if ("Description".equals(key)) {
-			description = Engine.removeHtml((String)value);
+			description = Engine.removeHtml(BaseLib.rawTostring(value));
 		} else if ("Visible".equals(key)) {
 			visible = LuaState.boolEval(value);
 		} else if ("ObjectLocation".equals(key)) {
