@@ -41,6 +41,7 @@ class CallbackCaller implements Caller {
 	public void call () {
 		Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed");
 		Engine.state.call(callback, value, null, null);
+		Engine.log("BTTN END");
 	}
 }
 
