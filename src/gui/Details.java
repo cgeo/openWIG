@@ -43,7 +43,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 		setCommandListener(this);
 		addCommand(Midlet.CMD_BACK);
 	}
-	
+
 	public Details reset (EventTable t, Displayable where) {
 		setTitle(t.name);
 		thing = t;

@@ -73,6 +73,7 @@ public class Timer extends EventTable {
 	public void start () {
 		if (task != null) return;
 		if (duration == 0) {
+			// XXX this might be a problem if the timer is interval
 			callEvent("OnStart", null);
 			callEvent("OnTick", null);
 			return;
@@ -104,6 +105,8 @@ public class Timer extends EventTable {
 		lastTick = System.currentTimeMillis();
 		updateRemaining();
 		if (type == COUNTDOWN) task = null;
+		if (type == INTERVAL) Engine.callEvent(this, "OnStart", null);
+			// the devices seem to do this. why, that's beyond me
 	}
 	
 	public void updateRemaining () {

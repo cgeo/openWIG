@@ -8,8 +8,6 @@ import java.io.OutputStream;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
-import java.util.Vector;
-
 import se.krka.kahlua.vm.*;
 import openwig.Engine;
 import openwig.EventTable;
@@ -281,6 +279,7 @@ public class Midlet extends MIDlet implements CommandListener {
 				push(mainMenu);
 				return;
 			case DETAILSCREEN:
+				// TODO maybe check whether the screen is not a child of the one pushed?
 				push(details.reset(param, parent));
 				return;
 			case INVENTORYSCREEN:
