@@ -251,6 +251,7 @@ public class Engine implements Runnable {
 
 	public static void log (String s) {
 		if (instance.log == null) return;
+		synchronized (instance.log) {
 		Calendar now = Calendar.getInstance();
 		instance.log.print(now.get(Calendar.HOUR_OF_DAY));
 		instance.log.print(':');
@@ -268,6 +269,7 @@ public class Engine implements Runnable {
 		instance.log.print("|:: ");
 		instance.log.println(s);
 		instance.log.flush();
+		}
 	}
 
 	public static String removeHtml (String s) {

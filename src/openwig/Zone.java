@@ -175,7 +175,7 @@ public class Zone extends Container {
 			double y = points[i].longitude - bbCenter.longitude;
 			double dd = x*x + y*y;
 			if (dd > dist) {
-				xx = x; yy = y;
+				xx = points[i].latitude; yy = points[i].longitude;
 				dist = dd;
 			}
 		}
