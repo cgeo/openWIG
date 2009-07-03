@@ -33,9 +33,15 @@ public class Timer extends EventTable {
 	};
 	
 	private class TimerTask extends java.util.TimerTask {
+		public boolean restart = false;
 		public void run() {
 			tick();
 			Midlet.refresh();
+			if (restart) {
+				cancel();
+				task = null;
+				start();
+			}
 		}	
 	}
 	
@@ -58,11 +64,19 @@ public class Timer extends EventTable {
 	protected void setItem (String key, Object value) {
 		if ("Type".equals(key) && value instanceof String) {
 			String v = (String)value;
+			int t = type;
 			if ("Countdown".equals(v)) {
-				type = COUNTDOWN;
+				t = COUNTDOWN;
+				if (t != type && task != null)
+					task.restart = false;
+					// we don't need task.restart here,
+					// so make sure it's not set
 			} else if ("Interval".equals(v)) {
-				type = INTERVAL;
+				t = INTERVAL;
+				if (t != type && task != null)
+					task.restart = true;
 			}
+			type = t;
 		} else if ("Duration".equals(key) && value instanceof Double) {
 			long d = (long)LuaState.fromDouble(value);
 			rawset("Remaining", value);
@@ -104,9 +118,14 @@ public class Timer extends EventTable {
 		Engine.callEvent(this, "OnTick", null);
 		lastTick = System.currentTimeMillis();
 		updateRemaining();
-		if (type == COUNTDOWN) task = null;
-		if (type == INTERVAL) Engine.callEvent(this, "OnStart", null);
+		if (type == COUNTDOWN) {
+			task.cancel();
+			task = null;
+		}
+		if (type == INTERVAL && task != null && !task.restart)
+			Engine.callEvent(this, "OnStart", null);
 			// the devices seem to do this. why, that's beyond me
+		// else it will be restarted and OnStart called again anyway
 	}
 	
 	public void updateRemaining () {
