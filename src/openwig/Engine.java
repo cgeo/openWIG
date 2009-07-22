@@ -194,8 +194,13 @@ public class Engine implements Runnable {
 
 	public static void stacktrace (Throwable e) {
 		e.printStackTrace();
-		System.out.println(state.currentThread.stackTrace);
-		String msg = e.toString() + "\n\nstack trace: " + state.currentThread.stackTrace;
+		String msg;
+		if (state != null) {
+			System.out.println(state.currentThread.stackTrace);
+			msg = e.toString() + "\n\nstack trace: " + state.currentThread.stackTrace;
+		} else {
+			msg = e.toString();
+		}
 		log(msg);
 		Midlet.error(msg);
 	}
@@ -250,7 +255,7 @@ public class Engine implements Runnable {
 	}
 
 	public static void log (String s) {
-		if (instance.log == null) return;
+		if (instance == null || instance.log == null) return;
 		synchronized (instance.log) {
 		Calendar now = Calendar.getInstance();
 		instance.log.print(now.get(Calendar.HOUR_OF_DAY));
