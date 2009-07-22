@@ -77,13 +77,18 @@ public class Midlet extends MIDlet implements CommandListener {
 	/////////////////////////////////////
 	//
 	//    Midlet maintenance
-	
+
+	public static String err = "";
 	public void startApp() {
+		try {
+		err = "getting display";
 		display = Display.getDisplay(this);
 		if (instance == null) {
 			instance = this;
+			err = "config";
 			config = new Config("_configuration");
 
+			err = "basemenu";
 			baseMenu = new List("menu", List.IMPLICIT);
 			baseMenu.append("Start", null);
 			baseMenu.append("GPS", null);
@@ -92,16 +97,28 @@ public class Midlet extends MIDlet implements CommandListener {
 			baseMenu.setSelectCommand(CMD_SELECT);
 			baseMenu.setCommandListener(this);
 
+			err = "coordinates";
 			coordinates = new Coordinates();
+			err = "options";
 			options = new Options();
+			err = "browser";
 			browser = new Browser();
-			
+
+			err = "navigation";
 			navigation = new Navigation();
+			err = "details";
 			cartridgeDetails = new CartridgeDetails();
 
+			err = "resetting GPS";
 			resetGps();
 
+			err = "almost done";
 			push(baseMenu);
+		}
+		} catch (Throwable t) {
+			Alert a = new Alert("error",t.toString() + " ("+t.getMessage()+") at "+ err,null,AlertType.ERROR);
+			a.setTimeout(Alert.FOREVER);
+			display.setCurrent(a);
 		}
 	}
 
@@ -190,18 +207,23 @@ public class Midlet extends MIDlet implements CommandListener {
 		gpsType = config.getInt(Config.GPS_TYPE);
 		switch (gpsType) {
 			case GPS_MANUAL:
+				err = "manual gps";
 				gps = coordinates;
 				break;
 			case GPS_SERIAL:
+				err = "serial port";
 				gps = new NMEAParser("comm:"+config.get(Config.GPS_SERIAL_PORT)+";baudrate=9600");
 				break;
 			case GPS_BLUETOOTH:
+				err = "bluetooth";
 				gps = new NMEAParser(config.get(Config.GPS_BT_URL));
 				break;
 			case GPS_SOCKET:
+				err = "socket";
 				gps = new NMEAParser("socket://localhost:"+config.get(Config.GPS_TCP_PORT));
 				break;
 			case GPS_INTERNAL: try {
+				err = "internal";
 				gps = InternalProviderRedirector.getInstance();
 				break;
 				} catch (Exception e) { error(e.getMessage()); }
