@@ -20,7 +20,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 	private StringItem state = new StringItem("State: ", null);
 	private StringItem distance = new StringItem("Distance: ", null);
 	private ImageItem image = new ImageItem(null, null, ImageItem.LAYOUT_CENTER, null);
-	
+
 	private static final String[] taskStates = { "pending", "finished", "failed" };
 	
 	private EventTable thing;
@@ -119,6 +119,7 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 				image.setImage(i);
 			} catch (Exception e) { }
 		} else {
+			image.setImage(Midlet.NULL_IMAGE);
 			image.setImage(null);
 		}
 		

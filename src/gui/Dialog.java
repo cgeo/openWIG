@@ -60,6 +60,7 @@ public class Dialog extends Form implements CommandListener, Cancellable {
 		} catch (Exception e) {
 			image.setAltText(m.altText);
 		} else {
+			image.setImage(Midlet.NULL_IMAGE);
 			image.setImage(null);
 		}
 		content.setText(texts[page]);

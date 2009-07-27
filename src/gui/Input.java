@@ -57,6 +57,9 @@ public class Input extends Form implements CommandListener, ItemCommandListener,
 				Image i = Image.createImage(is, 0, is.length);
 				image.setImage(i);
 			} catch (Exception e) { }
+		} else {
+			image.setImage(Midlet.NULL_IMAGE);
+			image.setImage(null);
 		}
 		
 		String text = Engine.removeHtml((String)input.table.rawget("Text"));

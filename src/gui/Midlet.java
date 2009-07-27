@@ -61,6 +61,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final Command CMD_SELECT = new Command("Select", Command.ITEM, 0);
 	public static final Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
 	public static final Command CMD_BACK = new Command("Back", Command.BACK, 9);
+
+	public static final Image NULL_IMAGE = Image.createImage(1, 1);
 	
 	public static Midlet instance = null;
 	public static Display display;
