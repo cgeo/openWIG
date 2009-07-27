@@ -195,8 +195,17 @@ public class LuaInterface implements JavaFunction {
 	private int zone (LuaCallFrame callFrame, int nArguments) {
 		Object param = callFrame.get(0);
 		Zone z = new Zone();
-		Engine.instance.cartridge.addObject(z);
-		if (param instanceof LuaTable) z.setTable((LuaTable)param);
+		Cartridge c;
+		if (param instanceof Cartridge) {
+			c = (Cartridge)param;
+		} else if (param instanceof LuaTable) {
+			LuaTable lt = (LuaTable)param;
+			c = (Cartridge)lt.rawget("Cartridge");
+			z.setTable((LuaTable)param);
+		} else {
+			throw new RuntimeException("unknown constructor format: "+param.getClass().getName());
+		}
+		c.addObject(z);
 		callFrame.push(z);
 		return 1;
 	}

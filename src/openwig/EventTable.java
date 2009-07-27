@@ -10,7 +10,7 @@ public class EventTable implements LuaTable {
 	public String name, description;
 	public ZonePoint position = null;
 	protected boolean visible = false;
-	
+
 	public boolean isVisible() { return visible; }
 
 	public void setPosition(ZonePoint location) {
@@ -38,8 +38,8 @@ public class EventTable implements LuaTable {
 		Object n = null;
 		while ((n = table.next(n)) != null) {
 			Object val = table.rawget(n);
-			this.table.rawset(n, val);
-			if (n instanceof String) setItem((String)n, val);
+			rawset(n, val);
+			//if (n instanceof String) setItem((String)n, val);
 		}
 	}
 	
