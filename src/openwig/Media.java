@@ -1,6 +1,6 @@
 package openwig;
 
-import java.io.ByteArrayInputStream;
+import java.io.*;
 import javax.microedition.media.PlayerListener;
 import se.krka.kahlua.vm.*;
 
@@ -18,6 +18,18 @@ public class Media extends EventTable implements PlayerListener {
 	
 	public Media() {
 		id = media_no++;
+	}
+
+	public void serialize (DataOutput out) throws IOException {
+		out.writeInt(id);
+		super.serialize(out);
+	}
+
+	public void deserialize (DataInput in) throws IOException {
+		media_no--; // deserialize must be called directly after construction
+		id = in.readInt();
+		if (id >= media_no) media_no = id + 1;
+		super.deserialize(in);
 	}
 	
 	protected void setItem (String key, Object value) {	

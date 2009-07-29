@@ -2,11 +2,10 @@
 package openwig;
 
 import gui.Midlet;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
+
+import java.io.*;
 
 public class LuaInterface implements JavaFunction {
 	
@@ -325,7 +324,7 @@ public class LuaInterface implements JavaFunction {
 
 	private static final String CYCLE_MARKER = "###CYCLE_MARKER###";
 
-	private static void serializeLuaValue (Object obj, DataOutputStream out)
+	private static void serializeLuaValue (Object obj, DataOutput out)
 	throws IOException {
 		if (obj == null) {
 			out.writeByte(LUA_NIL);
@@ -338,24 +337,23 @@ public class LuaInterface implements JavaFunction {
 		} else if (obj instanceof Double) {
 			out.writeByte(LUA_DOUBLE);
 			out.writeDouble(((Double)obj).doubleValue());
+		} else if (obj instanceof EventTable) {
+			out.writeByte(LUA_EVTABLE);
+			out.writeUTF(obj.getClass().getName());
+			serializeLuaTable((LuaTable)obj, out);
 		} else if (obj instanceof LuaTable) {
+			out.writeByte(LUA_TABLE);
 			serializeLuaTable((LuaTable)obj, out);
 		} else {
 			out.writeByte(LUA_OTHER);
 		}
 	}
 
-	public static void serializeLuaTable (LuaTable table, DataOutputStream out)
+	public static void serializeLuaTable (LuaTable table, DataOutput out)
 	throws IOException {
 		if (table.rawget(CYCLE_MARKER) != null) {
 			out.writeByte(LUA_OTHER);
 			return;
-		}
-		if (table instanceof EventTable) {
-			out.writeByte(LUA_EVTABLE);
-			out.writeUTF(table.getClass().getName());
-		} else {
-			out.writeByte(LUA_TABLE);
 		}
 		int size = table.len();
 		out.writeInt(size);
@@ -370,7 +368,7 @@ public class LuaInterface implements JavaFunction {
 		table.rawset(CYCLE_MARKER, null);
 	}
 
-	private static Object deserializeLuaValue (DataInputStream in, Object check)
+	public static Object deserializeLuaValue (DataInput in, Object check)
 	throws IOException {
 		byte type = in.readByte();
 		switch (type) {
@@ -398,7 +396,7 @@ public class LuaInterface implements JavaFunction {
 		}
 	}
 
-	public static LuaTable deserializeLuaTable (DataInputStream in, Object check)
+	public static LuaTable deserializeLuaTable (DataInput in, Object check)
 	throws IOException {
 		LuaTable table;
 		int size = in.readInt();

@@ -14,7 +14,7 @@ public class Savegame {
 	private FileConnection saveFile;
 
 	public Savegame (FileConnection fc) {
-		fc = saveFile;
+		saveFile = fc;
 	}
 
 	public void store (LuaTable table)

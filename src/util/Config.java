@@ -24,7 +24,7 @@ public class Config {
 	public void loadDefaults() {
 		values.put(GPS_TYPE, "0");
 		values.put(REFRESH_INTERVAL, "1");
-		values.put(ENABLE_LOGGING, "0");
+		values.put(ENABLE_LOGGING, "1");
 		
 		values.put("configVersion", "1");
 	}

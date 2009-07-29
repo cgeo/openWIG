@@ -1,12 +1,13 @@
 package openwig;
 
 import gui.Midlet;
-import gwc.CartridgeFile;
+import gwc.*;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.TableLib;
 
 import java.io.*;
 import java.util.*;
+import javax.microedition.io.file.FileConnection;
 
 interface Caller {
 	void call();
@@ -27,6 +28,12 @@ class EventCaller implements Caller {
 		target.callEvent(event, param);
 	}
 	
+}
+
+class SyncCaller implements Caller {
+	public void call() {
+		Engine.instance.sync();
+	}
 }
 
 class CallbackCaller implements Caller {
@@ -52,6 +59,7 @@ public class Engine implements Runnable {
 
 	private String codeUrl;
 	private CartridgeFile gwcfile;
+	private Savegame savegame = null;
 	private PrintStream log;
 	
 	private Vector eventQueue;
@@ -113,6 +121,11 @@ public class Engine implements Runnable {
 		if (out != null) log = new PrintStream(out);
 	}
 
+	public Engine (CartridgeFile cf, FileConnection sv, OutputStream out) {
+		this(cf, out);
+		if (sv != null) savegame = new Savegame(sv);
+	}
+
 	public void run () {
 		try {
 			write("Creating state...\n");
@@ -158,12 +171,21 @@ public class Engine implements Runnable {
 			player.rawset("Name", gwcfile.member);
 			log = l;
 
+			if (savegame != null) {
+				write("Restoring saved state...");
+				restore();
+			}
+
 			write("Starting game...\n");
 			Midlet.start();
 
 			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started\n-------------------");
 			player.refreshLocation();
-			cartridge.callEvent("OnStart", null);
+			if (savegame == null) {
+				cartridge.callEvent("OnStart", null);
+			} else {
+				cartridge.callEvent("OnRestore", null);
+			}
 			Midlet.refresh();
 			eventRunner.start();
 
@@ -298,6 +320,30 @@ public class Engine implements Runnable {
 		}
 		sb.append(s.substring(pos));
 		return sb.toString();
+	}
+
+	public void sync () {
+		// perform the actual sync
+		try {
+			if (savegame == null)
+				savegame = new Savegame(Midlet.browser.getSyncFile());
+			savegame.store(state.getEnvironment());
+		} catch (IOException e) {
+			Midlet.error("Sync failed.\n"+e.getMessage());
+		}
+	}
+
+	private void restore () {
+		if (savegame == null) return;
+		try {
+			savegame.restore(state.getEnvironment());
+		} catch (IOException e) {
+			Midlet.error("Restore failed.\n"+e.getMessage());
+		}
+	}
+
+	public static void requestSync () {
+		eventRunner.addCall(new SyncCaller());
 	}
 
 	public static void tableInsert (LuaTable table, int position, Object item) {

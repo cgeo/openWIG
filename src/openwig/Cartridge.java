@@ -16,6 +16,7 @@ public class Cartridge extends EventTable {
 	
 	private static JavaFunction requestSync = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
+			Engine.instance.sync();
 			return 0;
 		}
 	};

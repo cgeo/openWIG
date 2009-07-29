@@ -1,11 +1,22 @@
 package openwig;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Hashtable;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
 
-public class Distance implements LuaTable {
+public class Distance implements LuaTable, Serializable {
 	public double value; // value in metres
+
+	public void serialize (DataOutput out) throws IOException {
+		out.writeDouble(value);
+	}
+
+	public void deserialize (DataInput in) throws IOException {
+		value = in.readDouble();
+	}
 		
 	public static Hashtable conversions = new Hashtable(2);
 	static {
@@ -27,6 +38,10 @@ public class Distance implements LuaTable {
 			return 1;
 		}
 	};
+
+	public Distance () {
+		// for deserialize
+	}
 	
 	public Distance (double value, String unit)
 	{

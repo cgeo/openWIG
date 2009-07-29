@@ -3,9 +3,19 @@ package openwig;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
-public class EventTable implements LuaTable {
+import java.io.*;
+
+public class EventTable implements LuaTable, Serializable {
 
 	public LuaTable table = new LuaTableImpl();
+
+	public void serialize (DataOutput out) throws IOException {
+		LuaInterface.serializeLuaTable(table, out);
+	}
+
+	public void deserialize (DataInput in) throws IOException {
+		LuaInterface.deserializeLuaTable(in, table);
+	}
 	
 	public String name, description;
 	public ZonePoint position = null;

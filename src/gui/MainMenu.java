@@ -11,6 +11,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	private static final int TASKS = 3;
 	
 	public static Command CMD_GPS = new Command("Position", Command.SCREEN, 5);
+	public static Command CMD_SAVE = new Command("Save", Command.SCREEN, 6);
 	
 	private static Alert reallyexit = new Alert("question","Exit game?",null,AlertType.CONFIRMATION);
 	static {
@@ -22,6 +23,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	public MainMenu () {
 		super("menu", IMPLICIT);
 		addCommand(CMD_GPS);
+		addCommand(CMD_SAVE);
 		addCommand(Midlet.CMD_EXIT);
 		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
@@ -55,6 +57,8 @@ public class MainMenu extends List implements CommandListener, Pushable {
 				case Command.SCREEN:
 					if (cmd == CMD_GPS) {
 						Midlet.push(Midlet.coordinates.reset(this));
+					} else if (cmd == CMD_SAVE) {
+						Engine.requestSync();
 					}
 					break;
 				case Command.EXIT:

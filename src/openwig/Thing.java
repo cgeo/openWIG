@@ -1,5 +1,6 @@
 package openwig;
 
+import java.io.*;
 import se.krka.kahlua.vm.*;
 import java.util.Vector;
 
@@ -8,6 +9,20 @@ public class Thing extends Container {
 	private boolean character = false;
 	
 	public Vector actions = new Vector();
+
+	public Thing () {
+		// for serialization
+	}
+
+	public void serialize (DataOutput out) throws IOException {
+		out.writeBoolean(character);
+		super.serialize(out);
+	}
+
+	public void deserialize (DataInput in) throws IOException {
+		character = in.readBoolean();
+		super.deserialize(in);
+	}
 	
 	public Thing(boolean character) {
 		this.character = character;

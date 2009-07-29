@@ -2,6 +2,7 @@ package gui;
 
 import gwc.CartridgeFile;
 import java.io.OutputStream;
+import javax.microedition.io.file.FileConnection;
 import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.ZonePoint;
@@ -19,6 +20,7 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 	
 	private CartridgeFile cartridge;
 	private OutputStream logfile;
+	private FileConnection savegame;
 	private ZonePoint startPoint;
 	
 	public CartridgeDetails () {
@@ -38,10 +40,11 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 		addCommand(Midlet.CMD_BACK);
 	}
 	
-	public CartridgeDetails reset (CartridgeFile what, OutputStream log) {
+	public CartridgeDetails reset (CartridgeFile what, OutputStream log, FileConnection save) {
 		setTitle(what.name);
 		cartridge = what;
 		logfile = log;
+		savegame = save;
 		startPoint = new ZonePoint(cartridge.latitude, cartridge.longitude, 0);
 		
 		name.setText(cartridge.name);
@@ -59,7 +62,7 @@ public class CartridgeDetails extends Form implements CommandListener, Pushable,
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == CMD_START) {
 			stop();
-			Midlet.loadCartridge(cartridge, logfile);
+			Midlet.loadCartridge(cartridge, logfile, savegame);
 		} else if (cmd == CMD_NAVIGATE) {
 			Midlet.push(Midlet.navigation.reset(this, startPoint));
 		} else if (cmd == Midlet.CMD_BACK) {

@@ -15,11 +15,16 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	private String chdir = null;
 	private boolean up = false;
 	private String openFile = null;
+
+	private String selectedFile = null;
 	
 	private static Image gwc = null;
+	private static Image ows = null;
 	static {
 		try {
 			gwc = Image.createImage("/icons/compass.png");
+			ows = Image.createImage("/icons/task-pending.png");
+
 		} catch (IOException e) { }
 	}
 
@@ -27,7 +32,7 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 		super("wait...", List.IMPLICIT);
 		currentPath = Midlet.config.get(Config.LAST_DIRECTORY);
 		if (currentPath == null) currentPath = "";
-		
+
 		setSelectCommand(Midlet.CMD_SELECT);
 		addCommand(Midlet.CMD_BACK);
 		setCommandListener(this);
@@ -48,7 +53,10 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 			append("..", null);
 			while (list.hasMoreElements()) {
 				String fn = list.nextElement().toString();
-				append(fn, fn.toLowerCase().endsWith(".gwc") ? gwc : null);
+				Image image = null;
+				if (fn.toLowerCase().endsWith(".gwc")) image = gwc;
+				else if (fn.toLowerCase().endsWith(".ows")) image = ows;
+				append(fn, image);
 			}
 			Midlet.config.set(Config.LAST_DIRECTORY, where);
 		}
@@ -115,20 +123,42 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 				}
 
 				if (openFile != null) {
+					FileConnection sf = null;
 					String file = "file:///" + currentPath + openFile;
 					try {
+						if (file.endsWith("ows")) {
+							// this is the save file. now we find the cartridge file.
+							String prefix = openFile.substring(0, openFile.length() - 3);
+							for (int i = 0; i < size(); i++) {
+								String item = getString(i);
+								if (!item.equals(openFile) && item.startsWith(prefix)) {
+									// candidate
+									if (item.endsWith("gwl")) continue;
+									selectedFile = item;
+									file = "file:///" + currentPath + selectedFile;
+									sf = getSyncFile();
+									if (item.endsWith("gwc")) break;
+								}
+							}
+							if (sf == null) throw new IOException("couldn't find cartridge data for "+openFile);
+						}
+
 						CartridgeFile cf = CartridgeFile.read(file);
 						OutputStream os = null;
+
+						// open logfile
 						if (Midlet.config.getInt(Config.ENABLE_LOGGING) > 0) try {
 							FileConnection fc = (FileConnection)Connector.open(file.substring(0, file.length()-3) + "gwl", Connector.READ_WRITE);
 							if (!fc.exists()) fc.create();
 							os = fc.openOutputStream(fc.fileSize());
 						} catch (Exception e) { e.printStackTrace(); }
-						Midlet.push(Midlet.cartridgeDetails.reset(cf, os));
+
+						Midlet.push(Midlet.cartridgeDetails.reset(cf, os, sf));
 						stop();
 					} catch (IOException e) {
 						Midlet.error("Failed to load cartridge:\n" + e.getMessage());
 					}
+					selectedFile = openFile;
 					openFile = null;
 				}
 			} catch (IOException e) {
@@ -146,6 +176,19 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 		} catch (Throwable t) {
 			Midlet.error("browser:"+currentPath+"\n"+t.toString());
 			t.printStackTrace();
+		}
+	}
+
+	public FileConnection getSyncFile ()
+	throws IOException {
+		try {
+			String filename = selectedFile.substring(0, selectedFile.length()-3) + "ows";
+			FileConnection fc = (FileConnection)Connector.open("file:///" + currentPath + filename, Connector.READ_WRITE);
+			if (!fc.exists()) fc.create();
+			return fc;
+		} catch (SecurityException e) {
+			Midlet.error("you need to allow me to access your files!");
+			return null;
 		}
 	}
 
