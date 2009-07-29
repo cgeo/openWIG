@@ -1,6 +1,5 @@
 package gui;
 
-import gps.InternalProviderRedirector;
 import gps.LocationService;
 import gps.NMEAParser;
 import gwc.CartridgeFile;
@@ -226,9 +225,10 @@ public class Midlet extends MIDlet implements CommandListener {
 				break;
 			case GPS_INTERNAL: try {
 				err = "internal";
-				gps = InternalProviderRedirector.getInstance();
+				Class internal = Class.forName("gps.InternalProvider");
+				gps = (LocationService)internal.newInstance();
 				break;
-				} catch (Exception e) { error(e.getMessage()); }
+				} catch (Throwable e) { error(e.getMessage()); }
 				// if exception is caught, no break and fallback to manual
 			default:
 				gpsType = GPS_MANUAL;
