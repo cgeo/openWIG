@@ -1,5 +1,6 @@
 package util;
 
+import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import javax.microedition.rms.*;
@@ -44,7 +45,8 @@ public class Config {
 		if (store == null) return;
 		try {
 			byte[] r = store.getRecord(1);
-			String record = new String(r);
+			DataInputStream di = new DataInputStream(new ByteArrayInputStream(r));
+			String record = di.readUTF();
 			int si = 0;
 			int idx;
 			while ((idx = record.indexOf('\n', si)) > -1) {
@@ -56,6 +58,8 @@ public class Config {
 			}
 		} catch (RecordStoreException e) {
 			// sorry guys, no cake for you today
+		} catch (IOException e) {
+			// no cake for you either
 		}
 	}
 
@@ -71,7 +75,10 @@ public class Config {
 				rep.append((String) values.get(key));
 				rep.append('\n');
 			}
-			byte[] data = rep.toString().getBytes();
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			DataOutputStream dos = new DataOutputStream(bos);
+			dos.writeUTF(rep.toString());
+			byte[] data = bos.toByteArray();
 			if (store.getNumRecords() > 0) {
 				store.setRecord(1, data, 0, data.length);
 			} else {
@@ -79,6 +86,8 @@ public class Config {
 			}
 		} catch (RecordStoreException e) {
 			// bad luck, bye
+		} catch (IOException e) {
+			// same difference
 		}
 	}
 
