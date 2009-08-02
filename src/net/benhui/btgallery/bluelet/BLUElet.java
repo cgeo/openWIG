@@ -65,6 +65,9 @@ public class BLUElet  implements CommandListener
   private LocalDevice device;
   private DiscoveryAgent agent;
 
+  private RemoteDevice selectedRemoteDevice;
+  private String remoteDeviceName;
+
 
   /**
    * Creae a new BLUElet.
@@ -177,10 +180,15 @@ public class BLUElet  implements CommandListener
    */
   public RemoteDevice getSelectedDevice()
   {
-    if ( selectedDevice != -1 )
+	  return selectedRemoteDevice;
+    /*if ( selectedDevice != -1 )
       return (RemoteDevice) devices.elementAt(selectedDevice);
     else
-      return null;
+      return null;*/
+  }
+
+  public String getSelectedDeviceName() {
+	  return remoteDeviceName;
   }
 
   /**
@@ -198,6 +206,8 @@ public class BLUElet  implements CommandListener
       // clear previous values first
       devices.removeAllElements();
       deviceClasses.removeAllElements();
+      selectedRemoteDevice = null;
+      remoteDeviceName = null;
 
       //
       // initialize the JABWT stack
@@ -237,7 +247,8 @@ public class BLUElet  implements CommandListener
     {
       // get selected device
       selectedDevice = remotedeviceui.getSelectedIndex();
-      RemoteDevice remoteDevice = (RemoteDevice) devices.elementAt( selectedDevice );
+      selectedRemoteDevice = (RemoteDevice) devices.elementAt( selectedDevice );
+      remoteDeviceName = remotedeviceui.getString(selectedDevice);
 
       // remove all existing record first
       services.removeAllElements();
@@ -246,7 +257,7 @@ public class BLUElet  implements CommandListener
       {
         agent.searchServices(null,
                              serviceUUIDs,
-                             remoteDevice,
+                             selectedRemoteDevice,
                              new Listener() );
 
         // tell callback device selected

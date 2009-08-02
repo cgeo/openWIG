@@ -5,7 +5,6 @@ import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.Displayable;
 import net.benhui.btgallery.bluelet.BLUElet;
 import gui.Midlet;
-import java.io.IOException;
 import javax.microedition.lcdui.CommandListener;
 
 public class BluetoothOptions implements CommandListener {
@@ -25,15 +24,34 @@ public class BluetoothOptions implements CommandListener {
 				// do nothing
 			} else if (cmd == BLUElet.COMPLETED) {
 				Midlet.push(Midlet.options);
-				ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
-				bluelet = null;
-				String name;
-				try {
-					name = serviceRecord.getHostDevice().getFriendlyName(false);
-				} catch (IOException e) {
-					name = "(name scan failed)";
+				int ret = bluelet.getServiceDiscoveryReturnCode();
+				String name = bluelet.getSelectedDeviceName();
+				String url;
+				if (ret != DiscoveryListener.SERVICE_SEARCH_COMPLETED) {
+					if (ret == DiscoveryListener.SERVICE_SEARCH_ERROR) {
+						// assume the searcher or device is broken
+						url = "btspp://" + bluelet.getSelectedDevice().getBluetoothAddress() + ":1";
+					} else {
+						String err;
+						switch (ret) {
+							case DiscoveryListener.SERVICE_SEARCH_DEVICE_NOT_REACHABLE:
+								err = "could not connect to device";
+								break;
+							case DiscoveryListener.SERVICE_SEARCH_NO_RECORDS:
+								err = "device doesn't seem to be a GPS";
+								break;
+							default:
+								err = "unknown error " + ret +"\nPlease report this as a bug.";
+						}
+						Midlet.error(err);
+						bluelet = null;
+						return;
+					}
+				} else {
+					ServiceRecord serviceRecord = bluelet.getFirstDiscoveredService();
+					bluelet = null;
+					url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
 				}
-				String url = serviceRecord.getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
 				Midlet.config.set(Config.GPS_BT_NAME, name);
 				Midlet.config.set(Config.GPS_BT_URL, url);
 				// XXX this breaks "Save/Back" logic
