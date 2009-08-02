@@ -27,7 +27,7 @@ public class Tasks extends ListOfStuff {
 		if (z.hasEvent("OnClick")) {
 			Engine.callEvent(z, "OnClick", null);
 		} else {
-			Midlet.push(Midlet.details.reset(z, null));
+			Midlet.push(Midlet.details.reset(z, this));
 		}
 	}
 
