@@ -162,6 +162,19 @@ public class Midlet extends MIDlet implements CommandListener {
 	////////////////////////////////////////////
 	//
 	//   functions for other components to use
+
+	private static Ticker ticker = new Ticker("");
+	private static boolean showTicker = false;
+	public static void setStatusText (String text) {
+		if (text != null) {
+			ticker.setString(text);
+			showTicker = true;
+			currentDisplay.setTicker(ticker);
+		} else {
+			showTicker = false;
+			currentDisplay.setTicker(null);
+		}
+	}
 	
 	public static void error (String text) {
 		Alert a = new Alert("error",text,null,AlertType.ERROR);
@@ -196,6 +209,8 @@ public class Midlet extends MIDlet implements CommandListener {
 	}
 	
 	synchronized public static void show (Displayable d) {
+		if (showTicker) d.setTicker(ticker);
+		else d.setTicker(null);
 		currentDisplay = d;
 		display.setCurrent(d);
 	}
