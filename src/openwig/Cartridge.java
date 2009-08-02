@@ -1,5 +1,6 @@
 package openwig;
 
+import java.io.*;
 import java.util.Vector;
 import se.krka.kahlua.vm.*;
 
@@ -16,7 +17,7 @@ public class Cartridge extends EventTable {
 	
 	private static JavaFunction requestSync = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
-			Engine.instance.sync();
+			Engine.instance.store();
 			return 0;
 		}
 	};
@@ -93,9 +94,24 @@ public class Cartridge extends EventTable {
 	
 	public void addObject (Object o) {
 		Engine.tableInsert(allZObjects, o);
+		sortObject(o);
+	}
+
+	private void sortObject (Object o) {
 		if (o instanceof Task) tasks.addElement(o);
 		else if (o instanceof Zone) zones.addElement(o);
 		else if (o instanceof Timer) timers.addElement(o);
 		else if (o instanceof Thing) things.addElement(o);
+	}
+
+	public void deserialize (DataInputStream in)
+	throws IOException {
+		super.deserialize(in);
+		Engine.instance.cartridge = this;
+		allZObjects = (LuaTable)table.rawget("AllZObjects");
+		Object next = null;
+		while ((next = allZObjects.next(next)) != null) {
+			sortObject(allZObjects.rawget(next));
+		}
 	}
 }

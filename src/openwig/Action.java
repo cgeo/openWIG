@@ -14,6 +14,10 @@ public class Action extends EventTable {
 	private boolean universal;
 	
 	public String text;
+
+	public Action () {
+		// for serialization
+	}
 	
 	public Action (LuaTable table) {
 		this.table = table; // XXX deep copy needed?

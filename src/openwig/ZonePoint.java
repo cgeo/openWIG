@@ -1,10 +1,12 @@
 package openwig;
 
+import java.io.*;
+
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.stdlib.MathLib;
 
-public class ZonePoint implements LuaTable {
+public class ZonePoint implements LuaTable, Serializable {
 	public double latitude;
 	public double longitude;
 	//public double altitude;
@@ -20,6 +22,10 @@ public class ZonePoint implements LuaTable {
 	public static ZonePoint copy (ZonePoint z) {
 		if (z == null) return null;
 		else return new ZonePoint (z);
+	}
+
+	public ZonePoint () {
+		// for serialization
 	}
 	
 	public ZonePoint (ZonePoint z) {
@@ -148,4 +154,16 @@ public class ZonePoint implements LuaTable {
 	public int len () { return 3; }
 
 	public void updateWeakSettings (boolean weakKeys, boolean weakValues) { }
+
+	public void serialize (DataOutputStream out) throws IOException {
+		out.writeDouble(latitude);
+		out.writeDouble(longitude);
+		Engine.instance.savegame.storeValue(altitude, out);
+	}
+
+	public void deserialize (DataInputStream in) throws IOException {
+		latitude = in.readDouble();
+		longitude = in.readDouble();
+		altitude = (Distance)Engine.instance.savegame.restoreValue(in, null);
+	}
 }

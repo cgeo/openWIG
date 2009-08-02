@@ -5,8 +5,6 @@ import gui.Midlet;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
-import java.io.*;
-
 public class LuaInterface implements JavaFunction {
 	
 	private static final int _REQUIRE = 0;
@@ -312,103 +310,5 @@ public class LuaInterface implements JavaFunction {
 		Media m = (Media)callFrame.get(0);
 		m.play();
 		return 0;
-	}
-
-	private static final byte LUA_NIL      = 0x00;
-	private static final byte LUA_DOUBLE   = 0x01;
-	private static final byte LUA_STRING   = 0x02;
-	private static final byte LUA_BOOLEAN  = 0x03;
-	private static final byte LUA_TABLE    = 0x04;
-	private static final byte LUA_EVTABLE  = 0x05;
-	private static final byte LUA_OTHER    = 0x06;
-
-	private static final String CYCLE_MARKER = "###CYCLE_MARKER###";
-
-	private static void serializeLuaValue (Object obj, DataOutput out)
-	throws IOException {
-		if (obj == null) {
-			out.writeByte(LUA_NIL);
-		} else if (obj instanceof String) {
-			out.writeByte(LUA_STRING);
-			out.writeUTF((String)obj);
-		} else if (obj instanceof Boolean) {
-			out.writeByte(LUA_BOOLEAN);
-			out.writeBoolean(((Boolean)obj).booleanValue());
-		} else if (obj instanceof Double) {
-			out.writeByte(LUA_DOUBLE);
-			out.writeDouble(((Double)obj).doubleValue());
-		} else if (obj instanceof EventTable) {
-			out.writeByte(LUA_EVTABLE);
-			out.writeUTF(obj.getClass().getName());
-			serializeLuaTable((LuaTable)obj, out);
-		} else if (obj instanceof LuaTable) {
-			out.writeByte(LUA_TABLE);
-			serializeLuaTable((LuaTable)obj, out);
-		} else {
-			out.writeByte(LUA_OTHER);
-		}
-	}
-
-	public static void serializeLuaTable (LuaTable table, DataOutput out)
-	throws IOException {
-		if (table.rawget(CYCLE_MARKER) != null) {
-			out.writeByte(LUA_OTHER);
-			return;
-		}
-		int size = table.len();
-		out.writeInt(size);
-		table.rawset(CYCLE_MARKER, Boolean.TRUE);
-		Object next = null;
-		while ((next = table.next(next)) != null) {
-			if (next == CYCLE_MARKER) continue;
-			Object value = table.rawget(next);
-			serializeLuaValue(next, out);
-			serializeLuaValue(value, out);
-		}
-		table.rawset(CYCLE_MARKER, null);
-	}
-
-	public static Object deserializeLuaValue (DataInput in, Object check)
-	throws IOException {
-		byte type = in.readByte();
-		switch (type) {
-			case LUA_NIL:
-				return null;
-			case LUA_DOUBLE:
-				return LuaState.toDouble(in.readDouble());
-			case LUA_STRING:
-				return in.readUTF();
-			case LUA_BOOLEAN:
-				return LuaState.toBoolean(in.readBoolean());
-			case LUA_EVTABLE:
-				String classname = in.readUTF();
-				if (check instanceof EventTable &&
-				   !check.getClass().getName().equals(classname)) {
-					Engine.log("class mismatch on restore: stored is "+classname+", live is "+check.getClass().getName());
-					return check;
-				}
-			case LUA_TABLE:
-				LuaTable table = deserializeLuaTable (in, check);
-				return table;
-			case LUA_OTHER:
-			default:
-				return check;
-		}
-	}
-
-	public static LuaTable deserializeLuaTable (DataInput in, Object check)
-	throws IOException {
-		LuaTable table;
-		int size = in.readInt();
-		if (check instanceof LuaTable) table = (LuaTable)check;
-		else table = new LuaTableImpl(size);
-
-		for (int i = 0; i < size; i++) {
-			Object key = deserializeLuaValue(in, null);
-			Object value = deserializeLuaValue(in, table.rawget(key));
-			table.rawset(key, value);
-		}
-
-		return table;
 	}
 }

@@ -14,12 +14,12 @@ public class Thing extends Container {
 		// for serialization
 	}
 
-	public void serialize (DataOutput out) throws IOException {
+	public void serialize (DataOutputStream out) throws IOException {
 		out.writeBoolean(character);
 		super.serialize(out);
 	}
 
-	public void deserialize (DataInput in) throws IOException {
+	public void deserialize (DataInputStream in) throws IOException {
 		character = in.readBoolean();
 		super.deserialize(in);
 	}

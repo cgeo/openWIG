@@ -32,7 +32,7 @@ class EventCaller implements Caller {
 
 class SyncCaller implements Caller {
 	public void call() {
-		Engine.instance.sync();
+		Engine.instance.store();
 	}
 }
 
@@ -59,8 +59,9 @@ public class Engine implements Runnable {
 
 	private String codeUrl;
 	private CartridgeFile gwcfile;
-	private Savegame savegame = null;
+	public Savegame savegame = null;
 	private PrintStream log;
+	public static boolean logProperties = false;
 	
 	private Vector eventQueue;
 	private class EventQueue extends Thread {		
@@ -152,29 +153,30 @@ public class Engine implements Runnable {
 			eventQueue = new Vector(10);
 			eventRunner = new EventQueue();
 
-			write("Loading gwc...");
-			if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
-			if (gwcfile == null) throw new Exception("invalid cartridge file");
-			write("loading code...");
-			byte[] lbc = gwcfile.getBytecode();
+			if (savegame == null) {
+				// starting game normally
+				write("Loading gwc...");
+				if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
+				if (gwcfile == null) throw new Exception("invalid cartridge file");
+				write("loading code...");
+				byte[] lbc = gwcfile.getBytecode();
 
-			PrintStream l = log; log = null; // prevent logging while loading
-			write("parsing...");
-			closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
-			write("calling...\n");
-			state.call(closure, null, null, null);
-			lbc = null;
-			closure = null;
+				write("parsing...");
+				closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+				write("calling...\n");
+				state.call(closure, null, null, null);
+				lbc = null;
+				closure = null;
 
-			write("Setting remaining properties...\n");
-			player.rawset("CompletionCode", gwcfile.code);
-			player.rawset("Name", gwcfile.member);
-			log = l;
+				write("Setting remaining properties...\n");
+				player.rawset("CompletionCode", gwcfile.code);
+				player.rawset("Name", gwcfile.member);
 
-			if (savegame != null) {
+			} else if (savegame != null) {
 				write("Restoring saved state...");
 				restore();
 			}
+			logProperties = true;
 
 			write("Starting game...\n");
 			Midlet.start();
@@ -322,14 +324,17 @@ public class Engine implements Runnable {
 		return sb.toString();
 	}
 
-	public void sync () {
+	public void store () {
 		// perform the actual sync
 		try {
+			Midlet.setStatusText("saving...");
 			if (savegame == null)
 				savegame = new Savegame(Midlet.browser.getSyncFile());
 			savegame.store(state.getEnvironment());
 		} catch (IOException e) {
 			Midlet.error("Sync failed.\n"+e.getMessage());
+		} finally {
+			Midlet.setStatusText(null);
 		}
 	}
 

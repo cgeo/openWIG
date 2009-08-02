@@ -1,6 +1,9 @@
 package openwig;
 
 import gui.Midlet;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
@@ -17,6 +20,13 @@ public class Player extends Thing {
 		table.rawset("PositionAccuracy", new Distance(1,"metres"));
 		table.rawset("RefreshLocation", refreshLocation);
 		setPosition(new ZonePoint(360,360,0));
+	}
+
+	public void deserialize (DataInputStream in)
+	throws IOException {
+		super.deserialize(in);
+		Engine.instance.player = this;
+		//setPosition(new ZonePoint(360,360,0));
 	}
 	
 	public int visibleThings() {

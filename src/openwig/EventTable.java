@@ -9,12 +9,13 @@ public class EventTable implements LuaTable, Serializable {
 
 	public LuaTable table = new LuaTableImpl();
 
-	public void serialize (DataOutput out) throws IOException {
-		LuaInterface.serializeLuaTable(table, out);
+	public void serialize (DataOutputStream out) throws IOException {
+		Engine.instance.savegame.storeValue(table, out);
 	}
 
-	public void deserialize (DataInput in) throws IOException {
-		LuaInterface.deserializeLuaTable(in, table);
+	public void deserialize (DataInputStream in) throws IOException {
+		Engine.instance.savegame.restoreValue(in, this);
+		//setTable(table);
 	}
 	
 	public String name, description;
@@ -40,7 +41,9 @@ public class EventTable implements LuaTable, Serializable {
 		} else if ("Visible".equals(key)) {
 			visible = LuaState.boolEval(value);
 		} else if ("ObjectLocation".equals(key)) {
-			position = ZonePoint.copy((ZonePoint)value);
+			//setPosition(ZonePoint.copy((ZonePoint)value));
+			// i know there was need to copy. but why? it is messing up deserialization
+			position = (ZonePoint)value;
 		}
 	}
 	
@@ -80,7 +83,8 @@ public class EventTable implements LuaTable, Serializable {
 			setItem((String) key, value);
 		}
 		table.rawset(key, value);
-		Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()));
+		if (Engine.logProperties)
+			Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()));
 	}
 
 	public void setMetatable (LuaTable metatable) { table.setMetatable(metatable); }

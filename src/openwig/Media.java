@@ -20,12 +20,12 @@ public class Media extends EventTable implements PlayerListener {
 		id = media_no++;
 	}
 
-	public void serialize (DataOutput out) throws IOException {
+	public void serialize (DataOutputStream out) throws IOException {
 		out.writeInt(id);
 		super.serialize(out);
 	}
 
-	public void deserialize (DataInput in) throws IOException {
+	public void deserialize (DataInputStream in) throws IOException {
 		media_no--; // deserialize must be called directly after construction
 		id = in.readInt();
 		if (id >= media_no) media_no = id + 1;

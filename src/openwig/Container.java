@@ -1,5 +1,7 @@
 package openwig;
 
+import java.io.DataInputStream;
+import java.io.IOException;
 import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
@@ -57,5 +59,14 @@ public class Container extends EventTable {
 			return z.showThings();
 		}
 		return false;
+	}
+
+	public void deserialize (DataInputStream in)
+	throws IOException {
+		super.deserialize(in);
+		inventory = (LuaTable)table.rawget("Inventory");
+		Object o = table.rawget("Container");
+		if (o instanceof Container) location = (Container)o;
+		else location = null;
 	}
 }

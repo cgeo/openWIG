@@ -4,13 +4,10 @@ import se.krka.kahlua.vm.*;
 import gui.Midlet;
 
 import java.io.*;
-import java.util.Vector;
 
 public class Timer extends EventTable {
 	
 	private static java.util.Timer globalTimer;
-	private static boolean paused = true;
-	private static Vector timers = new Vector();
 
 	private static JavaFunction start = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -58,16 +55,12 @@ public class Timer extends EventTable {
 	
 	private long duration = -1;
 	private long lastTick = 0;
-
-	private long remaining = 0;
-	private boolean resume = false;
 	
 	public Timer () {
 		if (globalTimer == null) globalTimer = new java.util.Timer();
 		table.rawset("Start", start);
 		table.rawset("Stop", stop);
 		table.rawset("Tick", tick);
-		timers.addElement(this);
 	}
 	
 	protected void setItem (String key, Object value) {
@@ -101,14 +94,14 @@ public class Timer extends EventTable {
 			callEvent("OnTick", null);
 			return;
 		}
-		task = new TimerTask();
-		lastTick = System.currentTimeMillis();
-		updateRemaining();
-		callEvent("OnStart", null);
-		schedule(duration);
+		start(duration, true);
 	}
 
-	private void schedule (long when) {
+	private void start (long when, boolean callEvent) {
+		task = new TimerTask();
+		lastTick = System.currentTimeMillis();
+		if (callEvent) callEvent("OnStart", null);
+		updateRemaining();
 		switch (type) {
 			case COUNTDOWN:
 				globalTimer.schedule(task, when);
@@ -137,13 +130,13 @@ public class Timer extends EventTable {
 		}
 		if (type == INTERVAL && task != null && !task.restart)
 			Engine.callEvent(this, "OnStart", null);
-			// the devices seem to do this. why, that's beyond me
+			// the devices seem to do this.
 		// else it will be restarted and OnStart called again anyway
 	}
 	
 	public void updateRemaining () {
 		long stm = System.currentTimeMillis();
-		remaining = (duration/1000) - ((stm - lastTick)/1000);
+		long remaining = (duration/1000) - ((stm - lastTick)/1000);
 		table.rawset("Remaining", LuaState.toDouble(remaining));
 	}
 	
@@ -152,29 +145,24 @@ public class Timer extends EventTable {
 		globalTimer = null;
 	}
 
-	private void pause () {
-		if (task != null) resume = true;
-		updateRemaining();
-		lastTick = System.currentTimeMillis() - lastTick;
-	}
-
-	private void resume () {
-		lastTick += System.currentTimeMillis();
-		updateRemaining();
-		if (resume) {
-			task = new TimerTask();
-		}
-	}
-
-	public void serialize (DataOutput out) throws IOException {
-		out.writeBoolean(resume);
+	public void serialize (DataOutputStream out) throws IOException {
+		out.writeBoolean(task != null);
 		out.writeLong(lastTick);
 		super.serialize(out);
 	}
 
-	public void deserialize (DataInput in) throws IOException {
-		resume = in.readBoolean();
+	public void deserialize (DataInputStream in) throws IOException {
+		boolean resume = in.readBoolean();
 		lastTick = in.readLong();
 		super.deserialize(in);
+
+		if (resume) {
+			if (lastTick + duration < System.currentTimeMillis()) {
+				Engine.callEvent(this, "OnTick", null);
+			} else {
+				start(lastTick + duration - System.currentTimeMillis(), false);
+			}
+			if (type == INTERVAL) start();
+		}
 	}
 }
