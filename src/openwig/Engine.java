@@ -57,7 +57,11 @@ public class Engine implements Runnable {
 	public Cartridge cartridge;
 	public Player player = new Player();
 
-	public static final String VERSION = "$Rev$".substring(4);
+	public static final String VERSION;
+	static {
+		String v = "$Rev$".substring(6);
+		VERSION = v.substring(0, v.length()-2);
+	}
 
 	private String codeUrl;
 	public CartridgeFile gwcfile;
