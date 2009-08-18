@@ -94,6 +94,8 @@ public class Zone extends Container {
 			} else if ("Never".equals(v)) {
 				showObjects = S_NEVER;
 			}
+		} else if ("OriginalPoint".equals(key)) {
+			position = (ZonePoint)value;
 		} else super.setItem(key, value);
 	}
 	

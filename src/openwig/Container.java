@@ -35,15 +35,23 @@ public class Container extends EventTable {
 	}
 	
 	public void moveTo(Container c) {
+		String cn = c == null ? "(nowhere)" : c.name;
+		if (this != Engine.instance.player) Engine.log("MOVE: "+name+" to "+cn);
 		if (location != null) TableLib.removeItem(location.inventory, this);
 		// location.things.removeElement(this);
 		if (c != null) {
 			Engine.tableInsert(c.inventory, this);
 			location = c;
 			table.rawset("Container", c);
+			if (c == Engine.instance.player) {
+				rawset("ObjectLocation", null);
+			} else {
+				rawset("ObjectLocation", c.position);
+			}
 		} else {
 			location = null;
 			table.rawset("Container", LuaState.toBoolean(false));
+			rawset("ObjectLocation", null);
 		}
 	}
 

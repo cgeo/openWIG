@@ -44,4 +44,9 @@ public class Player extends Thing {
 		position.altitude.setValue(Midlet.gps.getAltitude(), "metres");
 		Engine.instance.cartridge.walk(position);
 	}
+
+	public void rawset (Object key, Object value) {
+		if ("ObjectLocation".equals(key)) return;
+		super.rawset(key, value);
+	}
 }
