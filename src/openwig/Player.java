@@ -2,7 +2,6 @@ package openwig;
 
 import gui.Midlet;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import se.krka.kahlua.vm.*;
 

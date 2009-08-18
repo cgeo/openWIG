@@ -15,6 +15,8 @@ import openwig.Media;
 import util.Config;
 
 public class Midlet extends MIDlet implements CommandListener {
+
+	public static final String VERSION = "$Rev$".substring(4);
 	
 	// basemenu screens
 	public static Coordinates coordinates;
@@ -91,7 +93,7 @@ public class Midlet extends MIDlet implements CommandListener {
 			config = new Config("_configuration");
 
 			err = "basemenu";
-			baseMenu = new List("menu", List.IMPLICIT);
+			baseMenu = new List("OpenWIG r"+VERSION, List.IMPLICIT);
 			baseMenu.append("Start", null);
 			baseMenu.append("GPS", null);
 			baseMenu.append("Options", null);

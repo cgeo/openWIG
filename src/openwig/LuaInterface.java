@@ -6,8 +6,8 @@ import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
 public class LuaInterface implements JavaFunction {
-	
-	private static final int _REQUIRE = 0;
+
+	private static final int COMMAND = 0; // Wherigo.Command
 	private static final int ZONEPOINT = 1;
 	private static final int DISTANCE = 2;
 	private static final int CARTRIDGE = 3;
@@ -28,14 +28,12 @@ public class LuaInterface implements JavaFunction {
 	private static final int TRANSLATEPOINT = 18;
 	private static final int SHOWSTATUSTEXT = 19;
 	private static final int VECTORTOPOINT = 20;
-	private static final int COMMAND = 21; // Wherigo.Command
 	
-	private static final int NUM_FUNCTIONS = 22;
+	private static final int NUM_FUNCTIONS = 21;
 	
 	private static final String[] names;
 	static {
 		names = new String[NUM_FUNCTIONS];
-		names[_REQUIRE] = "require";
 		names[ZONEPOINT] = "ZonePoint";
 		names[DISTANCE] = "Distance";
 		names[CARTRIDGE] = "ZCartridge";
@@ -73,8 +71,10 @@ public class LuaInterface implements JavaFunction {
 	}
 
 	public static void register(LuaState state) {
+		LuaTable environment = state.getEnvironment();
+
 		LuaTable wig = new LuaTableImpl();
-		state.getEnvironment().rawset("Wherigo", wig);
+		environment.rawset("Wherigo", wig);
 		for (int i = 1; i < NUM_FUNCTIONS; i++) {
 			wig.rawset(names[i], functions[i]);
 		}
@@ -92,18 +92,20 @@ public class LuaInterface implements JavaFunction {
 		wig.rawset("LOCATIONSCREEN", new Double(Midlet.LOCATIONSCREEN));
 		wig.rawset("TASKSCREEN", new Double(Midlet.TASKSCREEN));
 		
-		state.getEnvironment().rawset("require", functions[0]);
+		LuaTable pack = (LuaTable)environment.rawget("package");
+		LuaTable loaded = (LuaTable)pack.rawget("loaded");
+		loaded.rawset("Wherigo", wig);
 		
 		LuaTable env = new LuaTableImpl();
-		env.rawset("Device", "Windows PPC");
-		env.rawset("DeviceID", "You don't need to see his ID.");
+		env.rawset("Device", Engine.instance.gwcfile.device);
+		env.rawset("DeviceID", System.getProperty("microedition.platform"));
 		env.rawset("Platform", "MIDP-2.0/CLDC-1.1");
 		env.rawset("CartFolder", "c:/what/is/it/to/you");
 		env.rawset("SyncFolder", "c:/what/is/it/to/you");
 		env.rawset("LogFolder", "c:/what/is/it/to/you");
 		env.rawset("CartFilename", "cartridge.gwc");
 		env.rawset("PathSep", "/"); // no. you may NOT do file i/o on this device.
-		env.rawset("Version", "2.11ow");
+		env.rawset("Version", "2.11-compatible(r"+Engine.VERSION+")");
 		env.rawset("Downloaded", new Double(0));
 		state.getEnvironment().rawset("Env", env);
 		
@@ -117,7 +119,6 @@ public class LuaInterface implements JavaFunction {
 
 	public int call(LuaCallFrame callFrame, int nArguments) {
 		switch (index) {
-			case _REQUIRE: return requireWherigo(callFrame, nArguments);
 			case ZONEPOINT: return zonePoint(callFrame, nArguments);
 			case DISTANCE: return distance(callFrame, nArguments);
 			case CARTRIDGE: return cartridge(callFrame, nArguments);
@@ -141,14 +142,10 @@ public class LuaInterface implements JavaFunction {
 			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
 			case AUDIO: return playAudio(callFrame, nArguments);
 			case VECTORTOPOINT: return vectorToPoint(callFrame, nArguments);
-			case COMMAND:
-				return 0;
+			case COMMAND: return 0;
+			case SHOWSTATUSTEXT: return showStatusText(callFrame, nArguments);
 			default: return 0;
 		}
-	}
-	
-	private int requireWherigo (LuaCallFrame callFrame, int nArguments) {
-		return 0;
 	}
 	
 	private int cartridge (LuaCallFrame callFrame, int nArguments) {
@@ -309,6 +306,14 @@ public class LuaInterface implements JavaFunction {
 	private int playAudio (LuaCallFrame callFrame, int nArguments) {
 		Media m = (Media)callFrame.get(0);
 		m.play();
+		return 0;
+	}
+
+	private int showStatusText (LuaCallFrame callFrame, int nArguments) {
+		BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for ShowStatusText");
+		String text = (String)callFrame.get(0);
+		if (text != null && text.length() == 0) text = null;
+		Midlet.setStatusText(text);
 		return 0;
 	}
 }

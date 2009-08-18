@@ -57,8 +57,10 @@ public class Engine implements Runnable {
 	public Cartridge cartridge;
 	public Player player = new Player();
 
+	public static final String VERSION = "$Rev$".substring(4);
+
 	private String codeUrl;
-	private CartridgeFile gwcfile;
+	public CartridgeFile gwcfile;
 	public Savegame savegame = null;
 	private PrintStream log;
 	public static boolean logProperties = false;
@@ -139,6 +141,8 @@ public class Engine implements Runnable {
 			CoroutineLib.register(state);
 			OsLib.register(state);*/
 
+			write("Building javafunc map...\n");
+
 			write("Loading stdlib...");
 			InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
 			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
@@ -181,7 +185,7 @@ public class Engine implements Runnable {
 			write("Starting game...\n");
 			Midlet.start();
 
-			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started\n-------------------");
+			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started (openWIG r" + VERSION + "\n-------------------");
 			player.refreshLocation();
 			if (savegame == null) {
 				cartridge.callEvent("OnStart", null);
@@ -208,7 +212,7 @@ public class Engine implements Runnable {
 			if (log != null) log.close();
 		} catch (Throwable t) {
 			Midlet.end();
-			Engine.stacktrace(t);
+			stacktrace(t);
 		} finally {
 			instance = null;
 			state = null;
@@ -226,7 +230,7 @@ public class Engine implements Runnable {
 			msg = e.toString();
 		}
 		log(msg);
-		Midlet.error(msg);
+		Midlet.error("you hit a bug! please report at openwig.googlecode.com and i'll fix it for you!\n"+msg);
 	}
 
 	public static void kill () {
