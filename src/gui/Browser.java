@@ -78,6 +78,9 @@ public class Browser extends List implements Pushable, CommandListener {
 				}
 			} catch (IllegalArgumentException e) {
 				listRoot.run();
+			} catch (IOException e) {
+				Midlet.error(e.getMessage());
+				listRoot.run();
 			} catch (Throwable e) {
 				handleProblem(e);
 			}
