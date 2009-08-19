@@ -6,16 +6,14 @@ import java.util.*;
 import javax.microedition.io.Connector;
 import javax.microedition.lcdui.*;
 import javax.microedition.io.file.*;
+import util.BackgroundRunner;
 import util.Config;
 
-public class Browser extends List implements Pushable, Runnable, CommandListener {
+public class Browser extends List implements Pushable, CommandListener {
 
 	private Hashtable cache = new Hashtable(10);
 	private String currentPath;
-	private String chdir = null;
-	private boolean up = false;
-	private String openFile = null;
-
+	private String root;
 	private String selectedFile = null;
 	
 	private static Image gwc = null;
@@ -30,8 +28,8 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 
 	public Browser() {
 		super("wait...", List.IMPLICIT);
-		currentPath = Midlet.config.get(Config.LAST_DIRECTORY);
-		if (currentPath == null) currentPath = "";
+		/*currentPath = Midlet.config.get(Config.LAST_DIRECTORY);
+		if (currentPath == null) currentPath = "";*/
 
 		setSelectCommand(Midlet.CMD_SELECT);
 		addCommand(Midlet.CMD_BACK);
@@ -39,144 +37,142 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 	}
 
 	public void push () {
-		start();
 		// XXX TODO not refresh when returning from details
+		chdir(Midlet.config.get(Config.LAST_DIRECTORY));
 		Midlet.show(this);
 	}
 
-	public void chdir(String where) 
-	throws IOException {
-		if (where.endsWith("/")) { // directory test without (possibly) protected function call
-			FileConnection fc = (FileConnection) Connector.open("file:///" + where, Connector.READ);
-			Enumeration list = fc.list();
-			deleteAll();
-			append("..", null);
-			while (list.hasMoreElements()) {
-				String fn = list.nextElement().toString();
-				Image image = null;
-				if (fn.toLowerCase().endsWith(".gwc")) image = gwc;
-				else if (fn.toLowerCase().endsWith(".ows")) image = ows;
-				append(fn, image);
-			}
-			Midlet.config.set(Config.LAST_DIRECTORY, where);
-		}
+	private void setCurrentPath (String path) {
+		Midlet.config.set(Config.LAST_DIRECTORY, path);
+		currentPath = path;
+		setTitle(path);
 	}
 
-	public void listRoot() {
-		Enumeration roots = FileSystemRegistry.listRoots();
-		deleteAll();
-		while (roots.hasMoreElements()) {
-			String root = roots.nextElement().toString();
-			append(root, null);
-		}
-	}
-	private Thread thread = null;
-
-	private void start() {
-		if (thread != null) return;
-		thread = new Thread(this);
-		thread.start();
-	}
-
-	private void stop() {
-		thread = null;
-	}
-
-	synchronized public void run() {
-		try {
-		// init path
-		try {
-			if (currentPath.length() == 0) {
-				listRoot();
-			} else try {
-				chdir(currentPath);
-			} catch (IOException e) {
-				currentPath = "";
-				listRoot();
-			} catch (IllegalArgumentException e) {
-				currentPath = "";
-				listRoot();
-			}
-		} catch (SecurityException e) {
+	private void handleProblem (Throwable e) {
+		if (e instanceof IOException) {
+			Midlet.error(e.getMessage());
+		} else if (e instanceof SecurityException) {
 			Midlet.error("you need to allow me to access your files!");
 		}
-		
-		while (thread == Thread.currentThread()) {
+	}
+
+	private class Chdir implements Runnable {
+		public String where;
+		public void run () {
 			try {
-				if (up) {
-					if ("".equals(currentPath) || currentPath.lastIndexOf('/', currentPath.length() - 2) == -1) {
-						listRoot();
-						currentPath = "";
-					} else {
-						String below = currentPath.substring(0, currentPath.lastIndexOf('/', currentPath.length() - 2)) + "/";
-						chdir(below);
-						currentPath = below;
+				if (where.endsWith("/")) {
+					FileConnection fc = (FileConnection)Connector.open("file:///" + where, Connector.READ);
+					Enumeration list = fc.list();
+					deleteAll();
+					append("..", null);
+					while (list.hasMoreElements()) {
+						String fn = list.nextElement().toString();
+						Image image = null;
+						if (fn.toLowerCase().endsWith(".gwc"))
+							image = gwc;
+						else if (fn.toLowerCase().endsWith(".ows"))
+							image = ows;
+						append(fn, image);
 					}
-					up = false;
+					setCurrentPath(where);
 				}
-
-				if (chdir != null) {
-					String newpath = currentPath + chdir;
-					chdir(newpath);
-					currentPath = newpath;
-					chdir = null;
-				}
-
-				if (openFile != null) {
-					FileConnection sf = null;
-					String file = "file:///" + currentPath + openFile;
-					try {
-						if (file.endsWith("ows")) {
-							// this is the save file. now we find the cartridge file.
-							String prefix = openFile.substring(0, openFile.length() - 3);
-							for (int i = 0; i < size(); i++) {
-								String item = getString(i);
-								if (!item.equals(openFile) && item.startsWith(prefix)) {
-									// candidate
-									if (item.endsWith("gwl")) continue;
-									selectedFile = item;
-									file = "file:///" + currentPath + selectedFile;
-									sf = getSyncFile();
-									if (item.endsWith("gwc")) break;
-								}
-							}
-							if (sf == null) throw new IOException("couldn't find cartridge data for "+openFile);
-						}
-
-						CartridgeFile cf = CartridgeFile.read(file);
-						OutputStream os = null;
-
-						// open logfile
-						if (Midlet.config.getInt(Config.ENABLE_LOGGING) > 0) try {
-							FileConnection fc = (FileConnection)Connector.open(file.substring(0, file.length()-3) + "gwl", Connector.READ_WRITE);
-							if (!fc.exists()) fc.create();
-							os = fc.openOutputStream(fc.fileSize());
-						} catch (Exception e) { e.printStackTrace(); }
-
-						Midlet.push(Midlet.cartridgeDetails.reset(cf, os, sf));
-						stop();
-					} catch (IOException e) {
-						Midlet.error("Failed to load cartridge:\n" + e.getMessage());
-					}
-					selectedFile = openFile;
-					openFile = null;
-				}
-			} catch (IOException e) {
-				// presumably loading a default path that no longer exists
-				// do nothing (we ate the ioexceptions before anyway
-			} catch (SecurityException e) {
-				Midlet.error("you need to allow me to access your files!");
+			} catch (IllegalArgumentException e) {
+				listRoot.run();
+			} catch (Throwable e) {
+				handleProblem(e);
 			}
-			
-			setTitle(currentPath);
+		}
+	}
+	private Chdir chdir = new Chdir();
 
-			if (thread != Thread.currentThread()) break;
-			try { wait(); } catch (InterruptedException e) { }
+	private void chdir (String where) {
+		if (where == null || where.length() == 0) listRoot();
+		else {
+			chdir.where = where;
+			BackgroundRunner.performTask(chdir);
 		}
-		} catch (Throwable t) {
-			Midlet.error("browser:"+currentPath+"\n"+t.toString());
-			t.printStackTrace();
+	}
+
+	private void descend (String dirname) {
+		chdir(currentPath + dirname);
+
+	}
+
+	private void ascend () {
+		if ("".equals(currentPath) || currentPath.lastIndexOf('/', currentPath.length() - 2) == -1) {
+			listRoot();
+		} else {
+			String below = currentPath.substring(0, currentPath.lastIndexOf('/', currentPath.length() - 2)) + "/";
+			chdir(below);
 		}
+	}
+
+	private Runnable listRoot = new Runnable() {
+		public void run () {
+			Enumeration roots = FileSystemRegistry.listRoots();
+			deleteAll();
+			while (roots.hasMoreElements()) {
+				String root = roots.nextElement().toString();
+				append(root, null);
+			}
+			setCurrentPath("");
+		}
+	};
+
+	private void listRoot () {
+		BackgroundRunner.performTask(listRoot);
+	}
+
+	private class OpenFile implements Runnable {
+		public String filename;
+		public void run () {
+			FileConnection sf = null;
+			String file = "file:///" + currentPath + filename;
+			try {
+				if (file.endsWith("ows")) {
+					// this is the save file. now we find the cartridge file.
+					String prefix = filename.substring(0, filename.length() - 3);
+					for (int i = 0; i < size(); i++) {
+						String item = getString(i);
+						if (!item.equals(filename) && item.startsWith(prefix)) {
+							// candidate
+							if (item.endsWith("gwl"))
+								continue;
+							selectedFile = item;
+							file = "file:///" + currentPath + selectedFile;
+							sf = getSyncFile();
+							if (item.endsWith("gwc"))
+								break;
+						}
+					}
+					if (sf == null)
+						throw new IOException("couldn't find cartridge data for " + filename);
+				}
+
+				CartridgeFile cf = CartridgeFile.read(file);
+				OutputStream os = null;
+
+				// open logfile
+				if (Midlet.config.getInt(Config.ENABLE_LOGGING) > 0) try {
+						FileConnection fc = (FileConnection)Connector.open(file.substring(0, file.length() - 3) + "gwl", Connector.READ_WRITE);
+						if (!fc.exists()) fc.create();
+						os = fc.openOutputStream(fc.fileSize());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				Midlet.push(Midlet.cartridgeDetails.reset(cf, os, sf));
+			} catch (IOException e) {
+				Midlet.error("Failed to load cartridge:\n" + e.getMessage());
+			}
+			selectedFile = filename;
+		}
+	}
+	private OpenFile openFile = new OpenFile();
+
+	private void openFile (String name) {
+		openFile.filename = name;
+		BackgroundRunner.performTask(openFile);
 	}
 
 	public FileConnection getSyncFile ()
@@ -194,20 +190,13 @@ public class Browser extends List implements Pushable, Runnable, CommandListener
 
 	synchronized public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == Midlet.CMD_BACK) {
-			stop();
-			notify();
 			Midlet.push(Midlet.baseMenu);
 		} else if (cmd == Midlet.CMD_SELECT) {
 			String sel = getString(getSelectedIndex());
-			if ("..".equals(sel)) {
-				up = true;
-			} else if (sel.endsWith("/")) {
-				chdir = sel;
-			} else {
-				openFile = sel;
-			}
 			setTitle("wait...");
-			notify();
+			if ("..".equals(sel)) ascend();
+			else if (sel.endsWith("/")) descend(sel);
+			else openFile(sel);
 		}
 	}
 }

@@ -8,49 +8,7 @@ import se.krka.kahlua.stdlib.TableLib;
 import java.io.*;
 import java.util.*;
 import javax.microedition.io.file.FileConnection;
-
-interface Caller {
-	void call();
-}
-
-class EventCaller implements Caller {
-	private EventTable target = null;
-	private String event;
-	private Object param;
-	
-	public EventCaller (EventTable target, String event, Object param) {
-		this.target = target;
-		this.event = event;
-		this.param = param;
-	}
-	
-	public void call() {
-		target.callEvent(event, param);
-	}
-	
-}
-
-class SyncCaller implements Caller {
-	public void call() {
-		Engine.instance.store();
-	}
-}
-
-class CallbackCaller implements Caller {
-	private LuaClosure callback;
-	private Object value;
-	
-	public CallbackCaller (LuaClosure callback, Object value) {
-		this.callback = callback;
-		this.value = value;
-	}
-	
-	public void call () {
-		Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed");
-		Engine.state.call(callback, value, null, null);
-		Engine.log("BTTN END");
-	}
-}
+import util.BackgroundRunner;
 
 public class Engine implements Runnable {
 
@@ -69,36 +27,7 @@ public class Engine implements Runnable {
 	private PrintStream log;
 	public static boolean logProperties = false;
 	
-	private Vector eventQueue;
-	private class EventQueue extends Thread {		
-		public void run () {
-			boolean events;
-			while (!end) {
-				events = false;
-				while (!eventQueue.isEmpty()) {
-					events = true;
-					Caller c = (Caller)eventQueue.firstElement();
-					eventQueue.removeElementAt(0);
-					try {
-						c.call();
-					} catch (Throwable t) {
-						stacktrace(t);
-					}
-				}
-				if (events) Midlet.refresh();
-				synchronized (this) {
-					if (!eventQueue.isEmpty()) continue;
-					try { wait(); } catch (InterruptedException e) { }
-				}
-			}
-		}
-		
-		synchronized public void addCall (Caller c) {
-			eventQueue.addElement(c);
-			notify();
-		}
-	}
-	private static EventQueue eventRunner;
+	private static BackgroundRunner eventRunner;
 
 	public static Engine instance;
 	public static LuaState state;
@@ -158,8 +87,12 @@ public class Engine implements Runnable {
 			LuaInterface.register(state);
 				
 			write("Building event queue...\n");
-			eventQueue = new Vector(10);
-			eventRunner = new EventQueue();
+			eventRunner = new BackgroundRunner();
+			eventRunner.setQueueListener(new Runnable() {
+				public void run () {
+					Midlet.refresh();
+				}
+			});
 
 			if (savegame == null) {
 				// starting game normally
@@ -197,7 +130,6 @@ public class Engine implements Runnable {
 				cartridge.callEvent("OnRestore", null);
 			}
 			Midlet.refresh();
-			eventRunner.start();
 
 			while (!end) {
 				try {
@@ -269,15 +201,27 @@ public class Engine implements Runnable {
 		Midlet.pushInput(input);
 	}
 
-	public static void callEvent (EventTable subject, String name, Object param) {
+	public static void callEvent (final EventTable subject, final String name, final Object param) {
 		if (!subject.hasEvent(name)) return;
-		EventCaller ec = new EventCaller(subject, name, param);
-		eventRunner.addCall(ec);
+		eventRunner.perform(new Runnable() {
+			public void run () {
+				try {
+					subject.callEvent(name, param);
+				} catch (Throwable t) {
+					stacktrace(t);
+				}
+			}
+		});
 	}
 
-	public static void invokeCallback (LuaClosure callback, Object value) {
-		CallbackCaller cc = new CallbackCaller(callback, value);
-		eventRunner.addCall(cc);
+	public static void invokeCallback (final LuaClosure callback, final Object value) {
+		eventRunner.perform(new Runnable() {
+			public void run () {
+				Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed");
+				Engine.state.call(callback, value, null, null);
+				Engine.log("BTTN END");
+			}
+		});
 	}
 
 	public static byte[] mediaFile (Media media) throws Exception {
@@ -332,18 +276,24 @@ public class Engine implements Runnable {
 		return sb.toString();
 	}
 
-	public void store () {
-		// perform the actual sync
-		try {
-			Midlet.setStatusText("saving...");
-			if (savegame == null)
-				savegame = new Savegame(Midlet.browser.getSyncFile());
-			savegame.store(state.getEnvironment());
-		} catch (IOException e) {
-			Midlet.error("Sync failed.\n"+e.getMessage());
-		} finally {
-			Midlet.setStatusText(null);
+	private Runnable store = new Runnable() {
+		public void run () {
+			// perform the actual sync
+			try {
+				Midlet.setStatusText("saving...");
+				if (savegame == null)
+					savegame = new Savegame(Midlet.browser.getSyncFile());
+				savegame.store(state.getEnvironment());
+			} catch (IOException e) {
+				Midlet.error("Sync failed.\n" + e.getMessage());
+			} finally {
+				Midlet.setStatusText(null);
+			}
 		}
+	};
+
+	public void store () {
+		store.run();
 	}
 
 	private void restore () {
@@ -356,7 +306,7 @@ public class Engine implements Runnable {
 	}
 
 	public static void requestSync () {
-		eventRunner.addCall(new SyncCaller());
+		eventRunner.perform(instance.store);
 	}
 
 	public static void tableInsert (LuaTable table, int position, Object item) {
