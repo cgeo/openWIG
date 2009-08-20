@@ -25,7 +25,6 @@ public class MainMenu extends List implements CommandListener, Pushable {
 		addCommand(CMD_GPS);
 		addCommand(CMD_SAVE);
 		addCommand(Midlet.CMD_EXIT);
-		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
 		
 		append("locations", null);

@@ -10,7 +10,6 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 	
 	public ListOfStuff (String title) {
 		super(title, List.IMPLICIT);
-		setSelectCommand(Midlet.CMD_SELECT);
 		addCommand(Midlet.CMD_BACK);
 		setCommandListener(this);
 	}
@@ -22,7 +21,7 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 	protected Image getStuffIcon (Object what) { return null; }
 	
 	public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == Midlet.CMD_SELECT) {
+		if (cmd == SELECT_COMMAND) {
 			Object s = null;
 			synchronized (this) {
 				int index = getSelectedIndex();

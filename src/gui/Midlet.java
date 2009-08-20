@@ -64,7 +64,6 @@ public class Midlet extends MIDlet implements CommandListener {
 	public static final int COORDSCREEN = 6;
 	
 	public static final Command CMD_EXIT = new Command("Exit", Command.EXIT, 10);
-	public static final Command CMD_SELECT = new Command("Select", Command.ITEM, 0);
 	public static final Command CMD_CANCEL = new Command("Cancel", Command.BACK, 2);
 	public static final Command CMD_BACK = new Command("Back", Command.BACK, 9);
 
@@ -102,7 +101,6 @@ public class Midlet extends MIDlet implements CommandListener {
 			baseMenu.append("GPS", null);
 			baseMenu.append("Options", null);
 			baseMenu.append("Quit", null);
-			baseMenu.setSelectCommand(CMD_SELECT);
 			baseMenu.setCommandListener(this);
 
 			err = "coordinates";
@@ -141,7 +139,7 @@ public class Midlet extends MIDlet implements CommandListener {
 
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == baseMenu) {
-			if (cmd == CMD_SELECT) {
+			if (cmd == List.SELECT_COMMAND) {
 				switch (baseMenu.getSelectedIndex()) {
 					case MNU_START:
 						push(browser);

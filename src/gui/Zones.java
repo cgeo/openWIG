@@ -12,7 +12,6 @@ public class Zones extends List implements CommandListener, Pushable {
 	public Zones () {
 		super("Locations", IMPLICIT);
 		addCommand(Midlet.CMD_BACK);
-		setSelectCommand(Midlet.CMD_SELECT);
 		setCommandListener(this);
 	}
 	

@@ -81,7 +81,6 @@ public class Options extends Form implements Pushable, CommandListener,
 		
 		comPorts = new List("Serial ports", List.IMPLICIT);
 		comPorts.setCommandListener(this);
-		comPorts.setSelectCommand(Midlet.CMD_SELECT);
 		comPorts.addCommand(Midlet.CMD_BACK);
 		
 		tcpPort = new TextBox("Port number", null, 100, TextField.NUMERIC);
@@ -149,7 +148,7 @@ public class Options extends Form implements Pushable, CommandListener,
 			Midlet.push(Midlet.baseMenu);
 			
 		} else if (disp == comPorts) {
-			if (cmd == Midlet.CMD_SELECT) {
+			if (cmd == List.SELECT_COMMAND) {
 				String com = comPorts.getString(comPorts.getSelectedIndex());
 				Midlet.config.set(Config.GPS_SERIAL_PORT, com);
 				gpsDevice.setText(com);

@@ -31,7 +31,6 @@ public class Browser extends List implements Pushable, CommandListener {
 		/*currentPath = Midlet.config.get(Config.LAST_DIRECTORY);
 		if (currentPath == null) currentPath = "";*/
 
-		setSelectCommand(Midlet.CMD_SELECT);
 		addCommand(Midlet.CMD_BACK);
 		setCommandListener(this);
 	}
@@ -194,7 +193,7 @@ public class Browser extends List implements Pushable, CommandListener {
 	synchronized public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == Midlet.CMD_BACK) {
 			Midlet.push(Midlet.baseMenu);
-		} else if (cmd == Midlet.CMD_SELECT) {
+		} else if (cmd == SELECT_COMMAND) {
 			String sel = getString(getSelectedIndex());
 			setTitle("wait...");
 			if ("..".equals(sel)) ascend();
