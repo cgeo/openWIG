@@ -18,7 +18,7 @@ public class Distance implements LuaTable, Serializable {
 		value = in.readDouble();
 	}
 		
-	public static Hashtable conversions = new Hashtable(2);
+	public static Hashtable conversions = new Hashtable(6);
 	static {
 		conversions.put("feet", new Double(0.3048));
 		conversions.put("ft", new Double(0.3048));
@@ -58,7 +58,7 @@ public class Distance implements LuaTable, Serializable {
 	}
 	
 	public double getValue (String unit) {
-		if (conversions.containsKey(unit)) {
+		if (unit != null && conversions.containsKey(unit)) {
 			return value / ((Double)conversions.get(unit)).doubleValue();
 		} else {
 			return value;
