@@ -37,32 +37,26 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == this) {
-			switch (cmd.getCommandType()) {
-				case Command.ITEM:
-					switch (getSelectedIndex()) {
-						case ZONES:
-							Midlet.push(Midlet.zones);
-							break;
-						case INVENTORY:
-							Midlet.push(Midlet.inventory);
-							break;
-						case LOCATION:
-							Midlet.push(Midlet.surroundings);
-							break;
-						case TASKS:
-							Midlet.push(Midlet.tasks);
-					}
-					break;
-				case Command.SCREEN:
-					if (cmd == CMD_GPS) {
-						Midlet.push(Midlet.coordinates.reset(this));
-					} else if (cmd == CMD_SAVE) {
-						Engine.requestSync();
-					}
-					break;
-				case Command.EXIT:
-					Midlet.display.setCurrent(reallyexit,this);
-					break;
+			if (cmd == SELECT_COMMAND) {
+				switch (getSelectedIndex()) {
+					case ZONES:
+						Midlet.push(Midlet.zones);
+						break;
+					case INVENTORY:
+						Midlet.push(Midlet.inventory);
+						break;
+					case LOCATION:
+						Midlet.push(Midlet.surroundings);
+						break;
+					case TASKS:
+						Midlet.push(Midlet.tasks);
+				}
+			} else if (cmd == CMD_GPS) {
+				Midlet.push(Midlet.coordinates.reset(this));
+			} else if (cmd == CMD_SAVE) {
+				Engine.requestSync();
+			} else if (cmd == Midlet.CMD_EXIT) {
+				Midlet.display.setCurrent(reallyexit,this);
 			}
 		} else if (disp == reallyexit) {
 			if (cmd.getCommandType() == Command.OK) {

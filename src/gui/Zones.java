@@ -16,17 +16,14 @@ public class Zones extends List implements CommandListener, Pushable {
 	}
 	
 	public void commandAction(Command cmd, Displayable disp) {
-		switch (cmd.getCommandType()) {
-			case Command.ITEM:
-				int index = getSelectedIndex();
-				if (index >= 0 && index < zones.size()) {
-					Zone z = (Zone)zones.elementAt(index);
-					Midlet.push(Midlet.details.reset(z, this));
-				}
-				break;
-			case Command.BACK:
-				Midlet.push(Midlet.mainMenu);
-				break;
+		if (cmd == SELECT_COMMAND) {
+			int index = getSelectedIndex();
+			if (index >= 0 && index < zones.size()) {
+				Zone z = (Zone)zones.elementAt(index);
+				Midlet.push(Midlet.details.reset(z, this));
+			}
+		} else {
+			Midlet.push(Midlet.mainMenu);
 		}
 	}
 
