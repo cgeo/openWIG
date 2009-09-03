@@ -76,6 +76,7 @@ public class LuaInterface implements JavaFunction {
 		LuaTable wig = new LuaTableImpl();
 		environment.rawset("Wherigo", wig);
 		for (int i = 1; i < NUM_FUNCTIONS; i++) {
+			Engine.instance.savegame.addJavafunc(functions[i]);
 			wig.rawset(names[i], functions[i]);
 		}
 		
@@ -108,7 +109,13 @@ public class LuaInterface implements JavaFunction {
 		env.rawset("Version", "2.11-compatible(r"+Engine.VERSION+")");
 		env.rawset("Downloaded", new Double(0));
 		state.getEnvironment().rawset("Env", env);
-		
+
+		Cartridge.register();
+		Container.register();
+		Distance.register();
+		Player.register();
+		Timer.register();
+
 		Media.reset();
 	}
 
@@ -278,7 +285,7 @@ public class LuaInterface implements JavaFunction {
 			Object o = callFrame.get(1);
 			if (o instanceof EventTable) et = (EventTable)o;
 		}
-		Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name));
+		Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
 		Midlet.showScreen(screen, et);
 		return 0;
 	}

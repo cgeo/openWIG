@@ -7,13 +7,10 @@ import se.krka.kahlua.stdlib.TableLib;
 
 import java.io.*;
 import java.util.*;
-import javax.microedition.io.file.FileConnection;
+
 import util.BackgroundRunner;
 
 public class Engine implements Runnable {
-
-	public Cartridge cartridge;
-	public Player player = new Player();
 
 	public static final String VERSION;
 	static {
@@ -21,18 +18,28 @@ public class Engine implements Runnable {
 		VERSION = v.substring(0, v.length()-2);
 	}
 
-	private String codeUrl;
-	public CartridgeFile gwcfile;
-	public Savegame savegame = null;
-	private PrintStream log;
-	public static boolean logProperties = false;
-	
-	private static BackgroundRunner eventRunner;
-
 	public static Engine instance;
 	public static LuaState state;
 
+	public CartridgeFile gwcfile;
+	public Savegame savegame = null;
+	private PrintStream log;
+	
+	private BackgroundRunner eventRunner;
+
+	public Cartridge cartridge;
+	public Player player = new Player();
+
+	private boolean doRestore = false;
 	private boolean end = false;
+	
+	public static final int LOG_PROP = 0;
+	public static final int LOG_CALL = 1;
+	public static final int LOG_WARN = 2;
+	public static final int LOG_ERROR = 3;
+	private int loglevel = LOG_WARN;
+
+	private Thread thread = null;
 
 	// **** utility for displaying status on loading screen
 	private StringBuffer stdout = new StringBuffer("Creating engine...\n");
@@ -41,94 +48,103 @@ public class Engine implements Runnable {
 		Midlet.engineOutput.setText(stdout.toString());
 	}
 
-	public Engine (String codeUrl) {
-		instance = this;
-		this.codeUrl = codeUrl;
+	public static Engine newInstance (CartridgeFile cf, OutputStream log) {
+		instance = new Engine(cf, log);
+		return instance;
 	}
 
-	public Engine (CartridgeFile cf) {
+	private Engine (CartridgeFile cf, OutputStream out) {
 		instance = this;
 		gwcfile = cf;
-	}
-
-	public Engine (CartridgeFile cf, OutputStream out) {
-		instance = this;
-		gwcfile = cf;
+		savegame = cf.getSavegame();
 		if (out != null) log = new PrintStream(out);
 	}
 
-	public Engine (CartridgeFile cf, FileConnection sv, OutputStream out) {
-		this(cf, out);
-		if (sv != null) savegame = new Savegame(sv);
+	public void start () {
+		thread = new Thread(this);
+		thread.start();
+	}
+	
+	public void restore () {
+		doRestore = true;
+		start();
+	}
+
+	private void prepareState ()
+	throws IOException {
+		write("Creating state...\n");
+		state = new LuaState(System.out);
+
+		/*write("Registering base libs...\n");
+		BaseLib.register(state);
+		MathLib.register(state);
+		StringLib.register(state);
+		CoroutineLib.register(state);
+		OsLib.register(state);*/
+
+		write("Building javafunc map...\n");
+		savegame.buildJavafuncMap(state.getEnvironment());
+
+		write("Loading stdlib...");
+		InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
+		LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
+		write("calling...\n");
+		state.call(closure, null, null, null);
+		stdlib.close();
+		stdlib = null;
+
+		write("Registering WIG libs...\n");
+		LuaInterface.register(state);
+
+		write("Building event queue...\n");
+		eventRunner = new BackgroundRunner();
+		eventRunner.setQueueListener(new Runnable() {
+			public void run () {
+				Midlet.refresh();
+			}
+		});
+	}
+
+	private void restoreGame ()
+	throws IOException {
+		write("Restoring saved state...");
+		savegame.restore(state.getEnvironment());
+	}
+
+	private void newGame ()
+	throws IOException {
+		// starting game normally
+		write("Loading gwc...");
+		if (gwcfile == null) throw new IOException("invalid cartridge file");
+		write("loading code...");
+		byte[] lbc = gwcfile.getBytecode();
+
+		write("parsing...");
+		LuaClosure closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+		write("calling...\n");
+		state.call(closure, null, null, null);
+		lbc = null;
+		closure = null;
+
+		write("Setting remaining properties...\n");
+		player.rawset("CompletionCode", gwcfile.code);
+		player.rawset("Name", gwcfile.member);
 	}
 
 	public void run () {
 		try {
-			write("Creating state...\n");
-			state = new LuaState(System.out);
+			prepareState ();
+			loglevel = LOG_PROP;
 
-			/*		write("Registering base libs...\n");
-			BaseLib.register(state);
-			MathLib.register(state);
-			StringLib.register(state);
-			CoroutineLib.register(state);
-			OsLib.register(state);*/
-
-			write("Building javafunc map...\n");
-
-			write("Loading stdlib...");
-			InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
-			LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
-			write("calling...\n");
-			state.call(closure, null, null, null);
-			stdlib.close(); stdlib = null;
-
-			write("Registering WIG libs...\n");
-			LuaInterface.register(state);
-				
-			write("Building event queue...\n");
-			eventRunner = new BackgroundRunner();
-			eventRunner.setQueueListener(new Runnable() {
-				public void run () {
-					Midlet.refresh();
-				}
-			});
-
-			if (savegame == null) {
-				// starting game normally
-				write("Loading gwc...");
-				if (gwcfile == null) gwcfile = CartridgeFile.read(codeUrl);
-				if (gwcfile == null) throw new Exception("invalid cartridge file");
-				write("loading code...");
-				byte[] lbc = gwcfile.getBytecode();
-
-				write("parsing...");
-				closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
-				write("calling...\n");
-				state.call(closure, null, null, null);
-				lbc = null;
-				closure = null;
-
-				write("Setting remaining properties...\n");
-				player.rawset("CompletionCode", gwcfile.code);
-				player.rawset("Name", gwcfile.member);
-
-			} else if (savegame != null) {
-				write("Restoring saved state...");
-				restore();
-			}
-			logProperties = true;
+			if (doRestore) restoreGame();
+			else newGame();
 
 			write("Starting game...\n");
 			Midlet.start();
 
 			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started (openWIG r" + VERSION + "\n-------------------");
 			player.refreshLocation();
-			if (savegame == null) {
-				cartridge.callEvent("OnStart", null);
-			} else {
-				cartridge.callEvent("OnRestore", null);
-			}
+			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
 			Midlet.refresh();
 
 			while (!end) {
@@ -165,7 +181,7 @@ public class Engine implements Runnable {
 		} else {
 			msg = e.toString();
 		}
-		log(msg);
+		log(msg, LOG_ERROR);
 		Midlet.error("you hit a bug! please report at openwig.googlecode.com and i'll fix it for you!\n"+msg);
 	}
 
@@ -177,7 +193,7 @@ public class Engine implements Runnable {
 
 	public static void message (LuaTable message) {
 		String[] texts = {removeHtml((String)message.rawget("Text"))};
-		log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())));
+		log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
 		Media[] media = {(Media)message.rawget("Media")};
 		String button1 = null, button2 = null;
 		LuaTable buttons = (LuaTable)message.rawget("Buttons");
@@ -191,19 +207,19 @@ public class Engine implements Runnable {
 
 	public static void dialog (String[] texts, Media[] media) {
 		if (texts.length > 0) {
-			log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())));
+			log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
 		}
 		Midlet.pushDialog(texts, media, null, null, null);
 	}
 
 	public static void input (EventTable input) {
-		log("CALL: GetInput - "+input.name);
+		log("CALL: GetInput - "+input.name, LOG_CALL);
 		Midlet.pushInput(input);
 	}
 
 	public static void callEvent (final EventTable subject, final String name, final Object param) {
 		if (!subject.hasEvent(name)) return;
-		eventRunner.perform(new Runnable() {
+		instance.eventRunner.perform(new Runnable() {
 			public void run () {
 				try {
 					subject.callEvent(name, param);
@@ -215,23 +231,24 @@ public class Engine implements Runnable {
 	}
 
 	public static void invokeCallback (final LuaClosure callback, final Object value) {
-		eventRunner.perform(new Runnable() {
+		instance.eventRunner.perform(new Runnable() {
 			public void run () {
-				Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed");
+				Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed", LOG_CALL);
 				Engine.state.call(callback, value, null, null);
-				Engine.log("BTTN END");
+				Engine.log("BTTN END", LOG_CALL);
 			}
 		});
 	}
 
-	public static byte[] mediaFile (Media media) throws Exception {
+	public static byte[] mediaFile (Media media) throws IOException {
 		/*String filename = media.jarFilename();
 		return media.getClass().getResourceAsStream("/media/"+filename);*/
 		return instance.gwcfile.getFile(media.id);
 	}
 
-	public static void log (String s) {
+	public static void log (String s, int level) {
 		if (instance == null || instance.log == null) return;
+		if (level < instance.loglevel) return;
 		synchronized (instance.log) {
 		Calendar now = Calendar.getInstance();
 		instance.log.print(now.get(Calendar.HOUR_OF_DAY));
@@ -296,17 +313,8 @@ public class Engine implements Runnable {
 		store.run();
 	}
 
-	private void restore () {
-		if (savegame == null) return;
-		try {
-			savegame.restore(state.getEnvironment());
-		} catch (IOException e) {
-			Midlet.error("Restore failed.\n"+e.getMessage());
-		}
-	}
-
 	public static void requestSync () {
-		eventRunner.perform(instance.store);
+		instance.eventRunner.perform(instance.store);
 	}
 
 	public static void tableInsert (LuaTable table, int position, Object item) {

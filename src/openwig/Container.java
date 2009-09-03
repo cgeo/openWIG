@@ -27,6 +27,11 @@ public class Container extends EventTable {
 			return 1;
 		}
 	};
+
+	public static void register () {
+		Engine.instance.savegame.addJavafunc(moveTo);
+		Engine.instance.savegame.addJavafunc(contains);
+	}
 	
 	public Container() {
 		table.rawset("MoveTo", moveTo);
@@ -36,7 +41,7 @@ public class Container extends EventTable {
 	
 	public void moveTo(Container c) {
 		String cn = c == null ? "(nowhere)" : c.name;
-		if (this != Engine.instance.player) Engine.log("MOVE: "+name+" to "+cn);
+		if (this != Engine.instance.player) Engine.log("MOVE: "+name+" to "+cn, Engine.LOG_CALL);
 		if (location != null) TableLib.removeItem(location.inventory, this);
 		// location.things.removeElement(this);
 		if (c != null) {

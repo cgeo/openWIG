@@ -1,6 +1,7 @@
 package gwc;
 
 import java.io.*;
+import java.util.Hashtable;
 import javax.microedition.io.file.FileConnection;
 
 import openwig.Engine;
@@ -37,6 +38,7 @@ public class Savegame {
 
 	private void resetObjectStore () {
 		objectStore = new LuaTableImpl(256);
+		// XXX why did i choose to use LuaTable over Hashtable?
 		currentId = 0;
 		level = 0;
 	}
@@ -62,6 +64,29 @@ public class Savegame {
 	private LuaTable objectStore;
 	private int currentId;
 
+	private Hashtable javafuncMap = new Hashtable(128);
+	private Hashtable reverseJavafuncMap = new Hashtable(128);
+	private int currentJavafunc = 0;
+
+	public void buildJavafuncMap (LuaTable environment) {
+		LuaTable[] packages = new LuaTable[] {
+			environment,
+			(LuaTable)environment.rawget("string"),
+			(LuaTable)environment.rawget("math"),
+			(LuaTable)environment.rawget("coroutine"),
+			(LuaTable)environment.rawget("os"),
+			(LuaTable)environment.rawget("table")
+		};
+		for (int i = 0; i < packages.length; i++) {
+			LuaTable table = packages[i];
+			Object next = null;
+			while ((next = table.next(next)) != null) {
+				Object jf = table.rawget(next);
+				if (jf instanceof JavaFunction) addJavafunc((JavaFunction)jf);
+			}
+		}
+	}
+
 	private static final byte LUA_NIL	= 0x00;
 	private static final byte LUA_DOUBLE	= 0x01;
 	private static final byte LUA_STRING	= 0x02;
@@ -74,6 +99,23 @@ public class Savegame {
 
 	private static final byte LUATABLE_PAIR = 0x10;
 	private static final byte LUATABLE_END  = 0x11;
+
+	public void addJavafunc (JavaFunction javafunc) {
+		Integer id = new Integer(currentJavafunc++);
+		javafuncMap.put(id, javafunc);
+		reverseJavafuncMap.put(javafunc, id);
+	}
+
+	private int findJavafuncId (JavaFunction javafunc) {
+		Integer id = (Integer)javafuncMap.get(javafunc);
+		if (id != null) return id.intValue();
+		else throw new RuntimeException("javafunc not found in map!");
+	}
+
+	private JavaFunction findJavafuncObject (int id) {
+		JavaFunction jf = (JavaFunction)reverseJavafuncMap.get(new Integer(id));
+		return jf;
+	}
 
 	private void storeObject (Object obj, DataOutputStream out)
 	throws IOException {
@@ -103,15 +145,11 @@ public class Savegame {
 				out.writeByte(LUA_CLOSURE);
 				System.out.print("closure("+obj.toString()+")");
 				serializeLuaClosure((LuaClosure)obj, out);
-			} else if (obj instanceof JavaFunction) {
-				System.out.print("javafunc");
-				// this is special case, we mark it so that we leave the target alone
-				out.writeByte(LUA_JAVAFUNC);
 			} else {
 				// we're busted
 				out.writeByte(LUA_NIL);
 				System.out.print("UFO");
-				Engine.log("STOR: unable to store object of type "+obj.getClass().getName());
+				Engine.log("STOR: unable to store object of type "+obj.getClass().getName(), Engine.LOG_WARN);
 			}
 		}
 	}
@@ -133,6 +171,9 @@ public class Savegame {
 			out.writeByte(LUA_DOUBLE);
 			System.out.print(obj.toString());
 			out.writeDouble(((Double)obj).doubleValue());
+		} else if (obj instanceof JavaFunction) {
+			out.writeByte(LUA_JAVAFUNC);
+			out.writeInt(findJavafuncId((JavaFunction)obj));
 		} else {
 			storeObject(obj, out);
 		}
@@ -174,6 +215,9 @@ public class Savegame {
 				boolean b = in.readBoolean();
 				System.out.print(b);
 				return LuaState.toBoolean(b);
+			case LUA_JAVAFUNC:
+				int i = in.readInt();
+				return findJavafuncObject(i);
 			default:
 				return restoreObject(in, type, target);
 		}
@@ -211,34 +255,19 @@ public class Savegame {
 						s = (Serializable)c.newInstance();
 					}
 				} catch (Throwable e) {
-					Engine.log("REST: while trying to deserialize "+cls+":\n"+e.toString());
+					Engine.log("REST: while trying to deserialize "+cls+":\n"+e.toString(), Engine.LOG_ERROR);
 				}
 				if (s != null) {
 					restCache(s);
 					s.deserialize(in);
 				}
 				return s;
-			case LUA_JAVAFUNC:
-				if (! (target instanceof JavaFunction)) {
-					String exp;
-					if (target == null)
-						exp = "null";
-					else
-						exp = target.getClass().getName() + " (" + target.toString() + ")";
-					Engine.log("REST: expected JavaFunction, got something else: "+exp);
-					restCache(null);
-					System.out.print("missing javafunc");
-				} else {
-					restCache(target);
-					System.out.print("javafunction");
-				}
-				return target;
 			case LUA_REFERENCE:
 				Double what = new Double(in.readInt());
 				System.out.print("reference "+what.intValue());
 				Object result = objectStore.rawget(what);
 				if (result == null) {
-					Engine.log("REST: not found reference "+what.toString()+" in object store");
+					Engine.log("REST: not found reference "+what.toString()+" in object store", Engine.LOG_WARN);
 					System.out.print(" (which happens to be null?)");
 					return target;
 				} else {
@@ -246,7 +275,7 @@ public class Savegame {
 				}
 				return result;
 			default:
-				Engine.log("REST: found unknown type "+type);
+				Engine.log("REST: found unknown type "+type, Engine.LOG_WARN);
 				System.out.print("UFO");
 				return null;
 		}
@@ -277,7 +306,7 @@ public class Savegame {
 		for (int i = 0; i < closure.upvalues.length; i++) {
 			UpValue u = closure.upvalues[i];
 			if (u.value == null) {
-				Engine.log("STOR: unclosed upvalue in "+closure.toString());
+				Engine.log("STOR: unclosed upvalue in "+closure.toString(), Engine.LOG_WARN);
 				u.value = u.thread.objectStack[u.index];
 			}
 			storeObject(u.value, out);

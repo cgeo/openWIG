@@ -21,6 +21,10 @@ public class Cartridge extends EventTable {
 			return 0;
 		}
 	};
+
+	public static void register () {
+		Engine.instance.savegame.addJavafunc(requestSync);
+	}
 	
 	public Cartridge () {
 		table.rawset("RequestSync", requestSync);

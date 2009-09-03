@@ -22,6 +22,8 @@ public class CartridgeFile {
 	public double latitude, longitude;
 	public String type, member, name, description, startdesc, version, author, url, device, code;
 	public int iconId, splashId;
+
+	public String filename;
 	
 	private CartridgeFile() { }
 	
@@ -41,7 +43,7 @@ public class CartridgeFile {
 		return true;
 	}
 	
-	public static CartridgeFile read(String what)
+	public static CartridgeFile read (String what)
 	throws IOException {
 		CartridgeFile cf = new CartridgeFile();
 		if (what.startsWith("resource:")) {
@@ -101,7 +103,7 @@ public class CartridgeFile {
 		code = dis.readString();
 	}
 	
-	public byte[] getBytecode () throws Exception {
+	public byte[] getBytecode () throws IOException {
 		if (source.position() > offsets[0]) resetSource();
 		source.pseudoSeek(offsets[0]);
 		int len = source.readInt();
@@ -113,7 +115,7 @@ public class CartridgeFile {
 	private int lastId = -1;
 	private byte[] lastFile = null;
 	
-	public byte[] getFile (int id) throws Exception {
+	public byte[] getFile (int id) throws IOException {
 		if (id == lastId) return lastFile;
 		if (id < 1) // invalid, apparently. or bytecode - lookie no touchie
 			return null;

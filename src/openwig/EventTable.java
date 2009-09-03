@@ -60,10 +60,10 @@ public class EventTable implements LuaTable, Serializable {
 		try {
 			Object o = table.rawget(name);
 			if (o instanceof LuaClosure) {
-				Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""));
+				Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
 				LuaClosure event = (LuaClosure) o;
 				Engine.state.call(event, this, param, null);
-				Engine.log("EEND: " + toString() + "." + name);
+				Engine.log("EEND: " + toString() + "." + name, Engine.LOG_CALL);
 			}
 		} catch (Throwable t) {
 			Engine.stacktrace(t);
@@ -83,8 +83,7 @@ public class EventTable implements LuaTable, Serializable {
 			setItem((String) key, value);
 		}
 		table.rawset(key, value);
-		if (Engine.logProperties)
-			Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()));
+		Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()), Engine.LOG_PROP);
 	}
 
 	public void setMetatable (LuaTable metatable) { table.setMetatable(metatable); }

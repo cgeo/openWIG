@@ -39,6 +39,10 @@ public class Distance implements LuaTable, Serializable {
 		}
 	};
 
+	public static void register () {
+		Engine.instance.savegame.addJavafunc(getValue);
+	}
+
 	public Distance () {
 		// for deserialize
 	}

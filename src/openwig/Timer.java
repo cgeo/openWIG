@@ -33,6 +33,12 @@ public class Timer extends EventTable {
 			return 0;
 		}
 	};
+
+	public static void register () {
+		Engine.instance.savegame.addJavafunc(start);
+		Engine.instance.savegame.addJavafunc(stop);
+		Engine.instance.savegame.addJavafunc(tick);
+	}
 	
 	private class TimerTask extends java.util.TimerTask {
 		public boolean restart = false;

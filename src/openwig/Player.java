@@ -13,6 +13,10 @@ public class Player extends Thing {
 			return 0;
 		}
 	};
+
+	public static void register () {
+		Engine.instance.savegame.addJavafunc(refreshLocation);
+	}
 	
 	public Player() {
 		super(true);
