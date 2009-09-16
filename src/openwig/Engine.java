@@ -270,10 +270,28 @@ public class Engine implements Runnable {
 		}
 	}
 
+	private static void replace (String source, String pattern, String replace, StringBuffer builder) {
+		int pos = 0;
+		int pl = pattern.length();
+		builder.delete(0, builder.length());
+		while (pos < source.length()) {
+			int np = source.indexOf(pattern, pos);
+			if (np == -1) break;
+			builder.append(source.substring(pos, np));
+			builder.append(replace);
+			pos = np + pl;
+		}
+		builder.append(source.substring(pos));
+	}
+
 	public static String removeHtml (String s) {
 		if (s == null) return null;
 		StringBuffer sb = new StringBuffer(s.length());
-		int pos = 0;
+		replace(s, "<BR>", "\n", sb);
+		replace(sb.toString(), "&nbsp;", " ", sb);
+		replace(sb.toString(), "&lt;", "<", sb);
+		replace(sb.toString(), "&gt;", ">", sb);
+/*		int pos = 0;
 		while (pos < s.length()) {
 			int np = s.indexOf("<BR>", pos);
 			if (np == -1) break;
@@ -289,7 +307,7 @@ public class Engine implements Runnable {
 			sb.append(' ');
 			pos = np + 6;
 		}
-		sb.append(s.substring(pos));
+		sb.append(s.substring(pos));*/
 		return sb.toString();
 	}
 

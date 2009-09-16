@@ -7,10 +7,9 @@ import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.stdlib.MathLib;
 
 public class ZonePoint implements LuaTable, Serializable {
-	public double latitude;
-	public double longitude;
-	//public double altitude;
-	public Distance altitude;	
+	public double latitude = 0;
+	public double longitude = 0;
+	public Distance altitude = null;
 	
 	public static final double LATITUDE_COEF = 110940.00000395167;
 	public static final double METRE_COEF = 9.013881377e-6;
@@ -25,7 +24,7 @@ public class ZonePoint implements LuaTable, Serializable {
 	}
 
 	public ZonePoint () {
-		// for serialization
+		altitude = new Distance();
 	}
 	
 	public ZonePoint (ZonePoint z) {
@@ -136,8 +135,7 @@ public class ZonePoint implements LuaTable, Serializable {
 		else if ("longitude".equals(name))
 			longitude = LuaState.fromDouble(value);
 		else if ("altitude".equals(name)) {
-			BaseLib.luaAssert(value.getClass() == Distance.class, "invalid value for altitude");
-			altitude = (Distance)value;
+			if (value instanceof Distance) altitude = (Distance)value;
 		}
 	}
 

@@ -3,6 +3,7 @@ package openwig;
 import java.io.*;
 import se.krka.kahlua.vm.*;
 import java.util.Vector;
+import se.krka.kahlua.stdlib.BaseLib;
 
 public class Thing extends Container {
 	
@@ -34,7 +35,9 @@ public class Thing extends Container {
 			Object i = null;
 			while ((i = lt.next(i)) != null) {
 				Action a = (Action)lt.rawget(i);
-				a.name = (String)i;
+				//a.name = (String)i;
+				if (i instanceof Double) a.name = BaseLib.numberToString((Double)i);
+				else a.name = i.toString();
 				a.setActor(this);
 				actions.addElement(a);
 				if (a.hasParameter()) {

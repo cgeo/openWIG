@@ -162,10 +162,15 @@ public class LuaInterface implements JavaFunction {
 	}
 	
 	private int zonePoint (LuaCallFrame callFrame, int nArguments) {
-		double a = LuaState.fromDouble(callFrame.get(0));
-		double b = LuaState.fromDouble(callFrame.get(1));
-		double c = LuaState.fromDouble(callFrame.get(2));
-		callFrame.push(new ZonePoint(a,b,c));
+		if (nArguments == 0) {
+			callFrame.push(new ZonePoint());
+		} else {
+			BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for ZonePoint");
+			double a = LuaState.fromDouble(callFrame.get(0));
+			double b = LuaState.fromDouble(callFrame.get(1));
+			double c = LuaState.fromDouble(callFrame.get(2));
+			callFrame.push(new ZonePoint(a,b,c));
+		}
 		return 1;
 	}
 	
