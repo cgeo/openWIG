@@ -26,17 +26,21 @@ public class Savegame {
 
 	public void store (LuaTable table)
 	throws IOException {
+		DataOutputStream out = null;
 		if (saveFile.exists())
 			saveFile.truncate(0);
 		else
 			saveFile.create();
-		DataOutputStream out = saveFile.openDataOutputStream();
+		try {
+			out = saveFile.openDataOutputStream();
 
-		out.writeUTF(SIGNATURE);
-		resetObjectStore();
-		//serializeLuaTable(table, out);
-		storeValue(table, out);
-		out.close();
+			out.writeUTF(SIGNATURE);
+			resetObjectStore();
+			//serializeLuaTable(table, out);
+			storeValue(table, out);
+		} finally {
+			try { out.close(); } catch (Exception e) { }
+		}
 	}
 
 	private void resetObjectStore () {
@@ -110,13 +114,13 @@ public class Savegame {
 	}
 
 	private int findJavafuncId (JavaFunction javafunc) {
-		Integer id = (Integer)javafuncMap.get(javafunc);
+		Integer id = (Integer)reverseJavafuncMap.get(javafunc);
 		if (id != null) return id.intValue();
 		else throw new RuntimeException("javafunc not found in map!");
 	}
 
 	private JavaFunction findJavafuncObject (int id) {
-		JavaFunction jf = (JavaFunction)reverseJavafuncMap.get(new Integer(id));
+		JavaFunction jf = (JavaFunction)javafuncMap.get(new Integer(id));
 		return jf;
 	}
 
