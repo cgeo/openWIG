@@ -141,4 +141,9 @@ public class CartridgeFile {
 		lastFile = ffile;
 		return ffile;
 	}
+	
+	public Savegame getSavegame () throws IOException {
+		return new Savegame(gui.Midlet.browser.getSyncFile());
+	}
+
 }

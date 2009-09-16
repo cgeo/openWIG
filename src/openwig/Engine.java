@@ -48,12 +48,12 @@ public class Engine implements Runnable {
 		Midlet.engineOutput.setText(stdout.toString());
 	}
 
-	public static Engine newInstance (CartridgeFile cf, OutputStream log) {
+	public static Engine newInstance (CartridgeFile cf, OutputStream log) throws IOException {
 		instance = new Engine(cf, log);
 		return instance;
 	}
 
-	private Engine (CartridgeFile cf, OutputStream out) {
+	private Engine (CartridgeFile cf, OutputStream out) throws IOException {
 		instance = this;
 		gwcfile = cf;
 		savegame = cf.getSavegame();

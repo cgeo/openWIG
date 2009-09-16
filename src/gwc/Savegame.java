@@ -26,7 +26,10 @@ public class Savegame {
 
 	public void store (LuaTable table)
 	throws IOException {
-		saveFile.truncate(0);
+		if (saveFile.exists())
+			saveFile.truncate(0);
+		else
+			saveFile.create();
 		DataOutputStream out = saveFile.openDataOutputStream();
 
 		out.writeUTF(SIGNATURE);

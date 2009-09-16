@@ -4,7 +4,6 @@ import gps.LocationService;
 import gps.NMEAParser;
 import gwc.CartridgeFile;
 import java.io.OutputStream;
-import javax.microedition.io.file.FileConnection;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
@@ -256,7 +255,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		}
 	}
 	
-	public static void loadCartridge (CartridgeFile cf, OutputStream log, FileConnection save) {
+	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
 		try {
 		Form f = new Form("splash");
 		f.append(engineOutput = new StringItem(null, "Creating engine..."));
@@ -264,8 +263,7 @@ public class Midlet extends MIDlet implements CommandListener {
 		f.setCommandListener(instance);
 		show(f);
 
-		Thread t = new Thread(new Engine(cf, save, log));
-		t.start();
+		Engine.newInstance(cf, log).start();
 		} catch (Throwable t) {
 			error(t.toString());
 		}

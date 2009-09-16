@@ -128,7 +128,6 @@ public class Browser extends List implements Pushable, CommandListener {
 	private class OpenFile implements Runnable {
 		public String filename;
 		public void run () {
-			FileConnection sf = null;
 			String file = "file:///" + currentPath + filename;
 			try {
 				if (file.endsWith("ows")) {
@@ -142,13 +141,10 @@ public class Browser extends List implements Pushable, CommandListener {
 								continue;
 							selectedFile = item;
 							file = "file:///" + currentPath + selectedFile;
-							sf = getSyncFile();
 							if (item.endsWith("gwc"))
 								break;
 						}
 					}
-					if (sf == null)
-						throw new IOException("couldn't find cartridge data for " + filename);
 				}
 
 				CartridgeFile cf = CartridgeFile.read(file);
@@ -163,7 +159,7 @@ public class Browser extends List implements Pushable, CommandListener {
 						e.printStackTrace();
 					}
 
-				Midlet.push(Midlet.cartridgeDetails.reset(cf, os, sf));
+				Midlet.push(Midlet.cartridgeDetails.reset(cf, os));
 			} catch (IOException e) {
 				Midlet.error("Failed to load cartridge:\n" + e.getMessage());
 			}
@@ -182,7 +178,7 @@ public class Browser extends List implements Pushable, CommandListener {
 		try {
 			String filename = selectedFile.substring(0, selectedFile.length()-3) + "ows";
 			FileConnection fc = (FileConnection)Connector.open("file:///" + currentPath + filename, Connector.READ_WRITE);
-			if (!fc.exists()) fc.create();
+			//if (!fc.exists()) fc.create();
 			return fc;
 		} catch (SecurityException e) {
 			Midlet.error("you need to allow me to access your files!");
