@@ -37,12 +37,14 @@ public class Savegame {
 		else
 			saveFile.create();
 		try {
+			Engine.log("STOR: storing game", Engine.LOG_CALL);
 			out = saveFile.openDataOutputStream();
 
 			out.writeUTF(SIGNATURE);
 			resetObjectStore();
 			//serializeLuaTable(table, out);
 			storeValue(table, out);
+			Engine.log("STOR: store successful", Engine.LOG_CALL);
 		} finally {
 			try { out.close(); } catch (Exception e) { }
 		}
