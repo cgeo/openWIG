@@ -164,4 +164,8 @@ public class ZonePoint implements LuaTable, Serializable {
 		longitude = in.readDouble();
 		altitude = (Distance)Engine.instance.savegame.restoreValue(in, null);
 	}
+
+	public String toString () {
+		return "ZonePoint("+latitude+","+longitude+","+(altitude!=null ? altitude.toString() : "0")+")-"+super.toString();
+	}
 }

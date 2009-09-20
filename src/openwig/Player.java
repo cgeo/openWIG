@@ -53,4 +53,9 @@ public class Player extends Thing {
 		if ("ObjectLocation".equals(key)) return;
 		super.rawset(key, value);
 	}
+
+	public Object rawget (Object key) {
+		if ("ObjectLocation".equals(key)) return ZonePoint.copy(position);
+		return super.rawget(key);
+	}
 }

@@ -86,4 +86,8 @@ public class Distance implements LuaTable, Serializable {
 
 	public void updateWeakSettings (boolean weakKeys, boolean weakValues) {	}
 	public Object next (Object key) { return null; }
+
+	public String toString () {
+		return "Distance("+value+")-"+super.toString();
+	}
 }
