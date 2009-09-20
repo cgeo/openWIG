@@ -133,16 +133,17 @@ public class Engine implements Runnable {
 
 	public void run () {
 		try {
+			if (log != null) log.println("-------------------\ncartridge " + gwcfile.name + " started (openWIG r" + VERSION + ")\n-------------------");
 			prepareState ();
-			loglevel = LOG_PROP;
 
 			if (doRestore) restoreGame();
 			else newGame();
 
+			loglevel = LOG_PROP;
+
 			write("Starting game...\n");
 			Midlet.start();
 
-			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started (openWIG r" + VERSION + ")\n-------------------");
 			player.refreshLocation();
 			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
 			Midlet.refresh();
