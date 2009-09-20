@@ -21,7 +21,12 @@ public class Savegame {
 	private FileConnection saveFile;
 
 	public Savegame (FileConnection fc) {
+		if (fc == null) throw new NullPointerException("savefile must not be null");
 		saveFile = fc;
+	}
+
+	public boolean exists () throws IOException {
+		return saveFile.exists();
 	}
 
 	public void store (LuaTable table)
@@ -71,8 +76,8 @@ public class Savegame {
 	private LuaTable objectStore;
 	private int currentId;
 
-	private Hashtable javafuncMap = new Hashtable(128);
-	private Hashtable reverseJavafuncMap = new Hashtable(128);
+	private Hashtable idToJavafuncMap = new Hashtable(128);
+	private Hashtable javafuncToIdMap = new Hashtable(128);
 	private int currentJavafunc = 0;
 
 	public void buildJavafuncMap (LuaTable environment) {
@@ -109,18 +114,18 @@ public class Savegame {
 
 	public void addJavafunc (JavaFunction javafunc) {
 		Integer id = new Integer(currentJavafunc++);
-		javafuncMap.put(id, javafunc);
-		reverseJavafuncMap.put(javafunc, id);
+		idToJavafuncMap.put(id, javafunc);
+		javafuncToIdMap.put(javafunc, id);
 	}
 
 	private int findJavafuncId (JavaFunction javafunc) {
-		Integer id = (Integer)reverseJavafuncMap.get(javafunc);
+		Integer id = (Integer)javafuncToIdMap.get(javafunc);
 		if (id != null) return id.intValue();
 		else throw new RuntimeException("javafunc not found in map!");
 	}
 
 	private JavaFunction findJavafuncObject (int id) {
-		JavaFunction jf = (JavaFunction)javafuncMap.get(new Integer(id));
+		JavaFunction jf = (JavaFunction)idToJavafuncMap.get(new Integer(id));
 		return jf;
 	}
 
@@ -316,7 +321,7 @@ public class Savegame {
 				Engine.log("STOR: unclosed upvalue in "+closure.toString(), Engine.LOG_WARN);
 				u.value = u.thread.objectStack[u.index];
 			}
-			storeObject(u.value, out);
+			storeValue(u.value, out);
 		}
 	}
 

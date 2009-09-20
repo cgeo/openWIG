@@ -142,7 +142,7 @@ public class Engine implements Runnable {
 			write("Starting game...\n");
 			Midlet.start();
 
-			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started (openWIG r" + VERSION + "\n-------------------");
+			if (log != null) log.println("-------------------\ncartridge " + cartridge.toString() + " started (openWIG r" + VERSION + ")\n-------------------");
 			player.refreshLocation();
 			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
 			Midlet.refresh();

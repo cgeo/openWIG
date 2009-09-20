@@ -15,6 +15,14 @@ public class Browser extends List implements Pushable, CommandListener {
 	private String currentPath;
 	private String root;
 	private String selectedFile = null;
+
+	private static Alert restoreQuestion = new Alert("question", "Load previously saved game?", null, AlertType.CONFIRMATION);
+	private static Command restoreYes = new Command("Yes", Command.SCREEN, 1);
+	private static Command restoreNo = new Command("No", Command.SCREEN, 2);
+	static {
+		restoreQuestion.addCommand(restoreYes);
+		restoreQuestion.addCommand(restoreNo);
+	}
 	
 	private static Image gwc = null;
 	private static Image ows = null;
@@ -25,6 +33,11 @@ public class Browser extends List implements Pushable, CommandListener {
 
 		} catch (IOException e) { }
 	}
+
+	// those are used to hand over cf and lf from restore dialog.
+	// do not use for anything else ever.
+	private CartridgeFile tmpCartridgeFile;
+	private OutputStream tmpLogFile;
 
 	public Browser() {
 		super("wait...", List.IMPLICIT);
@@ -38,6 +51,7 @@ public class Browser extends List implements Pushable, CommandListener {
 	public void push () {
 		// XXX TODO not refresh when returning from details
 		chdir(Midlet.config.get(Config.LAST_DIRECTORY));
+		restoreQuestion.setCommandListener(this);
 		Midlet.show(this);
 	}
 
@@ -130,23 +144,6 @@ public class Browser extends List implements Pushable, CommandListener {
 		public void run () {
 			String file = "file:///" + currentPath + filename;
 			try {
-				if (file.endsWith("ows")) {
-					// this is the save file. now we find the cartridge file.
-					String prefix = filename.substring(0, filename.length() - 3);
-					for (int i = 0; i < size(); i++) {
-						String item = getString(i);
-						if (!item.equals(filename) && item.startsWith(prefix)) {
-							// candidate
-							if (item.endsWith("gwl"))
-								continue;
-							selectedFile = item;
-							file = "file:///" + currentPath + selectedFile;
-							if (item.endsWith("gwc"))
-								break;
-						}
-					}
-				}
-
 				CartridgeFile cf = CartridgeFile.read(file);
 				OutputStream os = null;
 
@@ -159,7 +156,14 @@ public class Browser extends List implements Pushable, CommandListener {
 						e.printStackTrace();
 					}
 
-				Midlet.push(Midlet.cartridgeDetails.reset(cf, os));
+				selectedFile = filename; // workaround for cf.getSavegame using it
+				if (cf.getSavegame().exists()) {
+					tmpCartridgeFile = cf;
+					tmpLogFile = os;
+					Midlet.display.setCurrent(restoreQuestion);
+				} else {
+					Midlet.push(Midlet.cartridgeDetails.reset(cf, os));
+				}
 			} catch (IOException e) {
 				Midlet.error("Failed to load cartridge:\n" + e.getMessage());
 			}
@@ -187,14 +191,22 @@ public class Browser extends List implements Pushable, CommandListener {
 	}
 
 	synchronized public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == Midlet.CMD_BACK) {
-			Midlet.push(Midlet.baseMenu);
-		} else if (cmd == SELECT_COMMAND) {
-			String sel = getString(getSelectedIndex());
-			setTitle("wait...");
-			if ("..".equals(sel)) ascend();
-			else if (sel.endsWith("/")) descend(sel);
-			else openFile(sel);
+		if (disp == restoreQuestion) {
+			if (cmd == restoreYes) {
+				Midlet.restoreCartridge(tmpCartridgeFile, tmpLogFile);
+			} else {
+				Midlet.push(Midlet.cartridgeDetails.reset(tmpCartridgeFile, tmpLogFile));
+			}
+		} else {
+			if (cmd == Midlet.CMD_BACK) {
+				Midlet.push(Midlet.baseMenu);
+			} else if (cmd == SELECT_COMMAND) {
+				String sel = getString(getSelectedIndex());
+				setTitle("wait...");
+				if ("..".equals(sel)) ascend();
+				else if (sel.endsWith("/")) descend(sel);
+				else openFile(sel);
+			}
 		}
 	}
 }

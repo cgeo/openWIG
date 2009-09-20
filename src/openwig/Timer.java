@@ -93,6 +93,7 @@ public class Timer extends EventTable {
 	}
 	
 	public void start () {
+		Engine.log("TIME: " + name + " start", Engine.LOG_CALL);
 		if (task != null) return;
 		if (duration == 0) {
 			// XXX this might be a problem if the timer is interval
@@ -120,6 +121,7 @@ public class Timer extends EventTable {
 	
 	public void stop () {
 		if (task != null) {
+			Engine.log("TIME: " + name + " stop", Engine.LOG_CALL);
 			task.cancel();
 			task = null;
 			callEvent("OnStop", null);
@@ -127,6 +129,7 @@ public class Timer extends EventTable {
 	}
 	
 	public void tick () {
+		Engine.log("TIME: " + name + " tick", Engine.LOG_CALL);
 		Engine.callEvent(this, "OnTick", null);
 		lastTick = System.currentTimeMillis();
 		updateRemaining();

@@ -254,16 +254,28 @@ public class Midlet extends MIDlet implements CommandListener {
 				gps = coordinates;
 		}
 	}
-	
-	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
-		try {
+
+	private static void makesplash () {
 		Form f = new Form("splash");
 		f.append(engineOutput = new StringItem(null, "Creating engine..."));
 		f.addCommand(CMD_EXIT);
 		f.setCommandListener(instance);
 		show(f);
+	}
+	
+	public static void loadCartridge (CartridgeFile cf, OutputStream log) {
+		try {
+			makesplash();
+			Engine.newInstance(cf, log).start();
+		} catch (Throwable t) {
+			error(t.toString());
+		}
+	}
 
-		Engine.newInstance(cf, log).start();
+	public static void restoreCartridge (CartridgeFile cf, OutputStream log) {
+		try {
+			makesplash();
+			Engine.newInstance(cf, log).restore();
 		} catch (Throwable t) {
 			error(t.toString());
 		}
