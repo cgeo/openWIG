@@ -42,7 +42,7 @@ public class Zone extends Container {
 	private double diameter; // approximate zone diameter - distance from bounding-box center to farthest vertex
 	private double insideTolerance = 5, proximityTolerance = 10, distantTolerance = 20; // hysteresis tolerance
 
-	private static final double DEFAULT_PROXIMITY = 300.0;
+	private static final double DEFAULT_PROXIMITY = 1500.0;
 	
 	protected void setItem (String key, Object value) {
 		if ("Points".equals(key) && value != null) {
@@ -163,8 +163,8 @@ public class Zone extends Container {
 		bbCenter.longitude = bbLeft + ((bbRight - bbLeft) / 2);
 
 		// margins for proximity bounding box
-		double proximityX = ZonePoint.m2lat((proximityRange < 0) ? DEFAULT_PROXIMITY : proximityRange);
-		double proximityY = ZonePoint.m2lon(bbCenter.latitude, (proximityRange < 0) ? DEFAULT_PROXIMITY : proximityRange);
+		double proximityX = ZonePoint.m2lat((proximityRange < DEFAULT_PROXIMITY) ? DEFAULT_PROXIMITY : proximityRange);
+		double proximityY = ZonePoint.m2lon(bbCenter.latitude, (proximityRange < DEFAULT_PROXIMITY) ? DEFAULT_PROXIMITY : proximityRange);
 		// and the box itself
 		pbbTop = bbTop + proximityX; pbbBottom = bbBottom - proximityX;
 		pbbLeft = bbLeft - proximityY; pbbRight = bbRight + proximityY;
