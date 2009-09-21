@@ -83,8 +83,8 @@ public class Browser extends List implements Pushable, CommandListener {
 						Image image = null;
 						if (fn.toLowerCase().endsWith(".gwc"))
 							image = gwc;
-						else if (fn.toLowerCase().endsWith(".ows"))
-							image = ows;
+						/*else if (fn.toLowerCase().endsWith(".ows"))
+							image = ows;*/
 						append(fn, image);
 					}
 					setCurrentPath(where);
