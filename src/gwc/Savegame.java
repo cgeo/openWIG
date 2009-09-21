@@ -399,6 +399,7 @@ public class Savegame {
 		for (int i = 0; i < closure.upvalues.length; i++) {
 			UpValue u = new UpValue();
 			u.value = restoreValue(in, null);
+			closure.upvalues[i] = u;
 		}
 		return closure;
 	}
