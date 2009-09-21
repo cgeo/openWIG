@@ -140,29 +140,41 @@ public class Savegame {
 		Double i = (Double)objectStore.rawget(obj);
 		if (i != null) {
 			out.writeByte(LUA_REFERENCE);
+			//#ifdef debugSavegame
 			System.out.print("reference "+i.intValue()+" ("+obj.toString()+")");
+			//#endif
 			out.writeInt(i.intValue());
 		} else {
 			i = new Double(currentId++);
 			objectStore.rawset(obj, i);
+			//#ifdef debugSavegame
 			System.out.print("(ref"+i.intValue()+")");
+			//#endif
 			if (obj instanceof Serializable) {
 				out.writeByte(LUA_OBJECT);
 				out.writeUTF(obj.getClass().getName());
+				//#ifdef debugSavegame
 				System.out.print(obj.getClass().getName() + " (" + obj.toString()+")");
+				//#endif
 				((Serializable)obj).serialize(out);
 			} else if (obj instanceof LuaTable) {
 				out.writeByte(LUA_TABLE);
+				//#ifdef debugSavegame
 				System.out.print("table("+obj.toString()+"):\n");
+				//#endif
 				serializeLuaTable((LuaTable)obj, out);
 			} else if (obj instanceof LuaClosure) {
 				out.writeByte(LUA_CLOSURE);
+				//#ifdef debugSavegame
 				System.out.print("closure("+obj.toString()+")");
+				//#endif
 				serializeLuaClosure((LuaClosure)obj, out);
 			} else {
 				// we're busted
 				out.writeByte(LUA_NIL);
+				//#ifdef debugSavegame
 				System.out.print("UFO");
+				//#endif
 				Engine.log("STOR: unable to store object of type "+obj.getClass().getName(), Engine.LOG_WARN);
 			}
 		}
@@ -171,23 +183,35 @@ public class Savegame {
 	public void storeValue (Object obj, DataOutputStream out)
 	throws IOException {
 		if (obj == null) {
+			//#ifdef debugSavegame
 			System.out.print("nil");
+			//#endif
 			out.writeByte(LUA_NIL);
 		} else if (obj instanceof String) {
 			out.writeByte(LUA_STRING);
+			//#ifdef debugSavegame
 			System.out.print("\""+obj.toString()+"\"");
+			//#endif
 			out.writeUTF((String)obj);
 		} else if (obj instanceof Boolean) {
+			//#ifdef debugSavegame
 			System.out.print(obj.toString());
+			//#endif
 			out.writeByte(LUA_BOOLEAN);
 			out.writeBoolean(((Boolean)obj).booleanValue());
 		} else if (obj instanceof Double) {
 			out.writeByte(LUA_DOUBLE);
+			//#ifdef debugSavegame
 			System.out.print(obj.toString());
+			//#endif
 			out.writeDouble(((Double)obj).doubleValue());
 		} else if (obj instanceof JavaFunction) {
+			int i = findJavafuncId((JavaFunction)obj);
+			//#ifdef debugSavegame
+			System.out.print("javafunc("+i+")-"+obj.toString());
+			//#endif
 			out.writeByte(LUA_JAVAFUNC);
-			out.writeInt(findJavafuncId((JavaFunction)obj));
+			out.writeInt(i);
 		} else {
 			storeObject(obj, out);
 		}
@@ -200,11 +224,18 @@ public class Savegame {
 		while ((next = table.next(next)) != null) {
 			Object value = table.rawget(next);
 			out.writeByte(LUATABLE_PAIR);
+			//#ifdef debugSavegame
 			for (int i = 0; i < level; i++) System.out.print("  ");
+			//#endif
+
 			storeValue(next, out);
+			//#ifdef debugSavegame
 			System.out.print(" : ");
+			//#endif
 			storeValue(value, out);
+			//#ifdef debugSavegame
 			System.out.println();
+			//#endif
 		}
 		level--;
 		out.writeByte(LUATABLE_END);
@@ -215,23 +246,35 @@ public class Savegame {
 		byte type = in.readByte();
 		switch (type) {
 			case LUA_NIL:
+				//#ifdef debugSavegame
 				System.out.print("nil");
+				//#endif
 				return null;
 			case LUA_DOUBLE:
 				double d = in.readDouble();
+				//#ifdef debugSavegame
 				System.out.print(d);
+				//#endif
 				return LuaState.toDouble(d);
 			case LUA_STRING:
 				String s = in.readUTF();
+				//#ifdef debugSavegame
 				System.out.print("\"" + s + "\"");
+				//#endif
 				return s;
 			case LUA_BOOLEAN:
 				boolean b = in.readBoolean();
+				//#ifdef debugSavegame
 				System.out.print(b);
+				//#endif
 				return LuaState.toBoolean(b);
 			case LUA_JAVAFUNC:
 				int i = in.readInt();
-				return findJavafuncObject(i);
+				JavaFunction jf = findJavafuncObject(i);
+				//#ifdef debugSavegame
+				System.out.print("javafunc("+i+")-"+jf);
+				//#endif
+				return jf;
 			default:
 				return restoreObject(in, type, target);
 		}
@@ -240,7 +283,9 @@ public class Savegame {
 	private void restCache (Object o) {
 		Double i = new Double(currentId++);
 		objectStore.rawset(i, o);
+		//#ifdef debugSavegame
 		System.out.print("(ref"+i.intValue()+")");
+		//#endif
 	}
 
 	private Object restoreObject (DataInputStream in, byte type, Object target)
@@ -253,17 +298,23 @@ public class Savegame {
 				else
 					lti = new LuaTableImpl();
 				restCache(lti);
+				//#ifdef debugSavegame
 				System.out.print("table:\n");
+				//#endif
 				return deserializeLuaTable(in, lti);
 			case LUA_CLOSURE:
 				LuaClosure lc = deserializeLuaClosure(in);
+				//#ifdef debugSavegame
 				System.out.print("closure: "+lc.toString());
+				//#endif
 				return lc;
 			case LUA_OBJECT:
 				String cls = in.readUTF();
 				Serializable s = null;
 				try {
+					//#ifdef debugSavegame
 					System.out.print("object of type "+cls+"\n");
+					//#endif
 					Class c = Class.forName(cls);
 					if (Serializable.class.isAssignableFrom(c)) {
 						s = (Serializable)c.newInstance();
@@ -278,19 +329,27 @@ public class Savegame {
 				return s;
 			case LUA_REFERENCE:
 				Double what = new Double(in.readInt());
+				//#ifdef debugSavegame
 				System.out.print("reference "+what.intValue());
+				//#endif
 				Object result = objectStore.rawget(what);
 				if (result == null) {
 					Engine.log("REST: not found reference "+what.toString()+" in object store", Engine.LOG_WARN);
+					//#ifdef debugSavegame
 					System.out.print(" (which happens to be null?)");
+					//#endif
 					return target;
 				} else {
+					//#ifdef debugSavegame
 					System.out.print(" : "+result.toString());
+					//#endif
 				}
 				return result;
 			default:
 				Engine.log("REST: found unknown type "+type, Engine.LOG_WARN);
+				//#ifdef debugSavegame
 				System.out.print("UFO");
+				//#endif
 				return null;
 		}
 	}
@@ -303,11 +362,17 @@ public class Savegame {
 		while (true) {
 			byte next = in.readByte();
 			if (next == LUATABLE_END) break;
+			//#ifdef debugSavegame
 			for (int i = 0; i < level; i++) System.out.print("  ");
+			//#endif
 			Object key = restoreValue(in, null);
+			//#ifdef debugSavegame
 			System.out.print(" : ");
+			//#endif
 			Object value = restoreValue(in, table.rawget(key));
+			//#ifdef debugSavegame
 			System.out.println();
+			//#endif
 			table.rawset(key, value);
 		}
 		level--;
