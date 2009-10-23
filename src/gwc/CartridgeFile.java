@@ -12,6 +12,8 @@ public class CartridgeFile {
 	private GwcInput source;
 	private String connectionUrl;
 	private FileConnection file;
+
+	private Savegame savegame;
 	
 	private int files;
 	private int[] offsets;
@@ -143,7 +145,8 @@ public class CartridgeFile {
 	}
 	
 	public Savegame getSavegame () throws IOException {
-		return new Savegame(gui.Midlet.browser.getSyncFile());
+		if (savegame == null) savegame = new Savegame(gui.Midlet.browser.getSyncFile());
+		return savegame;
 	}
 
 }

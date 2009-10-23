@@ -51,7 +51,7 @@ public class Savegame {
 	}
 
 	private void resetObjectStore () {
-		objectStore = new LuaTableImpl(256);
+		objectStore = new Hashtable(256);
 		// XXX why did i choose to use LuaTable over Hashtable?
 		currentId = 0;
 		level = 0;
@@ -75,7 +75,7 @@ public class Savegame {
 		}
 	}
 
-	private LuaTable objectStore;
+	private Hashtable objectStore;
 	private int currentId;
 
 	private Hashtable idToJavafuncMap = new Hashtable(128);
@@ -137,7 +137,7 @@ public class Savegame {
 			out.writeByte(LUA_NIL);
 			return;
 		}
-		Double i = (Double)objectStore.rawget(obj);
+		Integer i = (Integer)objectStore.get(obj);
 		if (i != null) {
 			out.writeByte(LUA_REFERENCE);
 			//#ifdef debugSavegame
@@ -145,8 +145,8 @@ public class Savegame {
 			//#endif
 			out.writeInt(i.intValue());
 		} else {
-			i = new Double(currentId++);
-			objectStore.rawset(obj, i);
+			i = new Integer(currentId++);
+			objectStore.put(obj, i);
 			//#ifdef debugSavegame
 			System.out.print("(ref"+i.intValue()+")");
 			//#endif
@@ -281,8 +281,8 @@ public class Savegame {
 	}
 
 	private void restCache (Object o) {
-		Double i = new Double(currentId++);
-		objectStore.rawset(i, o);
+		Integer i = new Integer(currentId++);
+		objectStore.put(i, o);
 		//#ifdef debugSavegame
 		System.out.print("(ref"+i.intValue()+")");
 		//#endif
@@ -328,11 +328,11 @@ public class Savegame {
 				}
 				return s;
 			case LUA_REFERENCE:
-				Double what = new Double(in.readInt());
+				Integer what = new Integer(in.readInt());
 				//#ifdef debugSavegame
 				System.out.print("reference "+what.intValue());
 				//#endif
-				Object result = objectStore.rawget(what);
+				Object result = objectStore.get(what);
 				if (result == null) {
 					Engine.log("REST: not found reference "+what.toString()+" in object store", Engine.LOG_WARN);
 					//#ifdef debugSavegame
