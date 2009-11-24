@@ -69,6 +69,16 @@ public class Browser extends List implements Pushable, CommandListener {
 		}
 	}
 
+        private int filePriority(String fileName) {
+            if (fileName.endsWith("/")) {
+                return 2;
+            } else if (fileName.endsWith(".gwc")) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
 	private class Chdir implements Runnable {
 		public String where;
 		public void run () {
@@ -78,14 +88,33 @@ public class Browser extends List implements Pushable, CommandListener {
 					Enumeration list = fc.list();
 					deleteAll();
 					append("..", null);
+					Vector files = new Vector();
 					while (list.hasMoreElements()) {
-						String fn = list.nextElement().toString();
+						String file = list.nextElement().toString();
+						String fileL = file.toLowerCase();
+						int prio = filePriority(fileL);
+						files.addElement("");
+						int i;
+						for (i = files.size() - 1; i > 0; i--) {
+							String current = (String)files.elementAt(i - 1);
+							String currentL = current.toLowerCase();
+							int currentPrio = filePriority(currentL);
+							if (currentPrio > prio || (currentPrio == prio && currentL.compareTo(fileL) <= 0)) {
+								break;
+							}
+							files.setElementAt(current, i);
+						}
+						files.setElementAt(file, i);
+					}
+
+					for (int i = 0; i < files.size(); i++) {
+						String file = (String)files.elementAt(i);
 						Image image = null;
-						if (fn.toLowerCase().endsWith(".gwc"))
+						if (file.toLowerCase().endsWith(".gwc"))
 							image = gwc;
 						/*else if (fn.toLowerCase().endsWith(".ows"))
-							image = ows;*/
-						append(fn, image);
+						image = ows;*/
+						append(file, image);
 					}
 					setCurrentPath(where);
 				}
