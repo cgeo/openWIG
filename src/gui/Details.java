@@ -12,8 +12,8 @@ import util.Config;
 
 public class Details extends Form implements CommandListener, Pushable, Runnable {
 	
-	private static final Command CMD_ACTIONS = new Command("Actions", Command.SCREEN, 0);
-	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 1);
+	private static final Command CMD_ACTIONS = new Command("Actions", Command.SCREEN, 1);
+	private static final Command CMD_NAVIGATE = new Command("Navigate", Command.SCREEN, 2);
 	
 	private StringItem name = new StringItem(null, null);
 	private StringItem description = new StringItem(null, null);
