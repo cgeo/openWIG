@@ -75,7 +75,7 @@ public class LuaInterface implements JavaFunction {
 
 		LuaTable wig = new LuaTableImpl();
 		environment.rawset("Wherigo", wig);
-		for (int i = 1; i < NUM_FUNCTIONS; i++) {
+		for (int i = 0; i < NUM_FUNCTIONS; i++) {
 			Engine.instance.savegame.addJavafunc(functions[i]);
 			wig.rawset(names[i], functions[i]);
 		}
