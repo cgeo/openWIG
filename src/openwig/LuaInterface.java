@@ -309,9 +309,9 @@ public class LuaInterface implements JavaFunction {
 		ZonePoint a = (ZonePoint)callFrame.get(0);
 		ZonePoint b = (ZonePoint)callFrame.get(1);
 		double bearing = ZonePoint.angle2azimuth(b.bearing(a.latitude, a.longitude));
-		double distance = b.distance(a.latitude, a.longitude);
+		Distance distance = new Distance(b.distance(a.latitude, a.longitude), "metres");
+		callFrame.push(distance);
 		callFrame.push(LuaState.toDouble(bearing));
-		callFrame.push(LuaState.toDouble(distance));
 		return 2;
 	}
 
