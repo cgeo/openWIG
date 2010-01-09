@@ -28,8 +28,9 @@ public class LuaInterface implements JavaFunction {
 	private static final int TRANSLATEPOINT = 18;
 	private static final int SHOWSTATUSTEXT = 19;
 	private static final int VECTORTOPOINT = 20;
+	private static final int LOGMESSAGE = 21;
 	
-	private static final int NUM_FUNCTIONS = 21;
+	private static final int NUM_FUNCTIONS = 22;
 	
 	private static final String[] names;
 	static {
@@ -55,6 +56,7 @@ public class LuaInterface implements JavaFunction {
 		names[SHOWSTATUSTEXT] = "ShowStatusText";
 		names[VECTORTOPOINT] = "VectorToPoint";
 		names[COMMAND] = "Command";
+		names[LOGMESSAGE] = "LogMessage";
 	}
 
 	private int index;
@@ -151,6 +153,7 @@ public class LuaInterface implements JavaFunction {
 			case VECTORTOPOINT: return vectorToPoint(callFrame, nArguments);
 			case COMMAND: return 0;
 			case SHOWSTATUSTEXT: return showStatusText(callFrame, nArguments);
+			case LOGMESSAGE: return logMessage(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -322,10 +325,18 @@ public class LuaInterface implements JavaFunction {
 	}
 
 	private int showStatusText (LuaCallFrame callFrame, int nArguments) {
-		BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for ShowStatusText");
+		BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for ShowStatusText");
 		String text = (String)callFrame.get(0);
 		if (text != null && text.length() == 0) text = null;
 		Midlet.setStatusText(text);
+		return 0;
+	}
+
+	private int logMessage (LuaCallFrame callFrame, int nArguments) {
+		if (nArguments < 1) return 0;
+		String text = (String)callFrame.get(0);
+		if (text != null && text.length() == 0) return 0;
+		Engine.log("CUST: " + text, Engine.LOG_CALL);
 		return 0;
 	}
 }
