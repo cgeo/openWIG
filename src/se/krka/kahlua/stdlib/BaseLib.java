@@ -55,7 +55,7 @@ public final class BaseLib implements JavaFunction {
 	private static final int NUM_FUNCTIONS = 19;
 
 	private static final String[] names;
-	private static final Object MODE_KEY = "__mode";
+	public static final Object MODE_KEY = "__mode";
 	private static final Object DOUBLE_ONE = new Double(1.0);
 	
 	public static final String TYPE_NIL = "nil";
@@ -349,14 +349,15 @@ public final class BaseLib implements JavaFunction {
 		Object toStringFun = state.tableGet(env, "tostring");
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < nArguments; i++) {
+            if (i > 0) {
+                sb.append("\t");
+            }
+
 			Object res = state.call(toStringFun, callFrame.get(i), null, null);
 
 			sb.append(res);
-			if (i < nArguments) {
-				sb.append("\t");
-			}
 		}
-		state.out.println(sb.toString());
+		state.getOut().println(sb.toString());
 		return 0;
 	}
 
@@ -492,39 +493,13 @@ public final class BaseLib implements JavaFunction {
 
 	public static void setmetatable(LuaState state, Object o, LuaTable newMeta, boolean raw) {
 		luaAssert(o != null, "Expected table, got nil");
-
-		LuaTable oldMeta;
-
-		LuaTable to = null;
-		Class co = null;
-
-		if (o instanceof LuaTable) {
-			to = (LuaTable) o;
-			oldMeta = to.getMetatable();
-		} else {
-			co = o.getClass();
-			oldMeta = (LuaTable) state.userdataMetatables.rawget(co);
-		}
+		final Object oldMeta = state.getmetatable(o, raw);
 
 		if (!raw && oldMeta != null && state.tableGet(oldMeta, "__metatable") != null) {
 			throw new RuntimeException("Can not set metatable of protected object");
 		}
 
-		if (to != null) {
-			to.setMetatable(newMeta);
-			boolean weakKeys = false, weakValues = false;
-			if (newMeta != null) {
-				Object modeObj = newMeta.rawget(MODE_KEY);
-				if (modeObj != null && modeObj instanceof String) {
-					String mode = (String)modeObj;
-					weakKeys = (mode.indexOf('k') >= 0);
-					weakValues = (mode.indexOf('v') >= 0);
-				}
-			}
-           	to.updateWeakSettings(weakKeys, weakValues);
-		} else {
-			state.userdataMetatables.rawset(co, newMeta);
-		}
+        state.setmetatable(o, newMeta);
 	}
 
 	private static int type(LuaCallFrame callFrame, int nArguments) {

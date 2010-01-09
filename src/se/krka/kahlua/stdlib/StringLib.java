@@ -93,7 +93,7 @@ public final class StringLib implements JavaFunction {
 		}
 
 		string.rawset("__index", string);
-		state.setUserdataMetatable(STRING_CLASS, string);
+		state.setClassMetatable(STRING_CLASS, string);
 	}
 
 	public String toString() {
@@ -809,6 +809,9 @@ public final class StringLib implements JavaFunction {
 		}
 
 		public Object[] getCaptures() {
+			if (level <= 0) {
+				return null;
+			}
 			Object[] caps = new String[level];
 			for (int i = 0; i < level; i++) {
 				if (capture[i].len == CAP_POSITION) {
@@ -1431,27 +1434,23 @@ public final class StringLib implements JavaFunction {
 	private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
 		String type = BaseLib.type(repl);
 		if (type == BaseLib.TYPE_NUMBER || type == BaseLib.TYPE_STRING) {
-			b.append(addString(ms, repl, src, e));
+			b.append(addString (ms, repl, src, e));
 		} else {
-			Object[] captures = ms.getCaptures();
 			String match = src.getString().substring(0, e.getIndex() - src.getIndex());
-			if (captures.length == 0) {
-				// no captures, pass whole match
-				captures = new String[] {match};
+			Object[] captures = ms.getCaptures();
+			if (captures != null) {
+				match = BaseLib.rawTostring(captures[0]);
 			}
-			Object res;
+			Object res = null;
 			if (type == BaseLib.TYPE_FUNCTION) {
-				res = ms.callFrame.thread.state.call(repl, captures);
+				res = ms.callFrame.thread.state.call(repl, match, null, null);
 			} else if (type == BaseLib.TYPE_TABLE) {
-				res = ((LuaTable)repl).rawget(captures[0]);
-			} else {
-				return;
+				res = ((LuaTable)repl).rawget(match);
 			}
-			String rtype = BaseLib.type(res);
-			if (rtype == BaseLib.TYPE_NUMBER || rtype == BaseLib.TYPE_STRING)
-				b.append(BaseLib.rawTostring(res));
-			else
-				b.append(match);
+			if (res == null) {
+				res = match;
+			}
+			b.append(BaseLib.rawTostring(res));
 		}
 	}
 
@@ -1475,7 +1474,16 @@ public final class StringLib implements JavaFunction {
 					buf.append(str.substring(0, len));
 				} else {
 					Object o = ms.getCaptures()[replStr.getChar(i) - '1'];
-					buf.append(BaseLib.rawTostring(o));
+					if(o instanceof Double) {
+						Double doubleValue = ((Double)o);
+						if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
+							buf.append(String.valueOf(((Double)o).intValue())); 
+						} else {
+							buf.append(String.valueOf(((Double)o).doubleValue()));
+						}
+					} else {
+						buf.append(o);
+					}
 				}
 			}
 		}

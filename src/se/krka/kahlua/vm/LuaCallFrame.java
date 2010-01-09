@@ -29,6 +29,8 @@ public class LuaCallFrame {
 	}
 	
 	public LuaClosure closure;
+	public JavaFunction javaFunction;
+
 	public int pc;
 
 	public int localBase;
@@ -125,6 +127,7 @@ public class LuaCallFrame {
 				stackCopy(-nArguments, 0, toCopy);
 			} else {
 				setTop(closure.prototype.maxStacksize);
+				stackClear(closure.prototype.numParams, nArguments);
 			}
 		}
 	}
@@ -152,7 +155,7 @@ public class LuaCallFrame {
 			stackClear(index + nVarargs, index + n - 1);
 		}
 	}
-	
+
 	public LuaTable getEnvironment() {
 		if (isLua()) {
 			return closure.env;
@@ -167,5 +170,14 @@ public class LuaCallFrame {
 	public boolean isLua() {
 		return closure != null;
 	}
-	
+
+	public String toString() {
+		if (closure != null) {
+			return "Callframe at: " + closure.toString();
+		}
+		if (javaFunction != null) {
+			return "Callframe at: " + javaFunction.toString();
+		}
+		return super.toString();
+	}
 }

@@ -22,6 +22,8 @@ THE SOFTWARE.
  */
 package se.krka.kahlua.stdlib;
 
+import se.krka.kahlua.vm.LuaArray;
+
 import se.krka.kahlua.vm.JavaFunction;
 import se.krka.kahlua.vm.LuaCallFrame;
 import se.krka.kahlua.vm.LuaState;
@@ -34,8 +36,9 @@ public final class TableLib implements JavaFunction {
 	private static final int INSERT = 1;
 	private static final int REMOVE = 2;
 	private static final int MAXN = 3;
-	private static final int NUM_FUNCTIONS = 4;
-	
+	private static final int NEWARRAY = 4;
+	private static final int NUM_FUNCTIONS = 5;
+
 	private static final String[] names;
 	private static TableLib[] functions;
 
@@ -45,6 +48,7 @@ public final class TableLib implements JavaFunction {
 		names[INSERT] = "insert";
 		names[REMOVE] = "remove";
 		names[MAXN] = "maxn";
+		names[NEWARRAY] = "newarray";
 	}
 	
 	private int index;
@@ -73,7 +77,10 @@ public final class TableLib implements JavaFunction {
 	}
 
 	public String toString () {
-		return "table." + names[index];
+		if (index < names.length) {
+			return "table." + names[index];
+		}
+		return super.toString();
 	}
 
 	public int call (LuaCallFrame callFrame, int nArguments) {
@@ -86,9 +93,28 @@ public final class TableLib implements JavaFunction {
 				return remove(callFrame, nArguments);
 			case MAXN:
 				return maxn(callFrame, nArguments);
+			case NEWARRAY:
+				return newarray(callFrame, nArguments);
 			default:
 				return 0;
 		}
+	}
+
+	private int newarray(LuaCallFrame callFrame, int arguments) {
+		Object param = BaseLib.getOptArg(callFrame, 1, null);
+		LuaArray ret = new LuaArray();
+		if (param instanceof LuaTable && arguments == 1) {
+			LuaTable t = (LuaTable) param;
+			int n = t.len();
+			for (int i = n; i >= 1; i--) {
+				ret.rawset(i, t.rawget(LuaState.toDouble(i)));
+			}
+		} else {
+            for (int i = arguments; i >= 1; i--) {
+                ret.rawset(i, callFrame.get(i - 1));
+            }
+        }
+		return callFrame.push(ret);
 	}
 
 	private static int concat (LuaCallFrame callFrame, int nArguments) {
@@ -129,15 +155,40 @@ public final class TableLib implements JavaFunction {
 	}
 	
 	public static void insert (LuaState state, LuaTable table, Object element) {
-		insert(state, table, table.len() + 1, element);
+		append(state, table, element);
 	}
 
-	public static void insert (LuaState state, LuaTable table, int position, Object element) {
+	public static void append(LuaState state, LuaTable table, Object element) {
+		int position = 1 + table.len();
+		state.tableSet(table, LuaState.toDouble(position), element);
+	}
+
+	public static void rawappend(LuaTable table, Object element) {
+		int position = 1 + table.len();
+		table.rawset(LuaState.toDouble(position), element);
+	}
+
+	public static void insert(LuaState state, LuaTable table, int position, Object element) {
 		int len = table.len();
 		for (int i = len; i >= position; i--) {
 			state.tableSet(table, LuaState.toDouble(i+1), state.tableGet(table, LuaState.toDouble(i)));
 		}
 		state.tableSet(table, LuaState.toDouble(position), element);
+	}
+
+	public static void rawinsert(LuaTable table, int position, Object element) {
+		int len = table.len();
+		if (position <= len) {
+			Double dest = LuaState.toDouble(len + 1);
+			for (int i = len; i >= position; i--) {
+				Double src = LuaState.toDouble(i);
+				table.rawset(dest, table.rawget(src));
+				dest = src;
+			}
+			table.rawset(dest, element);
+		} else {
+			table.rawset(LuaState.toDouble(position), element);
+		}
 	}
 
 	private static int insert (LuaCallFrame callFrame, int nArguments) {
@@ -179,7 +230,7 @@ public final class TableLib implements JavaFunction {
 			}
 		}
 	}
-	
+
 	private static int remove (LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
 		LuaTable t = (LuaTable)callFrame.get(0);
@@ -205,7 +256,7 @@ public final class TableLib implements JavaFunction {
 		callFrame.push(LuaState.toDouble(max));
 		return 1;
 	}
-	
+
 	public static Object find (LuaTable table, Object item) {
 		if (item == null) return null;
 		Object key = null;
@@ -216,7 +267,7 @@ public final class TableLib implements JavaFunction {
 		}
 		return null;
 	}
-	
+
 	public static boolean contains (LuaTable table, Object item) {
 		return find(table, item) != null;
 	}

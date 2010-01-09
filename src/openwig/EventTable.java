@@ -95,6 +95,4 @@ public class EventTable implements LuaTable, Serializable {
 	public Object next (Object key) { return table.next(key); }
 
 	public int len () { return table.len(); }
-	
-	public void updateWeakSettings (boolean weakKeys, boolean weakValues) { table.updateWeakSettings(weakKeys, weakValues); }
 }

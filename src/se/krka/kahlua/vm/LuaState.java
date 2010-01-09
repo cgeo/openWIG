@@ -32,7 +32,7 @@ import se.krka.kahlua.stdlib.OsLib;
 import se.krka.kahlua.stdlib.StringLib;
 import se.krka.kahlua.stdlib.TableLib;
 
-public final class LuaState {
+public class LuaState {
 	public static final int FIELDS_PER_FLUSH = 50;
 
 	public static final int OP_MOVE = 0;
@@ -114,11 +114,12 @@ public final class LuaState {
 	public LuaThread currentThread;
 
 	// Needed for Math lib - every state needs its own random
-	public Random random = new Random();
+	public final Random random = new Random();
 
-	public LuaTable userdataMetatables;
+	private final LuaTable userdataMetatables;
+    private final LuaTable classMetatables;
 
-	public PrintStream out;
+    protected final PrintStream out;
 
 	static final int MAX_INDEX_RECURSION = 100;
 
@@ -139,12 +140,26 @@ public final class LuaState {
 	}
 
 	public LuaState(PrintStream stream) {
-		out = stream;
-		reset();
+		this(stream, true);
 	}
 
 	public LuaState() {
-		this(System.out);
+		this(System.out, true);
+	}
+	
+	protected LuaState(PrintStream stream, boolean callReset) {
+        // The userdataMetatables must be weak to avoid memory leaks
+        LuaTable weakKeyMetatable = new LuaTableImpl();
+        weakKeyMetatable.rawset("__mode", "k");
+        userdataMetatables = new LuaTableImpl();
+        userdataMetatables.setMetatable(weakKeyMetatable);
+
+        classMetatables = new LuaTableImpl();
+
+		out = stream;
+		if (callReset) {
+			reset();
+		}
 	}
 
 	// For debugging purposes only
@@ -157,10 +172,9 @@ public final class LuaState {
 	 * Auto-generated catch block e.printStackTrace(); } }
 	 */
 
-	public final void reset() {
+	protected final void reset() {
 		currentThread = new LuaThread(this, new LuaTableImpl());
 
-		userdataMetatables = new LuaTableImpl();
 		getEnvironment().rawset("_G", getEnvironment());
 		getEnvironment().rawset("_VERSION", "Lua 5.1 for CLDC 1.1");
 
@@ -171,8 +185,12 @@ public final class LuaState {
 		OsLib.register(this);
 		TableLib.register(this);
 		
-/*		LuaClosure closure = loadByteCodeFromResource("/stdlib", getEnvironment());
-		call(closure, null, null, null);*/
+		LuaClosure closure = loadByteCodeFromResource("/stdlib",
+				getEnvironment());
+		if (closure == null) {
+			BaseLib.fail("Could not load /stdlib.lbc");
+		}
+		call(closure, null, null, null);
 	}
 
 	public int call(int nArguments) {
@@ -192,7 +210,7 @@ public final class LuaState {
 			throw new RuntimeException("tried to call a non-function");
 		}
 
-		LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o,
+		LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o, null,
 				base + 1, base, nArguments, false, false);
 		callFrame.init();
 
@@ -209,7 +227,7 @@ public final class LuaState {
 			int nArguments) {
 		LuaThread thread = currentThread;
 
-		LuaCallFrame callFrame = thread.pushNewCallFrame(null, localBase,
+		LuaCallFrame callFrame = thread.pushNewCallFrame(null, f, localBase,
 				returnBase, nArguments, false, false);
 
 		int nReturnValues = f.call(callFrame, nArguments);
@@ -236,7 +254,7 @@ public final class LuaState {
 		return f;
 	}
 
-	public final void luaMainloop() {
+	private final void luaMainloop() {
 		LuaCallFrame callFrame = currentThread.currentCallFrame();
 		LuaClosure closure = callFrame.closure;
 		LuaPrototype prototype = closure.prototype;
@@ -660,7 +678,7 @@ public final class LuaState {
 
 					if (fun instanceof LuaClosure) {
 						LuaCallFrame newCallFrame = currentThread
-								.pushNewCallFrame((LuaClosure) fun, localBase2,
+								.pushNewCallFrame((LuaClosure) fun, null, localBase2,
 										returnBase2, nArguments2, true,
 										callFrame.insideCoroutine);
 						newCallFrame.init();
@@ -1007,7 +1025,7 @@ public final class LuaState {
 		}
 	}
 
-	public final Object getMetaOp(Object o, String meta_op) {
+	public Object getMetaOp(Object o, String meta_op) {
 		LuaTable meta = (LuaTable) getmetatable(o, true);
 		if (meta == null) {
 			return null;
@@ -1015,7 +1033,7 @@ public final class LuaState {
 		return meta.rawget(meta_op);
 	}
 
-	public final Object getCompMetaOp(Object a, Object b, String meta_op) {
+	private final Object getCompMetaOp(Object a, Object b, String meta_op) {
 		LuaTable meta1 = (LuaTable) getmetatable(a, true);
 		LuaTable meta2 = (LuaTable) getmetatable(b, true);
 		if (meta1 != meta2 || meta1 == null) {
@@ -1024,7 +1042,7 @@ public final class LuaState {
 		return meta1.rawget(meta_op);
 	}
 
-	public final Object getBinMetaOp(Object a, Object b, String meta_op) {
+	private final Object getBinMetaOp(Object a, Object b, String meta_op) {
 		Object op = getMetaOp(a, meta_op);
 		if (op != null) {
 			return op;
@@ -1032,8 +1050,8 @@ public final class LuaState {
 		return getMetaOp(b, meta_op);
 	}
 
-	public void setUserdataMetatable(Class type, LuaTable metatable) {
-		userdataMetatables.rawset(type, metatable);
+	private void setUserdataMetatable(Object obj, LuaTable metatable) {
+		userdataMetatables.rawset(obj, metatable);
 	}
 
 	private final Object getRegisterOrConstant(LuaCallFrame callFrame, int index, LuaPrototype prototype) {
@@ -1104,7 +1122,7 @@ public final class LuaState {
 		return toDouble(res);
 	}
 
-	public final Object call(Object fun, Object arg1, Object arg2, Object arg3) {
+	public Object call(Object fun, Object arg1, Object arg2, Object arg3) {
 		int oldTop = currentThread.getTop();
 		final int argslen = 3;
 		currentThread.setTop(oldTop + 1 + argslen);
@@ -1124,7 +1142,7 @@ public final class LuaState {
 		return ret;
 	}
 
-	public final Object call(Object fun, Object[] args) {
+	public Object call(Object fun, Object[] args) {
 		int oldTop = currentThread.getTop();
 		int argslen = args == null ? 0 : args.length;
 		currentThread.setTop(oldTop + 1 + argslen);
@@ -1143,7 +1161,7 @@ public final class LuaState {
 		return ret;
 	}
 
-	public final Object tableGet(Object table, Object key) {
+	public Object tableGet(Object table, Object key) {
 		Object curObj = table;
 		for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
 			boolean isTable = curObj instanceof LuaTable;
@@ -1172,7 +1190,7 @@ public final class LuaState {
 		throw new RuntimeException("loop in gettable");
 	}
 
-	public final void tableSet(Object table, Object key, Object value) {
+	public void tableSet(Object table, Object key, Object value) {
 		Object curObj = table;
 		for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
 			Object metaOp;
@@ -1203,7 +1221,21 @@ public final class LuaState {
 		throw new RuntimeException("loop in settable");
 	}
 
-	public final Object getmetatable(Object o, boolean raw) {
+    public void setClassMetatable(Class clazz, LuaTable metatable) {
+        classMetatables.rawset(clazz, metatable);
+    }
+
+    public void setmetatable(Object o, LuaTable metatable) {
+        BaseLib.luaAssert(o != null, "Can't set metatable for nil");
+        if (o instanceof LuaTable) {
+            LuaTable t = (LuaTable) o;
+            t.setMetatable(metatable);
+        } else {
+            userdataMetatables.rawset(o, metatable);
+        }
+    }
+
+	public Object getmetatable(Object o, boolean raw) {
 		if (o == null) {
 			return null;
 		}
@@ -1212,8 +1244,12 @@ public final class LuaState {
 			LuaTable t = (LuaTable) o;
 			metatable = t.getMetatable();
 		} else {
-			metatable = (LuaTable) userdataMetatables.rawget(o.getClass());
+			metatable = (LuaTable) userdataMetatables.rawget(o);
 		}
+
+        if (metatable == null) {
+            metatable = (LuaTable) classMetatables.rawget(o.getClass());
+        }
 
 		if (!raw && metatable != null) {
 			Object meta2 = metatable.rawget("__metatable");
@@ -1227,18 +1263,20 @@ public final class LuaState {
 	public Object[] pcall(Object fun, Object[] args) {
 		int nArgs = args == null ? 0 : args.length;
 
-		int oldTop = currentThread.getTop();
+		LuaThread thread = currentThread;
+		int oldTop = thread.getTop();
 
-		currentThread.setTop(oldTop + 1 + nArgs);
-		currentThread.objectStack[oldTop] = fun;
+		thread.setTop(oldTop + 1 + nArgs);
+		thread.objectStack[oldTop] = fun;
 		if (nArgs > 0) {
-			System.arraycopy(args, 0, currentThread.objectStack, oldTop + 1,
+			System.arraycopy(args, 0, thread.objectStack, oldTop + 1,
 					nArgs);
 		}
 		int nRet = pcall(nArgs);
+		BaseLib.luaAssert(thread == currentThread, "Internal Kahlua error - thread changed in pcall");
 		Object[] ret = new Object[nRet];
-		System.arraycopy(currentThread.objectStack, oldTop, ret, 0, nRet);
-		currentThread.setTop(oldTop);
+		System.arraycopy(thread.objectStack, oldTop, ret, 0, nRet);
+		thread.setTop(oldTop);
 		return ret;
 	}
 
@@ -1269,6 +1307,7 @@ public final class LuaState {
 			exception = e;
 			errorMessage = e.getMessage();
 		}
+		BaseLib.luaAssert(thread == currentThread, "Internal Kahlua error - thread changed in pcall");
 		if (currentCallFrame != null) {
 			currentCallFrame.closeUpvalues(0);
 		}
@@ -1333,4 +1372,24 @@ public final class LuaState {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
+	
+	/**
+	 * Not thread safe by default, so this does nothing.
+	 */
+	public void lock() {
+	}
+
+	/**
+	 * Not thread safe by default, so this does nothing.
+	 */
+	public void unlock() {
+	}
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public LuaTable getClassMetatable(Class clazz) {
+        return (LuaTable) classMetatables.rawget(clazz);
+    }
 }
