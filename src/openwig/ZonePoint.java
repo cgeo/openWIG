@@ -3,7 +3,6 @@ package openwig;
 import java.io.*;
 
 import se.krka.kahlua.vm.*;
-import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.stdlib.MathLib;
 
 public class ZonePoint implements LuaTable, Serializable {
