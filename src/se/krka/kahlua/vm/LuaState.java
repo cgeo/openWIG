@@ -185,12 +185,12 @@ public class LuaState {
 		OsLib.register(this);
 		TableLib.register(this);
 		
-		LuaClosure closure = loadByteCodeFromResource("/stdlib",
+/*		LuaClosure closure = loadByteCodeFromResource("/stdlib",
 				getEnvironment());
 		if (closure == null) {
 			BaseLib.fail("Could not load /stdlib.lbc");
 		}
-		call(closure, null, null, null);
+		call(closure, null, null, null);*/
 	}
 
 	public int call(int nArguments) {

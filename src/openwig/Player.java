@@ -6,6 +6,8 @@ import java.io.IOException;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
+
+	public LuaTableImpl insideOfZones = new LuaTableImpl();
 	
 	private static JavaFunction refreshLocation = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -22,6 +24,7 @@ public class Player extends Thing {
 		super(true);
 		table.rawset("PositionAccuracy", new Distance(1,"metres"));
 		table.rawset("RefreshLocation", refreshLocation);
+		table.rawset("InsideOfZones", insideOfZones);
 		setPosition(new ZonePoint(360,360,0));
 	}
 

@@ -1,6 +1,7 @@
 package openwig;
 
 import gui.Midlet;
+import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
 public class Zone extends Container {
@@ -119,7 +120,10 @@ public class Zone extends Container {
 		contain = ncontain;
 		if (contain == INSIDE) {
 			Engine.instance.player.moveTo(this);
+			if (!TableLib.contains(Engine.instance.player.insideOfZones, this))
+				TableLib.rawappend(Engine.instance.player.insideOfZones, this);
 		} else if (Engine.instance.player.location == this) {
+			TableLib.removeItem(Engine.instance.player.insideOfZones, this);
 			Engine.instance.player.moveTo(null);
 		}
 		switch (contain) {
