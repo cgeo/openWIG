@@ -219,6 +219,15 @@ public final class TableLib implements JavaFunction {
 		state.tableSet(table, LuaState.toDouble(len), null);
 		return ret;
 	}
+
+	public static Object rawremove (LuaTable table, int position) {
+		Object ret = table.rawget(LuaState.toDouble(position));
+		int len = table.len();
+		for (int i = position; i <= len; i++) {
+			table.rawset(LuaState.toDouble(i), table.rawget(LuaState.toDouble(i+1)));
+		}
+		return ret;
+	}
 	
 	public static void removeItem (LuaTable table, Object item) {
 		if (item == null) return;
@@ -226,9 +235,23 @@ public final class TableLib implements JavaFunction {
 		while ((key = table.next(key)) != null) {
 			if (item.equals(table.rawget(key))) {
 				table.rawset(key, null);
+				if (key instanceof Double) {
+					double k = ((Double)key).doubleValue();
+					int i = (int)k;
+					if (k == i) rawremove(table, i);
+				}
 				return;
 			}
 		}
+	}
+
+	public static void dumpTable (LuaTable table) {
+		System.out.print("table " + table + ": ");
+		Object key = null;
+		while ((key = table.next(key)) != null) {
+			System.out.print(key.toString() + " => " + table.rawget(key) + ", ");
+		}
+		System.out.println();
 	}
 
 	private static int remove (LuaCallFrame callFrame, int nArguments) {

@@ -3,11 +3,12 @@ package openwig;
 import gui.Midlet;
 import java.io.DataInputStream;
 import java.io.IOException;
+import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
 
-	public LuaTableImpl insideOfZones = new LuaTableImpl();
+	private LuaTableImpl insideOfZones = new LuaTableImpl();
 	
 	private static JavaFunction refreshLocation = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -27,6 +28,27 @@ public class Player extends Thing {
 		table.rawset("InsideOfZones", insideOfZones);
 		setPosition(new ZonePoint(360,360,0));
 	}
+
+	public void moveTo (Container c) {
+		// do nothing
+	}
+
+	public void enterZone (Zone z) {
+		location = z;
+		if (!TableLib.contains(insideOfZones, z)) {
+			TableLib.rawappend(insideOfZones, z);
+		}
+		if (!TableLib.contains(z.inventory, this)) {
+			TableLib.rawappend(z.inventory, this);
+		}
+	}
+
+	public void leaveZone (Zone z) {
+		TableLib.removeItem(insideOfZones, z);
+		TableLib.removeItem(z.inventory, this);
+	}
+
+	protected String luaTostring () { return "a Player instance"; }
 
 	public void deserialize (DataInputStream in)
 	throws IOException {

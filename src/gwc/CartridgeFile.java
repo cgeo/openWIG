@@ -116,24 +116,37 @@ public class CartridgeFile {
 
 	private int lastId = -1;
 	private byte[] lastFile = null;
+
+	private int idToIndex (int id) {
+		for (int i = 0; i < ids.length; i++)
+			if (ids[i] == id) return i;
+		return -1;
+	}
+
+	private void pseudoSeek (long target) throws IOException {
+		if (source.position() > target) resetSource();
+		source.pseudoSeek(target);
+	}
+
+	private int preseek = 0;
+	private boolean preseekPresent = false;;
+
+	public boolean isPresent (int id) throws IOException {
+		if (id == preseek) return preseekPresent;
+		if (id < 1) return false;
+		id = idToIndex(id);
+		pseudoSeek(offsets[id]);
+		int a = source.read();
+		if (a != 1) return false;
+		return true;
+	}
 	
 	public byte[] getFile (int id) throws IOException {
 		if (id == lastId) return lastFile;
-		if (id < 1) // invalid, apparently. or bytecode - lookie no touchie
-			return null;
-		
-		for (int i = 0; i < ids.length; i++)
-			if (ids[i] == id) {
-				id = i;
-				break;
-			}
-		
-		if (source.position() > offsets[id]) resetSource();
-		source.pseudoSeek(offsets[id]);
-		int a = source.read();
-		if (a != 1) { // deleted object 
-			return null;
-		}
+
+		if (!isPresent(id)) return null;
+		// relying on side-effect - we are now at proper position
+
 		int ttype = source.readInt(); // we don't need this?
 		int len = source.readInt();
 		byte[] ffile = new byte[len];

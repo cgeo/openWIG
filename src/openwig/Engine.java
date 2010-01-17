@@ -244,7 +244,7 @@ public class Engine implements Runnable {
 	public static byte[] mediaFile (Media media) throws IOException {
 		/*String filename = media.jarFilename();
 		return media.getClass().getResourceAsStream("/media/"+filename);*/
-		return instance.gwcfile.getFile(media.id);
+		return media.getData();
 	}
 
 	public static void log (String s, int level) {

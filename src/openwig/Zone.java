@@ -1,13 +1,18 @@
 package openwig;
 
 import gui.Midlet;
-import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
-public class Zone extends Container {
+public class Zone extends Thing {
+
+	protected String luaTostring() { return "a Zone instance"; }
 
 	public boolean isVisible () {
 		return active && visible && contain > NOWHERE;
+	}
+
+	public boolean visibleToPlayer () {
+		return isVisible();
 	}
 	
 	public boolean isLocated () {
@@ -69,7 +74,7 @@ public class Zone extends Container {
 				//setcontain();
 			} else { // if the zone is deactivated, remove player, just to be sure
 				contain = ncontain = (distanceRange < 0) ? DISTANT : NOWHERE;
-				if (Engine.instance.player.location == this) Engine.instance.player.moveTo(null);
+				Engine.instance.player.leaveZone(this);
 			}
 		} else if ("Visible".equals(key)) {
 			boolean a = LuaState.boolEval(value);
@@ -111,20 +116,16 @@ public class Zone extends Container {
 			if (ticks % 5 == 0) setcontain();
 		}*/
 	}
-	
+
 	private void setcontain () {
 		if (contain == ncontain) return;
 		if (contain == INSIDE) {
+			Engine.instance.player.leaveZone(this);
 			Engine.callEvent(this, "OnExit", null);
 		}
 		contain = ncontain;
 		if (contain == INSIDE) {
-			Engine.instance.player.moveTo(this);
-			if (!TableLib.contains(Engine.instance.player.insideOfZones, this))
-				TableLib.rawappend(Engine.instance.player.insideOfZones, this);
-		} else if (Engine.instance.player.location == this) {
-			TableLib.removeItem(Engine.instance.player.insideOfZones, this);
-			Engine.instance.player.moveTo(null);
+			Engine.instance.player.enterZone(this);
 		}
 		switch (contain) {
 			case INSIDE:

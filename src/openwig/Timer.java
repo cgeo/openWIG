@@ -39,6 +39,8 @@ public class Timer extends EventTable {
 		Engine.instance.savegame.addJavafunc(stop);
 		Engine.instance.savegame.addJavafunc(tick);
 	}
+
+	protected String luaTostring () { return "a ZTimer instance"; }
 	
 	private class TimerTask extends java.util.TimerTask {
 		public boolean restart = false;

@@ -18,6 +18,8 @@ public class Task extends EventTable {
 		if (!complete) return PENDING;
 		else return state;
 	}
+
+	protected String luaTostring () { return "a ZTask instance"; }
 	
 	protected void setItem (String key, Object value) {
 		if ("Active".equals(key)) {

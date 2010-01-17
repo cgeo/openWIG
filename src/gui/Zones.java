@@ -1,51 +1,34 @@
 package gui;
 
 import java.util.Vector;
-import javax.microedition.lcdui.*;
 import openwig.Engine;
 import openwig.Zone;
 
-public class Zones extends List implements CommandListener, Pushable {
+public class Zones extends ListOfStuff {
 	
-	private Vector zones = new Vector();
-		
 	public Zones () {
-		super("Locations", IMPLICIT);
-		addCommand(Midlet.CMD_BACK);
-		setCommandListener(this);
-	}
-	
-	public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == SELECT_COMMAND) {
-			int index = getSelectedIndex();
-			if (index >= 0 && index < zones.size()) {
-				Zone z = (Zone)zones.elementAt(index);
-				Midlet.push(Midlet.details.reset(z, this));
-			}
-		} else {
-			Midlet.push(Midlet.mainMenu);
-		}
+		super("Locations");
 	}
 
-	public void push () {
-		int index = getSelectedIndex();
-		deleteAll();
-		zones.removeAllElements();
+	protected void callStuff(Object what) {
+		Midlet.push(Midlet.details.reset((Zone)what, this));
+	}
+
+	protected boolean stillValid() {
+		return true;
+	}
+
+	protected Vector getValidStuff() {
+		Vector ret = new Vector();
 		Vector v = Engine.instance.cartridge.zones;
 		for (int i = 0; i < v.size(); i++) {
 			Zone z = (Zone)v.elementAt(i);
-			if (z.isVisible()) {
-				zones.addElement(z);
-				append(z.name, null);
-			}
+			if (z.isVisible()) ret.addElement(z);
 		}
-		int s = size();
-		if (s > 0) {
-			if (index >= s) index = s-1;
-			if (index < 0) index = 0;
-			setSelectedIndex(index, true);
-		}
-		Midlet.show(this);
+		return ret;
 	}
-	
+
+	protected String getStuffName(Object what) {
+		return ((Zone)what).name;
+	}
 }

@@ -9,6 +9,28 @@ public class EventTable implements LuaTable, Serializable {
 
 	public LuaTable table = new LuaTableImpl();
 
+	private LuaTable metatable = new LuaTableImpl();
+
+	private static class TostringJavaFunc implements JavaFunction {
+
+		public EventTable parent;
+
+		public TostringJavaFunc (EventTable parent) {
+			this.parent = parent;
+		}
+
+		public int call (LuaCallFrame callFrame, int nArguments) {
+			callFrame.push(parent.luaTostring());
+			return 1;
+		}
+	};
+
+	protected String luaTostring () { return "a ZObject instance"; }
+
+	public EventTable() {
+		metatable.rawset("__tostring", new TostringJavaFunc(this));
+	}
+
 	public void serialize (DataOutputStream out) throws IOException {
 		Engine.instance.savegame.storeValue(table, out);
 	}
@@ -86,9 +108,9 @@ public class EventTable implements LuaTable, Serializable {
 		Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()), Engine.LOG_PROP);
 	}
 
-	public void setMetatable (LuaTable metatable) { table.setMetatable(metatable); }
+	public void setMetatable (LuaTable metatable) { }
 
-	public LuaTable getMetatable () { return table.getMetatable(); }
+	public LuaTable getMetatable () { return metatable; }
 
 	public Object rawget (Object key) { return table.rawget(key); }
 

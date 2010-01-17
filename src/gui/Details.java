@@ -128,10 +128,12 @@ public class Details extends Form implements CommandListener, Pushable, Runnable
 			Thing t = (Thing)thing;
 			int actions = t.visibleActions() + Engine.instance.cartridge.visibleUniversalActions();
 			if (actions > 0) addCommand(CMD_ACTIONS);
-		} else if (thing instanceof Task) {
+		}
+		if (thing instanceof Task) {
 			Task t = (Task)thing;
 			state.setText(taskStates[t.state()]);
-		} else if (thing instanceof Zone) {
+		}
+		if (thing instanceof Zone) {
 			updateNavi();
 			start();
 		}

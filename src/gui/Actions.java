@@ -25,7 +25,12 @@ public class Actions extends ListOfStuff {
 		String eventName = "On" + z.getName();
 
 		if (z.hasParameter()) {
-			Midlet.push(Midlet.targets.reset(thing.name + ": " + z.text, z, thing));
+			if (z.getActor() == thing)
+				Midlet.push(Midlet.targets.reset(thing.name + ": " + z.text, z, thing));
+			else {
+				Midlet.push(parent);
+				Engine.callEvent(z.getActor(), eventName, thing);
+			}
 		} else {
 			Midlet.push(parent);
 			Engine.callEvent(thing, eventName, null);
@@ -44,10 +49,7 @@ public class Actions extends ListOfStuff {
 		
 		for (int i = 0; i < newactions.size(); i++) {
 			Action a = (Action) newactions.elementAt(i);
-			if (!a.isEnabled() ||
-				(a.hasParameter()
-				&& (a.targetsInside(Engine.instance.cartridge.currentThings()) + a.visibleTargets(Engine.instance.player)) < 1)
-			) {
+			if (!a.isEnabled()) {
 				newactions.removeElementAt(i--);
 				continue;
 			}
@@ -57,6 +59,7 @@ public class Actions extends ListOfStuff {
 
 	protected String getStuffName(Object what) {
 		Action a = (Action) what;
-		return a.text;
+		if (a.getActor() == thing) return a.text;
+		else return (a.getActor().name + ": " + a.text);
 	}
 }

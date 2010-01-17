@@ -25,6 +25,8 @@ public class Cartridge extends EventTable {
 	public static void register () {
 		Engine.instance.savegame.addJavafunc(requestSync);
 	}
+
+	protected String luaTostring () { return "a ZCartridge instance"; }
 	
 	public Cartridge () {
 		table.rawset("RequestSync", requestSync);
@@ -82,7 +84,7 @@ public class Cartridge extends EventTable {
 		int count = 0;
 		for (int i = 0; i < universalActions.size(); i++) {
 			Action a = (Action)universalActions.elementAt(i);
-			if (a.isEnabled()) count++;
+			if (a.isEnabled() && a.getActor().visibleToPlayer()) count++;
 		}
 		return count;
 	}

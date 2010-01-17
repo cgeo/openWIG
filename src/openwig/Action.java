@@ -7,6 +7,7 @@ import java.util.Vector;
 public class Action extends EventTable {
 	
 	private boolean parameter;
+	private boolean reciprocal = true;
 	private boolean enabled;
 
 	private Thing actor = null;
@@ -14,6 +15,7 @@ public class Action extends EventTable {
 	private boolean universal;
 	
 	public String text;
+	public String notarget;
 
 	public Action () {
 		// for serialization
@@ -26,6 +28,8 @@ public class Action extends EventTable {
 			if (o instanceof String) setItem((String)o, table.rawget(o));
 		}
 	}
+
+	protected String luaTostring () { return "a ZCommand instance"; }
 	
 	protected void setItem (String key, Object value) {
 		if ("Text".equals(key)) {
@@ -42,6 +46,11 @@ public class Action extends EventTable {
 			while ((i = lt.next(i)) != null) {
 				targets.addElement(lt.rawget(i));
 			}
+		} else if ("MakeReciprocal".equals(key)) {
+			reciprocal = LuaState.boolEval(value);
+			// TODO when this changes, the change is not propagated.
+		} else if ("EmptyTargetListText".equals(key)) {
+			notarget = value == null ? "(not available now)" : value.toString();
 		}
 	}
 	
@@ -67,11 +76,14 @@ public class Action extends EventTable {
 			if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
 		}
 		return count;
-
 	}
 	
 	public boolean isTarget(Thing t) {
 		return targets.contains(t) || isUniversal();
+	}
+
+	public Vector getTargets () {
+		return targets;
 	}
 
 	public String getName() {
@@ -96,5 +108,9 @@ public class Action extends EventTable {
 	
 	public Thing getActor () {
 		return actor;
+	}
+
+	public boolean isReciprocal () {
+		return reciprocal;
 	}
 }
