@@ -12,7 +12,7 @@ import util.BackgroundRunner;
 
 public class Engine implements Runnable {
 
-	public static final String VERSION = "303:310M";
+	public static final String VERSION = "312";
 
 	public static Engine instance;
 	public static LuaState state;
