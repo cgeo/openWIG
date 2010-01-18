@@ -229,7 +229,7 @@ public class Browser extends List implements Pushable, CommandListener {
 		} else {
 			if (cmd == Midlet.CMD_BACK) {
 				Midlet.push(Midlet.baseMenu);
-			} else if (cmd == SELECT_COMMAND) {
+			} else if (cmd == List.SELECT_COMMAND) {
 				String sel = getString(getSelectedIndex());
 				setTitle("wait...");
 				if ("..".equals(sel)) ascend();

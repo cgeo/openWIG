@@ -21,7 +21,7 @@ abstract public class ListOfStuff extends List implements Pushable, CommandListe
 	protected Image getStuffIcon (Object what) { return null; }
 	
 	public void commandAction(Command cmd, Displayable disp) {
-		if (cmd == SELECT_COMMAND) {
+		if (cmd == List.SELECT_COMMAND) {
 			Object s = null;
 			synchronized (this) {
 				int index = getSelectedIndex();

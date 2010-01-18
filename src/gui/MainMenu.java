@@ -37,7 +37,7 @@ public class MainMenu extends List implements CommandListener, Pushable {
 	
 	public void commandAction(Command cmd, Displayable disp) {
 		if (disp == this) {
-			if (cmd == SELECT_COMMAND) {
+			if (cmd == List.SELECT_COMMAND) {
 				switch (getSelectedIndex()) {
 					case ZONES:
 						Midlet.push(Midlet.zones);
