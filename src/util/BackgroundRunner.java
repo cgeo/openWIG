@@ -6,8 +6,24 @@ public class BackgroundRunner extends Thread {
 
 	private static BackgroundRunner instance;
 
+	private boolean paused = false;
+
 	public BackgroundRunner () {
 		start();
+	}
+
+	public BackgroundRunner (boolean paused) {
+		this.paused = paused;
+		start();
+	}
+
+	synchronized public void pause () {
+		paused = true;
+	}
+
+	synchronized public void resume () {
+		paused = false;
+		notify();
 	}
 
 	public static BackgroundRunner getInstance () {
@@ -26,6 +42,9 @@ public class BackgroundRunner extends Thread {
 	public void run () {
 		boolean events;
 		while (!end) {
+			synchronized (this) { while (paused) {
+				try { wait(); } catch (InterruptedException e) { }
+			} }
 			events = false;
 			while (!queue.isEmpty()) {
 				events = true;
@@ -36,6 +55,7 @@ public class BackgroundRunner extends Thread {
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
+				if (paused) break;
 			}
 			if (events && queueProcessedListener != null) queueProcessedListener.run();
 			synchronized (this) {

@@ -12,11 +12,7 @@ import util.BackgroundRunner;
 
 public class Engine implements Runnable {
 
-	public static final String VERSION;
-	static {
-		String v = "$Rev$".substring(6);
-		VERSION = v.substring(0, v.length()-2);
-	}
+	public static final String VERSION = "303:310M";
 
 	public static Engine instance;
 	public static LuaState state;
@@ -97,7 +93,7 @@ public class Engine implements Runnable {
 		LuaInterface.register(state);
 
 		write("Building event queue...\n");
-		eventRunner = new BackgroundRunner();
+		eventRunner = new BackgroundRunner(true);
 		eventRunner.setQueueListener(new Runnable() {
 			public void run () {
 				Midlet.refresh();
@@ -108,6 +104,7 @@ public class Engine implements Runnable {
 	private void restoreGame ()
 	throws IOException {
 		write("Restoring saved state...");
+		cartridge = new Cartridge();
 		savegame.restore(state.getEnvironment());
 	}
 
@@ -143,6 +140,7 @@ public class Engine implements Runnable {
 
 			write("Starting game...\n");
 			Midlet.start();
+			eventRunner.resume();
 
 			player.refreshLocation();
 			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);

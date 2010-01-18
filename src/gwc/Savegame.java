@@ -41,8 +41,12 @@ public class Savegame {
 			out = saveFile.openDataOutputStream();
 
 			out.writeUTF(SIGNATURE);
+			out.writeUTF(Engine.VERSION);
 			resetObjectStore();
-			//serializeLuaTable(table, out);
+
+			//specialcase cartridge:
+			storeValue(Engine.instance.cartridge, out);
+			
 			storeValue(table, out);
 			Engine.log("STOR: store successful", Engine.LOG_CALL);
 		} finally {
@@ -61,12 +65,20 @@ public class Savegame {
 	throws IOException {
 		DataInputStream dis = saveFile.openDataInputStream();
 		String sig = dis.readUTF();
-		if (!SIGNATURE.equals(sig)) {
-			throw new IOException("Invalid savegame file: bad signature.");
+		if (!SIGNATURE.equals(sig)) throw new IOException("Invalid savegame file: bad signature.");
+		try {
+			String ver = dis.readUTF();
+			if (!Engine.VERSION.equals(ver)) throw new IOException("Savegame is for different version.");
+		} catch (UTFDataFormatException e) {
+			throw new IOException("Savegame is for different version.");
 		}
+
 		try {
 			resetObjectStore();
-			//deserializeLuaTable(dis, table);
+
+			// specialcase cartridge: (TODO make a generic mechanism for this)
+			Engine.instance.cartridge = (openwig.Cartridge)restoreValue(dis, null);
+			
 			restoreValue(dis, table);
 		} catch (IOException e) {
 			throw new IOException("Problem loading game: "+e.getMessage());

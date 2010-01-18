@@ -1,6 +1,7 @@
 package openwig;
 
 import gui.Midlet;
+import java.io.*;
 import se.krka.kahlua.vm.*;
 
 public class Zone extends Thing {
@@ -338,5 +339,17 @@ public class Zone extends Thing {
 		if (t == Engine.instance.player) {
 			return contain == INSIDE;
 		} else return super.contains(t);
+	}
+
+	public void serialize (DataOutputStream out) throws IOException {
+		out.writeInt(contain);
+		out.writeInt(ncontain);
+		super.serialize(out);
+	}
+
+	public void deserialize (DataInputStream in) throws IOException {
+		contain = in.readInt();
+		ncontain = in.readInt();
+		super.deserialize(in);
 	}
 }
