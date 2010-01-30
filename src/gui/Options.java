@@ -21,7 +21,7 @@ public class Options extends Form implements Pushable, CommandListener,
 	private static final int CHK_SHOWFULL = 1;
 	
 	// option labels
-	private static final String NAME_MANUAL = "Manual";
+	private static final String NAME_MANUAL = "None";
 	private static final String NAME_BLUETOOTH = "Bluetooth";
 	private static final String NAME_SERIAL = "Serial port";
 	private static final String NAME_INTERNAL = "Internal";

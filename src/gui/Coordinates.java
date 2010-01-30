@@ -142,8 +142,11 @@ public class Coordinates extends Form implements CommandListener, Pushable, Runn
 	}
 	
 	private void updateScreen () {
+		if (Midlet.gps == this) {
+			lblGps.setText("input your coordinates:");
+			return;
+		}
 		lblGps.setText(states[Midlet.gps.getState()]);
-		if (Midlet.gps == this) return;
 		if (Midlet.gps.getState() == LocationService.ONLINE) {
 			lblLat.setText(makeFriendlyLat(Midlet.gps.getLatitude()));
 			lblLon.setText(makeFriendlyLon(Midlet.gps.getLongitude()));
