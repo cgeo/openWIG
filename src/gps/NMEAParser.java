@@ -33,7 +33,6 @@ public class NMEAParser implements Runnable, LocationService {
 	protected String pdop,  hdop,  vdop;
 	//Zephy 21.11.07 gpsstatus+/
 	private String communicationURL;
-	protected String nmea;
 	//zdroje dat
 	private Thread thread = null;
 	private boolean connected = false;
@@ -137,10 +136,6 @@ public class NMEAParser implements Runnable, LocationService {
 		return day + "." + month + ". " + hour + ":" + minute;
 	}
 
-	public String getNmea() {
-		return nmea;
-	}
-
 	//Zephy 21.11.07 gpsstatus+\
 	public Hashtable getSignalData() {
 		return signaldata;
@@ -179,6 +174,43 @@ public class NMEAParser implements Runnable, LocationService {
 		// notify midlet
 	}
 
+	private byte[] buffer = new byte[2048];
+	private char[] charbuf = new char[2048];
+	private int bufpos = 0;
+	private String readline (InputStream is) throws IOException {
+		int lbp = 0;
+		endlessloop: while (true) {
+			// find line in existing buffer content
+			for (int i = lbp; i < bufpos; i++) {
+				if (buffer[i] == '\n') break endlessloop;
+			}
+			// if not found, prefill buffer
+			int av = is.available();
+			lbp = bufpos;
+			if (av > 0) {
+				// read all of it into a buffer
+				int len = Math.min(av, buffer.length - bufpos);
+				bufpos += is.read(buffer, bufpos, len);
+				if (bufpos == lbp) throw new IOException("GPS device disconnected.");
+			} else {
+				// read just one char
+				int r = is.read();
+				if (r == -1) throw new IOException("GPS device disconnected.");
+				buffer[bufpos++] = (byte)r;
+			}
+		}
+		// now we either exception-ed out or have the line in buffer
+		int br = 0;
+		for (br = 0; br < bufpos; br++) {
+			if (buffer[br] == '\n') break;
+			charbuf[br] = (char)buffer[br];
+		}
+		String ret = String.valueOf(charbuf, 0, br);
+		bufpos -= br + 1;
+		System.arraycopy(buffer, br + 1, buffer, 0, bufpos);
+		return ret;
+	}
+
 	/**
 	 * Vlakno NMEA komunikace s GPS, na nic neceka, porad parsuje data
 	 */
@@ -199,31 +231,9 @@ public class NMEAParser implements Runnable, LocationService {
 			Midlet.coordinates.gpsConnected();
 
 			//cteni dat
-			StringBuffer sb = new StringBuffer(50);
 			boolean prevfix = fix;
-			int ch = 0;
 			while (thread != null) {
-				sb.delete(0, sb.length());
-				ch = 0;
-				while (true) {
-					if (inputStream.available() > 0) {
-						ch = inputStream.read();
-						if (ch == -1) {
-							throw new IOException("GPS device disconnected.");
-						} else if (ch == '\n') {
-							break;
-						} else {
-							sb.append((char)ch);
-						}
-					} else {
-						// let us rest for a bit
-						try { Thread.sleep(100); } catch (InterruptedException e) { }
-					}
-					if (thread == null) return;
-				}
-				String s = sb.toString();
-				nmea = s;
-				receiveNmea(s);
+				receiveNmea(readline(inputStream));
 				if (prevfix != fix) Midlet.coordinates.fixChanged(fix);
 				prevfix = fix;
 			}
