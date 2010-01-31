@@ -12,7 +12,7 @@ import util.BackgroundRunner;
 
 public class Engine implements Runnable {
 
-	public static final String VERSION = "312";
+	public static final String VERSION = "319M";
 
 	public static Engine instance;
 	public static LuaState state;
@@ -128,20 +128,8 @@ public class Engine implements Runnable {
 		player.rawset("Name", gwcfile.member);
 	}
 
-	public void run () {
+	private void mainloop () {
 		try {
-			if (log != null) log.println("-------------------\ncartridge " + gwcfile.name + " started (openWIG r" + VERSION + ")\n-------------------");
-			prepareState ();
-
-			if (doRestore) restoreGame();
-			else newGame();
-
-			loglevel = LOG_PROP;
-
-			write("Starting game...\n");
-			Midlet.start();
-			eventRunner.resume();
-
 			player.refreshLocation();
 			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
 			Midlet.refresh();
@@ -157,7 +145,7 @@ public class Engine implements Runnable {
 				} catch (Exception e) {
 					stacktrace(e);
 				}
-				
+
 				try { Thread.sleep(1000); } catch (InterruptedException e) { }
 			}
 			if (log != null) log.close();
@@ -168,6 +156,30 @@ public class Engine implements Runnable {
 			instance = null;
 			state = null;
 			eventRunner = null;
+		}
+	}
+
+	public void run () {
+		try {
+			if (log != null) log.println("-------------------\ncartridge " + gwcfile.name + " started (openWIG r" + VERSION + ")\n-------------------");
+			prepareState ();
+
+			if (doRestore) restoreGame();
+			else newGame();
+
+			loglevel = LOG_PROP;
+
+			write("Starting game...\n");
+			Midlet.start();
+			eventRunner.resume();
+			
+			mainloop();
+		} catch (IOException e) {
+			Midlet.end();
+			Midlet.error("Could not load cartridge: "+e.getMessage());
+		} catch (Throwable t) {
+			Midlet.end();
+			stacktrace(t);
 		}
 	}
 
