@@ -8,6 +8,8 @@ public class CartridgeFile {
 	
 	private static final byte[] CART_ID = { 0x02, 0x0a, 0x43, 0x41, 0x52, 0x54, 0x00 };
 			// 02 0a CART 00
+
+	private static final int CACHE_LIMIT = 128000; // in kB
 	
 	private GwcInput source;
 	private String connectionUrl;
@@ -18,8 +20,6 @@ public class CartridgeFile {
 	private int files;
 	private int[] offsets;
 	private int[] ids;
-	
-	public byte[] bytecode;
 	
 	public double latitude, longitude;
 	public String type, member, name, description, startdesc, version, author, url, device, code;
@@ -119,6 +119,8 @@ public class CartridgeFile {
 	
 	public byte[] getFile (int id) throws IOException {
 		if (id == lastId) return lastFile;
+		else lastFile = null;
+
 		if (id < 1) // invalid, apparently. or bytecode - lookie no touchie
 			return null;
 		
@@ -136,11 +138,22 @@ public class CartridgeFile {
 
 		int ttype = source.readInt(); // we don't need this?
 		int len = source.readInt();
-		byte[] ffile = new byte[len];
-		source.read(ffile);
-		
-		lastId = id;
-		lastFile = ffile;
+
+		byte[] ffile;
+		try {
+			ffile = new byte[len];
+			source.read(ffile);
+		} catch (OutOfMemoryError e) {
+			return null;
+		}
+
+		if (len < CACHE_LIMIT) {
+			lastId = id;
+			lastFile = ffile;
+		} else {
+			lastId = -1;
+			lastFile = null;
+		}
 		return ffile;
 	}
 	
