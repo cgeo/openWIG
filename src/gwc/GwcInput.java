@@ -51,9 +51,17 @@ public class GwcInput {
 	}
 	
 	public int read (byte[] b) throws IOException {
-		int re = stream.read(b);
-		pos += re;
-		return re;
+		int r = 0;
+		try {
+			while (r < b.length) {
+				int re = stream.read(b, r, b.length - r);
+				if (re == 0) break;
+				else r += re;
+			}
+			return r;
+		} finally {
+			pos += r;
+		}
 	}
 	
 	public int read () throws IOException {
