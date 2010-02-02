@@ -45,7 +45,7 @@ public class Container extends EventTable {
 		if (location != null) TableLib.removeItem(location.inventory, this);
 		// location.things.removeElement(this);
 		if (c != null) {
-			Engine.tableInsert(c.inventory, this);
+			TableLib.rawappend(c.inventory, this);
 			location = c;
 			table.rawset("Container", c);
 			if (c == Engine.instance.player) {

@@ -2,6 +2,7 @@ package openwig;
 
 import gui.Midlet;
 import java.io.*;
+import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
 public class Zone extends Thing {
@@ -326,12 +327,13 @@ public class Zone extends Thing {
 	}
 	
 	public void collectThings (LuaTable c) {
+		// XXX does this have to be a LuaTable? maybe it does...
 		if (!showThings()) return;
 		Object key = null;
 		while ((key = inventory.next(key)) != null) {
 			Object z = inventory.rawget(key);
 			if (z instanceof Thing && ((Thing)z).isVisible())
-				Engine.tableInsert(c, z);
+				TableLib.rawappend(c, z);
 		}
 	}
 	

@@ -3,7 +3,6 @@ package openwig;
 import gui.Midlet;
 import gwc.*;
 import se.krka.kahlua.vm.*;
-import se.krka.kahlua.stdlib.TableLib;
 
 import java.io.*;
 import java.util.*;
@@ -12,7 +11,7 @@ import util.BackgroundRunner;
 
 public class Engine implements Runnable {
 
-	public static final String VERSION = "319M";
+	public static final String VERSION = "321M";
 
 	public static Engine instance;
 	public static LuaState state;
@@ -331,6 +330,7 @@ public class Engine implements Runnable {
 					savegame = new Savegame(Midlet.browser.getSyncFile());
 				savegame.store(state.getEnvironment());
 			} catch (IOException e) {
+				log("STOR: save failed: "+e.toString(), LOG_WARN);
 				Midlet.error("Sync failed.\n" + e.getMessage());
 			} finally {
 				Midlet.setStatusText(null);
@@ -344,18 +344,5 @@ public class Engine implements Runnable {
 
 	public static void requestSync () {
 		instance.eventRunner.perform(instance.store);
-	}
-
-	public static void tableInsert (LuaTable table, int position, Object item) {
-		TableLib.insert(state, table, position, item);
-	}
-	public static void tableInsert (LuaTable table, Object item) {
-		TableLib.insert(state, table, item);
-	}
-	public static Object tableRemove (LuaTable table, int position) {
-		return TableLib.remove(state, table, position);
-	}
-	public static Object tableRemove (LuaTable table) {
-		return TableLib.remove(state, table);
 	}
 }

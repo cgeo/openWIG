@@ -2,6 +2,7 @@ package openwig;
 
 import java.io.*;
 import java.util.Vector;
+import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
 
 public class Cartridge extends EventTable {
@@ -31,7 +32,7 @@ public class Cartridge extends EventTable {
 	public Cartridge () {
 		table.rawset("RequestSync", requestSync);
 		table.rawset("AllZObjects", allZObjects);
-		Engine.tableInsert(allZObjects, this);
+		TableLib.rawappend(allZObjects, this);
 	}
 		
 	public void walk (ZonePoint zp) {		
@@ -99,7 +100,7 @@ public class Cartridge extends EventTable {
 	}
 	
 	public void addObject (Object o) {
-		Engine.tableInsert(allZObjects, o);
+		TableLib.rawappend(allZObjects, o);
 		sortObject(o);
 	}
 
