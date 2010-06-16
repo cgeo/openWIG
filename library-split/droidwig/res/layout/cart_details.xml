@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">"
+	<TextView
+		android:id="@+id/cart_title"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center_horizontal"
+		android:textStyle="bold"
+		android:text="cart title"/>
+	<ImageView
+		android:id="@+id/cart_splash"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center_horizontal"
+		android:adjustViewBounds="true" />
+	<TextView
+		android:id="@+id/cart_description"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="description goes here"/>
+</LinearLayout>
