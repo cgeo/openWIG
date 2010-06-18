@@ -55,12 +55,12 @@ public class EventTable implements LuaTable, Serializable {
 	}
 
 	public boolean isVisible() { return visible; }
-
+	
 	public void setPosition(ZonePoint location) {
 		position = location;
 		table.rawset("ObjectLocation", location);
 	}
-	
+
 	public boolean isLocated() {
 		return position != null;
 	}
@@ -81,6 +81,13 @@ public class EventTable implements LuaTable, Serializable {
 		} else if ("Icon".equals(key)) {
 			icon = (Media)value;
 		}
+	}
+
+	protected Object getItem (String key) {
+		if ("CurrentDistance".equals(key)) {
+			if (isLocated()) return new Distance(position.distance(Engine.instance.player.position), null);
+			else return new Distance();
+		} else return table.rawget(key);
 	}
 	
 	public void setTable (LuaTable table) {
@@ -126,7 +133,12 @@ public class EventTable implements LuaTable, Serializable {
 
 	public LuaTable getMetatable () { return metatable; }
 
-	public Object rawget (Object key) { return table.rawget(key); }
+	public Object rawget (Object key) {
+		if (key instanceof String)
+			return getItem((String)key);
+		else
+			return table.rawget(key);
+	}
 
 	public Object next (Object key) { return table.next(key); }
 

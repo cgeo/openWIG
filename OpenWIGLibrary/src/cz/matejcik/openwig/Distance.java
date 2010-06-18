@@ -59,13 +59,17 @@ public class Distance implements LuaTable, Serializable {
 			this.value = value;
 		}
 	}
-	
-	public double getValue (String unit) {
+
+	public static double convert (double value, String unit) {
 		if (unit != null && conversions.containsKey(unit)) {
 			return value / ((Double)conversions.get(unit)).doubleValue();
 		} else {
 			return value;
-		}		
+		}
+	}
+	
+	public double getValue (String unit) {
+		return convert(value, unit);
 	}
 
 	public void setMetatable (LuaTable metatable) { }
