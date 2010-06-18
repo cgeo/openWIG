@@ -38,14 +38,15 @@ public class Player extends Thing {
 		if (!TableLib.contains(insideOfZones, z)) {
 			TableLib.rawappend(insideOfZones, z);
 		}
-		if (!TableLib.contains(z.inventory, this)) {
+		// Player should not go to inventory
+		/*if (!TableLib.contains(z.inventory, this)) {
 			TableLib.rawappend(z.inventory, this);
-		}
+		}*/
 	}
 
 	public void leaveZone (Zone z) {
 		TableLib.removeItem(insideOfZones, z);
-		TableLib.removeItem(z.inventory, this);
+		//TableLib.removeItem(z.inventory, this);
 	}
 
 	protected String luaTostring () { return "a Player instance"; }
