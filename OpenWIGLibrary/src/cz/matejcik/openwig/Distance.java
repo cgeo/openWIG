@@ -90,6 +90,6 @@ public class Distance implements LuaTable, Serializable {
 	public Object next (Object key) { return null; }
 
 	public String toString () {
-		return "Distance("+value+")-"+super.toString();
+		return "Distance("+value+")"/* + "-" + super.toString()*/;
 	}
 }

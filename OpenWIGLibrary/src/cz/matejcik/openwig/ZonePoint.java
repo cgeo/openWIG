@@ -192,6 +192,6 @@ public class ZonePoint implements LuaTable, Serializable {
 	}
 
 	public String toString () {
-		return "ZonePoint("+latitude+","+longitude+","+(altitude!=null ? altitude.toString() : "0")+")-"+super.toString();
+		return "ZonePoint("+latitude+","+longitude+","+(altitude!=null ? altitude.toString() : "0")+")" /* + "-" + super.toString()*/;
 	}
 }
