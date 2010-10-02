@@ -55,7 +55,7 @@ public class EventTableDetails extends DetailPane {
 		for (int i = 0; i < actions.size(); i++) {
 			Action a = actions.get(i);
 			JButton b = buttons.get(i);
-			b.setVisible(a.isEnabled());
+			b.setVisible(a.isEnabled() && a.getActor().visibleToPlayer());
 			String label;
 			if (a.getActor() == table) {
 				label = a.text;

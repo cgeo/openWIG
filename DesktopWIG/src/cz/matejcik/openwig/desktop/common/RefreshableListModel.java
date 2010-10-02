@@ -33,9 +33,11 @@ public class RefreshableListModel<T> extends AbstractListModel {
 	}
 
 	public void clear () {
-		int size = contents.size();
-		contents.clear();
-		fireIntervalRemoved(this, 0, size);
+		if (!contents.isEmpty()) {
+			int size = contents.size();
+			contents.clear();
+			fireIntervalRemoved(this, 0, size - 1);
+		}
 	}
 
 	public void add (int i, T thing) {
