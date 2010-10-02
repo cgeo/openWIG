@@ -44,6 +44,7 @@ public class NMEAParser implements Runnable, LocationService {
 	 */
 	public NMEAParser(String address) {
 		nmeaCount = 0;
+		if (address == null) address = "";
 		communicationURL = address;
 		if (address.toLowerCase().indexOf("at5") == 5) hge100 = true;
 	}
