@@ -234,11 +234,12 @@ public final class TableLib implements JavaFunction {
 		Object key = null;
 		while ((key = table.next(key)) != null) {
 			if (item.equals(table.rawget(key))) {
-				table.rawset(key, null);
 				if (key instanceof Double) {
 					double k = ((Double)key).doubleValue();
 					int i = (int)k;
 					if (k == i) rawremove(table, i);
+				} else {
+					table.rawset(key, null);
 				}
 				return;
 			}
