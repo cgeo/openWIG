@@ -18,7 +18,7 @@ import util.Config;
 
 public class Midlet extends MIDlet implements CommandListener, UI, PlayerListener {
 
-	public static final String VERSION = "358";
+	public static final String VERSION = "386";
 	
 	// basemenu screens
 	public static Coordinates coordinates;
@@ -119,7 +119,7 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 			push(baseMenu);
 		}
 		} catch (Throwable t) {
-			Alert a = new Alert("error",t.toString() + " ("+t.getMessage()+") at "+ err,null,AlertType.ERROR);
+			Alert a = new Alert("error r"+VERSION, t.toString() + " ("+t.getMessage()+") at "+ err,null,AlertType.ERROR);
 			a.setTimeout(Alert.FOREVER);
 			display.setCurrent(a);
 		}
@@ -251,9 +251,8 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 				err = "internal";
 				Class internal = Class.forName("gps.InternalProvider");
 				gps = (LocationService)internal.newInstance();
+				} catch (Throwable e) { throw new RuntimeException(e.toString() + " ("+e.getMessage()+")"); }
 				break;
-				} catch (Throwable e) { error(e.getMessage()); }
-				// if exception is caught, no break and fallback to manual
 			default:
 				gpsType = GPS_MANUAL;
 				gps = coordinates;

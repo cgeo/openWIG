@@ -18,7 +18,7 @@ public class CartridgeFile {
 	
 	private SeekableFile source;
 
-	private Savegame savegame;
+	protected Savegame savegame;
 	
 	private int files;
 	private int[] offsets;
@@ -30,7 +30,7 @@ public class CartridgeFile {
 
 	public String filename;
 	
-	private CartridgeFile() { }
+	protected CartridgeFile() { }
 	
 	private boolean fileOk () throws IOException {
 		byte[] buf = new byte[CART_ID.length];

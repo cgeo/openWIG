@@ -34,7 +34,7 @@ import util.BackgroundRunner;
  */
 public class Engine implements Runnable {
 
-	public static final String VERSION = "358";
+	public static final String VERSION = "386";
 
 	/** the main instance */
 	public static Engine instance;
@@ -81,7 +81,7 @@ public class Engine implements Runnable {
 		return instance;
 	}
 
-	private Engine (CartridgeFile cf, OutputStream out) throws IOException {
+	protected Engine (CartridgeFile cf, OutputStream out) throws IOException {
 		instance = this;
 		gwcfile = cf;
 		savegame = cf.getSavegame();
