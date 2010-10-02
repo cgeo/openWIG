@@ -28,7 +28,7 @@ public class Distance implements LuaTable, Serializable {
 		conversions.put("nauticalmiles", new Double(1852));
 	}
 	
-	protected static LuaTable metatable;
+	protected static LuaTable metatable = new LuaTableImpl();
 	protected static JavaFunction getValue = new JavaFunction() {
 		public int call (LuaCallFrame frame, int n) {
 			BaseLib.luaAssert(n >= 2, "not enough parameters");
@@ -38,6 +38,9 @@ public class Distance implements LuaTable, Serializable {
 			return 1;
 		}
 	};
+	static {
+		metatable.rawset("__call", getValue);
+	}
 
 	public static void register () {
 		Engine.instance.savegame.addJavafunc(getValue);
@@ -53,7 +56,7 @@ public class Distance implements LuaTable, Serializable {
 	}
 	
 	public void setValue (double value, String unit) {
-		if (conversions.containsKey(unit)) {
+		if (unit != null && conversions.containsKey(unit)) {
 			this.value = value * ((Double)conversions.get(unit)).doubleValue();
 		} else {
 			this.value = value;
@@ -73,7 +76,7 @@ public class Distance implements LuaTable, Serializable {
 	}
 
 	public void setMetatable (LuaTable metatable) { }
-	public LuaTable getMetatable () { return null; }
+	public LuaTable getMetatable () { return metatable; }
 
 	public void rawset (Object key, Object value) {	}
 
