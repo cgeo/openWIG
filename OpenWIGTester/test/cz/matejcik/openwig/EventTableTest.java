@@ -1,43 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package cz.matejcik.openwig;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import se.krka.kahlua.vm.LuaTable;
 
-/**
- *
- * @author matejcik
- */
 public class EventTableTest {
-
-    public EventTableTest() {
-    }
-
-	@BeforeClass
-	public static void setUpClass () throws Exception {
-	}
-
-	@AfterClass
-	public static void tearDownClass () throws Exception {
-	}
 
 	@Test
 	public void testLuaTostring () {
-		System.out.println("luaTostring");
 		EventTable instance = new EventTable();
-		String expResult = "";
+		String expResult = "a ZObject instance";
 		String result = instance.luaTostring();
 		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
 	}
 
 	@Test
@@ -228,5 +204,4 @@ public class EventTableTest {
 		assertEquals(expResult, result);
 		fail("The test case is a prototype.");
 	}
-
 }

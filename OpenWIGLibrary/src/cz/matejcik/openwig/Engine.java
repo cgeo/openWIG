@@ -88,6 +88,10 @@ public class Engine implements Runnable {
 		if (out != null) log = new PrintStream(out);
 	}
 
+	protected Engine () {
+		/* for test mockups */
+	}
+
 	/** starts Engine's thread */
 	public void start () {
 		thread = new Thread(this);

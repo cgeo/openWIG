@@ -45,17 +45,15 @@ public class ZonePoint implements LuaTable, Serializable {
 		altitude = new Distance(alt,"metres");
 	}
 
-	public ZonePoint translate (double angle, Distance distance) {
-		double dist = distance.value;
+	public ZonePoint translate (double angle, double dist) {
 		double rad = azimuth2angle(angle);
 		double x = m2lat(dist * Math.sin(rad));
 		double y = m2lon(latitude, dist * Math.cos(rad));
 		return new ZonePoint(latitude + x, longitude + y, altitude);
 	}
-	
-	public void diff (ZonePoint z) {
-		latitude -= z.latitude;
-		longitude -= z.longitude;
+
+	public ZonePoint translate (double angle, Distance distance) {
+		return translate(angle, distance.value);
 	}
 
 	public void sync (ZonePoint z) {

@@ -19,6 +19,10 @@ public class Savegame {
 		saveFile = fc;
 	}
 
+	protected Savegame () {
+		/* for test mockups */
+	}
+
 	public boolean exists () throws IOException {
 		return saveFile.exists();
 	}
@@ -59,7 +63,7 @@ public class Savegame {
 		}
 	}
 
-	private void resetObjectStore () {
+	protected void resetObjectStore () {
 		objectStore = new Hashtable(256);
 		// XXX why did i choose to use LuaTable over Hashtable?
 		currentId = 0;

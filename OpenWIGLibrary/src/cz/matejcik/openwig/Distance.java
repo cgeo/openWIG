@@ -7,7 +7,7 @@ import java.util.Hashtable;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.BaseLib;
 
-public class Distance implements LuaTable, Serializable {
+public final class Distance implements LuaTable, Serializable {
 	public double value; // value in metres
 
 	public void serialize (DataOutputStream out) throws IOException {
@@ -18,7 +18,7 @@ public class Distance implements LuaTable, Serializable {
 		value = in.readDouble();
 	}
 		
-	public static Hashtable conversions = new Hashtable(6);
+	public static final Hashtable conversions = new Hashtable(6);
 	static {
 		conversions.put("feet", new Double(0.3048));
 		conversions.put("ft", new Double(0.3048));
@@ -28,8 +28,8 @@ public class Distance implements LuaTable, Serializable {
 		conversions.put("nauticalmiles", new Double(1852));
 	}
 	
-	protected static LuaTable metatable = new LuaTableImpl();
-	protected static JavaFunction getValue = new JavaFunction() {
+	protected static final LuaTable metatable = new LuaTableImpl();
+	protected static final JavaFunction getValue = new JavaFunction() {
 		public int call (LuaCallFrame frame, int n) {
 			BaseLib.luaAssert(n >= 2, "not enough parameters");
 			Distance z = (Distance) frame.get(0);
@@ -60,7 +60,7 @@ public class Distance implements LuaTable, Serializable {
 		if (d == null) return null;
 		return new Distance(d.value, null);
 	}
-	
+
 	public void setValue (double value, String unit) {
 		if (unit != null && conversions.containsKey(unit)) {
 			this.value = value * ((Double)conversions.get(unit)).doubleValue();

@@ -2,16 +2,14 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package cz.matejcik.openwig;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import cz.matejcik.openwig.testmockups.TestEngine;
+import java.io.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import se.krka.kahlua.vm.LuaTable;
 
 /**
  *
@@ -19,55 +17,64 @@ import se.krka.kahlua.vm.LuaTable;
  */
 public class ZonePointTest {
 
-    public ZonePointTest() {
-    }
-
 	@BeforeClass
 	public static void setUpClass () throws Exception {
+		TestEngine.initialize();
 	}
 
 	@AfterClass
 	public static void tearDownClass () throws Exception {
+		TestEngine.kill();
+	}
+
+	private static final double FUZZ = 1.0e-6;
+	
+	private ZonePoint randomZonePoint ()
+	{
+		return new ZonePoint(Math.random(), Math.random(), Math.random());
+	}
+
+	private void assertEqualZP (ZonePoint a, ZonePoint b, double tolerance)
+	{
+		assertEquals(a.latitude, b.latitude, tolerance);
+		assertEquals(a.longitude, b.longitude, tolerance);
+		assertEquals(a.altitude.value, b.altitude.value, tolerance);
 	}
 
 	@Test
 	public void testCopy () {
-		System.out.println("copy");
-		ZonePoint z = null;
-		ZonePoint expResult = null;
-		ZonePoint result = ZonePoint.copy(z);
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
+		assertNull(ZonePoint.copy(null));
+
+		ZonePoint z = randomZonePoint();
+		ZonePoint c = ZonePoint.copy(z);
+		assertNotSame(z, c);
+		assertNotSame(z.altitude, c.altitude);
+		assertEqualZP(z, c, 0);
 	}
 
 	@Test
 	public void testTranslate () {
-		System.out.println("translate");
-		double angle = 0.0;
-		Distance distance = null;
-		ZonePoint instance = new ZonePoint();
-		ZonePoint expResult = null;
-		ZonePoint result = instance.translate(angle, distance);
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
-	}
+		ZonePoint z = randomZonePoint();
+		ZonePoint t = z.translate(Math.random() * 360, 0);
+		assertNotSame(z, t);
+		assertEqualZP(z, t, 0);
 
-	@Test
-	public void testDiff () {
-		System.out.println("diff");
-		ZonePoint z = null;
-		ZonePoint instance = new ZonePoint();
-		instance.diff(z);
-		fail("The test case is a prototype.");
+		double dist = Math.random() * 2000;
+		double angle = Math.random() * 360;
+
+		t = z.translate(angle, dist);
+		ZonePoint zz = t.translate(angle - 180, dist);
+		assertEqualZP(z, zz, FUZZ);
+
+		/* TODO test known translation values */
 	}
 
 	@Test
 	public void testSync () {
-		System.out.println("sync");
-		ZonePoint z = null;
-		ZonePoint instance = new ZonePoint();
-		instance.sync(z);
-		fail("The test case is a prototype.");
+		ZonePoint z = new ZonePoint(Math.random(), Math.random(), 0);
+		ZonePoint y = new ZonePoint(Math.random(), Math.random(), 0);
+		z.sync(y);
+		assertEqualZP(y, z, 0);
 	}
 
 	@Test
@@ -233,102 +240,57 @@ public class ZonePointTest {
 	}
 
 	@Test
-	public void testSetMetatable () {
-		System.out.println("setMetatable");
-		LuaTable metatable = null;
-		ZonePoint instance = new ZonePoint();
-		instance.setMetatable(metatable);
-		fail("The test case is a prototype.");
-	}
-
-	@Test
-	public void testGetMetatable () {
-		System.out.println("getMetatable");
-		ZonePoint instance = new ZonePoint();
-		LuaTable expResult = null;
-		LuaTable result = instance.getMetatable();
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
-	}
-
-	@Test
 	public void testRawset () {
-		System.out.println("rawset");
-		Object key = null;
-		Object value = null;
-		ZonePoint instance = new ZonePoint();
-		instance.rawset(key, value);
-		fail("The test case is a prototype.");
+		ZonePoint z = randomZonePoint();
+		double lat = Math.random();
+		double lon = Math.random();
+		Distance alt = new Distance(Math.random(), null);
+		z.rawset("latitude", lat);
+		assertEquals(z.latitude, lat, 0);
+		z.rawset("longitude", lon);
+		assertEquals(z.longitude, lon, 0);
+		z.rawset("altitude", alt);
+		assertSame(z.altitude, alt);
+
+		z.rawset("nonsense", true);
+		z.rawset(null, null);
 	}
 
 	@Test
 	public void testRawget () {
-		System.out.println("rawget");
-		Object key = null;
-		ZonePoint instance = new ZonePoint();
-		Object expResult = null;
-		Object result = instance.rawget(key);
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
+		ZonePoint z = randomZonePoint();
+		double lat = (Double)z.rawget("latitude");
+		assertEquals(z.latitude, lat, 0);
+		double lon = (Double)z.rawget("longitude");
+		assertEquals(z.longitude, lon, 0);
+		Distance alt = (Distance)z.rawget("altitude");
+		assertEquals(z.altitude, alt);
+
+		z.rawset("nonsense", true);
+		assertNull(z.rawget("nonsense"));
+		assertNull(z.rawget(null));
 	}
 
-	@Test
-	public void testNext () {
-		System.out.println("next");
-		Object key = null;
-		ZonePoint instance = new ZonePoint();
-		Object expResult = null;
-		Object result = instance.next(key);
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
-	}
+	private void assertSerializationReverses (ZonePoint z)
+	throws IOException
+	{
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream(bos);
+		z.serialize(out);
 
-	@Test
-	public void testLen () {
-		System.out.println("len");
-		ZonePoint instance = new ZonePoint();
-		int expResult = 0;
-		int result = instance.len();
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
-	}
+		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+		DataInputStream in = new DataInputStream(bis);
+		ZonePoint zz = new ZonePoint();
+		zz.deserialize(in);
 
-	@Test
-	public void testUpdateWeakSettings () {
-		System.out.println("updateWeakSettings");
-		boolean weakKeys = false;
-		boolean weakValues = false;
-		ZonePoint instance = new ZonePoint();
-		instance.updateWeakSettings(weakKeys, weakValues);
-		fail("The test case is a prototype.");
+		assertEqualZP(z, zz, 0);
 	}
 
 	@Test
 	public void testSerialize () throws Exception {
-		System.out.println("serialize");
-		DataOutputStream out = null;
-		ZonePoint instance = new ZonePoint();
-		instance.serialize(out);
-		fail("The test case is a prototype.");
+		ZonePoint z = randomZonePoint();
+		assertSerializationReverses(z);
+		ZonePoint y = new ZonePoint();
+		assertSerializationReverses(y);
 	}
-
-	@Test
-	public void testDeserialize () throws Exception {
-		System.out.println("deserialize");
-		DataInputStream in = null;
-		ZonePoint instance = new ZonePoint();
-		instance.deserialize(in);
-		fail("The test case is a prototype.");
-	}
-
-	@Test
-	public void testToString () {
-		System.out.println("toString");
-		ZonePoint instance = new ZonePoint();
-		String expResult = "";
-		String result = instance.toString();
-		assertEquals(expResult, result);
-		fail("The test case is a prototype.");
-	}
-
 }
