@@ -5,9 +5,7 @@
 
 package cz.matejcik.openwig;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -31,41 +29,25 @@ public class WherigoLibTest {
 	public static void tearDownClass () throws Exception {
 	}
 
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-	/**
-	 * Test of register method, of class WherigoLib.
-	 */ @Test
+	@Test
 	public void testRegister () {
 		System.out.println("register");
 		LuaState state = null;
 		WherigoLib.register(state);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of toString method, of class WherigoLib.
-	 */ @Test
+	@Test
 	public void testToString () {
 		System.out.println("toString");
 		WherigoLib instance = null;
 		String expResult = "";
 		String result = instance.toString();
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of call method, of class WherigoLib.
-	 */ @Test
+	@Test
 	public void testCall () {
 		System.out.println("call");
 		LuaCallFrame callFrame = null;
@@ -74,7 +56,6 @@ public class WherigoLibTest {
 		int expResult = 0;
 		int result = instance.call(callFrame, nArguments);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 

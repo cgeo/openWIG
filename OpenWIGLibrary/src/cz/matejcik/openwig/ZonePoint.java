@@ -29,7 +29,7 @@ public class ZonePoint implements LuaTable, Serializable {
 	public ZonePoint (ZonePoint z) {
 		latitude = z.latitude;
 		longitude = z.longitude;
-		altitude = z.altitude;
+		altitude = Distance.copy(z.altitude);
 	}
 	
 	private ZonePoint (double lat, double lon, Distance alt) {

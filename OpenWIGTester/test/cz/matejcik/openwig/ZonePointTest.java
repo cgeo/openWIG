@@ -1,10 +1,13 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package cz.matejcik.openwig;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -16,8 +19,8 @@ import se.krka.kahlua.vm.LuaTable;
  */
 public class ZonePointTest {
 
-	public ZonePointTest () {
-	}
+    public ZonePointTest() {
+    }
 
 	@BeforeClass
 	public static void setUpClass () throws Exception {
@@ -27,17 +30,6 @@ public class ZonePointTest {
 	public static void tearDownClass () throws Exception {
 	}
 
-	@Before
-	public void setUp () {
-	}
-
-	@After
-	public void tearDown () {
-	}
-
-	/**
-	 * Test of copy method, of class ZonePoint.
-	 */
 	@Test
 	public void testCopy () {
 		System.out.println("copy");
@@ -45,13 +37,9 @@ public class ZonePointTest {
 		ZonePoint expResult = null;
 		ZonePoint result = ZonePoint.copy(z);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of translate method, of class ZonePoint.
-	 */
 	@Test
 	public void testTranslate () {
 		System.out.println("translate");
@@ -61,39 +49,27 @@ public class ZonePointTest {
 		ZonePoint expResult = null;
 		ZonePoint result = instance.translate(angle, distance);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of diff method, of class ZonePoint.
-	 */
 	@Test
 	public void testDiff () {
 		System.out.println("diff");
 		ZonePoint z = null;
 		ZonePoint instance = new ZonePoint();
 		instance.diff(z);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of sync method, of class ZonePoint.
-	 */
 	@Test
 	public void testSync () {
 		System.out.println("sync");
 		ZonePoint z = null;
 		ZonePoint instance = new ZonePoint();
 		instance.sync(z);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of lat2m method, of class ZonePoint.
-	 */
 	@Test
 	public void testLat2m () {
 		System.out.println("lat2m");
@@ -101,13 +77,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.lat2m(degrees);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of lon2m method, of class ZonePoint.
-	 */
 	@Test
 	public void testLon2m () {
 		System.out.println("lon2m");
@@ -116,13 +88,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.lon2m(latitude, degrees);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of m2lat method, of class ZonePoint.
-	 */
 	@Test
 	public void testM2lat () {
 		System.out.println("m2lat");
@@ -130,13 +98,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.m2lat(metres);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of m2lon method, of class ZonePoint.
-	 */
 	@Test
 	public void testM2lon () {
 		System.out.println("m2lon");
@@ -145,13 +109,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.m2lon(latitude, metres);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of distance method, of class ZonePoint.
-	 */
 	@Test
 	public void testDistance_double_double () {
 		System.out.println("distance");
@@ -161,13 +121,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = instance.distance(lat, lon);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of distance method, of class ZonePoint.
-	 */
 	@Test
 	public void testDistance_ZonePoint () {
 		System.out.println("distance");
@@ -176,13 +132,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = instance.distance(z);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of distance method, of class ZonePoint.
-	 */
 	@Test
 	public void testDistance_4args () {
 		System.out.println("distance");
@@ -193,13 +145,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.distance(lat1, lon1, lat2, lon2);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of friendlyDistance method, of class ZonePoint.
-	 */
 	@Test
 	public void testFriendlyDistance () {
 		System.out.println("friendlyDistance");
@@ -209,13 +157,9 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = instance.friendlyDistance(lat, lon);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of makeFriendlyDistance method, of class ZonePoint.
-	 */
 	@Test
 	public void testMakeFriendlyDistance () {
 		System.out.println("makeFriendlyDistance");
@@ -223,13 +167,9 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = ZonePoint.makeFriendlyDistance(dist);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of makeFriendlyAngle method, of class ZonePoint.
-	 */
 	@Test
 	public void testMakeFriendlyAngle () {
 		System.out.println("makeFriendlyAngle");
@@ -237,13 +177,9 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = ZonePoint.makeFriendlyAngle(angle);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of makeFriendlyLatitude method, of class ZonePoint.
-	 */
 	@Test
 	public void testMakeFriendlyLatitude () {
 		System.out.println("makeFriendlyLatitude");
@@ -251,13 +187,9 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = ZonePoint.makeFriendlyLatitude(angle);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of makeFriendlyLongitude method, of class ZonePoint.
-	 */
 	@Test
 	public void testMakeFriendlyLongitude () {
 		System.out.println("makeFriendlyLongitude");
@@ -265,13 +197,9 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = ZonePoint.makeFriendlyLongitude(angle);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of bearing method, of class ZonePoint.
-	 */
 	@Test
 	public void testBearing () {
 		System.out.println("bearing");
@@ -281,13 +209,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = instance.bearing(lat, lon);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of angle2azimuth method, of class ZonePoint.
-	 */
 	@Test
 	public void testAngle2azimuth () {
 		System.out.println("angle2azimuth");
@@ -295,13 +219,9 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.angle2azimuth(angle);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of azimuth2angle method, of class ZonePoint.
-	 */
 	@Test
 	public void testAzimuth2angle () {
 		System.out.println("azimuth2angle");
@@ -309,26 +229,18 @@ public class ZonePointTest {
 		double expResult = 0.0;
 		double result = ZonePoint.azimuth2angle(azim);
 		assertEquals(expResult, result, 0.0);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of setMetatable method, of class ZonePoint.
-	 */
 	@Test
 	public void testSetMetatable () {
 		System.out.println("setMetatable");
 		LuaTable metatable = null;
 		ZonePoint instance = new ZonePoint();
 		instance.setMetatable(metatable);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of getMetatable method, of class ZonePoint.
-	 */
 	@Test
 	public void testGetMetatable () {
 		System.out.println("getMetatable");
@@ -336,13 +248,9 @@ public class ZonePointTest {
 		LuaTable expResult = null;
 		LuaTable result = instance.getMetatable();
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of rawset method, of class ZonePoint.
-	 */
 	@Test
 	public void testRawset () {
 		System.out.println("rawset");
@@ -350,13 +258,9 @@ public class ZonePointTest {
 		Object value = null;
 		ZonePoint instance = new ZonePoint();
 		instance.rawset(key, value);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of rawget method, of class ZonePoint.
-	 */
 	@Test
 	public void testRawget () {
 		System.out.println("rawget");
@@ -365,13 +269,9 @@ public class ZonePointTest {
 		Object expResult = null;
 		Object result = instance.rawget(key);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of next method, of class ZonePoint.
-	 */
 	@Test
 	public void testNext () {
 		System.out.println("next");
@@ -380,13 +280,9 @@ public class ZonePointTest {
 		Object expResult = null;
 		Object result = instance.next(key);
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of len method, of class ZonePoint.
-	 */
 	@Test
 	public void testLen () {
 		System.out.println("len");
@@ -394,13 +290,9 @@ public class ZonePointTest {
 		int expResult = 0;
 		int result = instance.len();
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of updateWeakSettings method, of class ZonePoint.
-	 */
 	@Test
 	public void testUpdateWeakSettings () {
 		System.out.println("updateWeakSettings");
@@ -408,39 +300,27 @@ public class ZonePointTest {
 		boolean weakValues = false;
 		ZonePoint instance = new ZonePoint();
 		instance.updateWeakSettings(weakKeys, weakValues);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of serialize method, of class ZonePoint.
-	 */
 	@Test
 	public void testSerialize () throws Exception {
 		System.out.println("serialize");
 		DataOutputStream out = null;
 		ZonePoint instance = new ZonePoint();
 		instance.serialize(out);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of deserialize method, of class ZonePoint.
-	 */
 	@Test
 	public void testDeserialize () throws Exception {
 		System.out.println("deserialize");
 		DataInputStream in = null;
 		ZonePoint instance = new ZonePoint();
 		instance.deserialize(in);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
 
-	/**
-	 * Test of toString method, of class ZonePoint.
-	 */
 	@Test
 	public void testToString () {
 		System.out.println("toString");
@@ -448,7 +328,7 @@ public class ZonePointTest {
 		String expResult = "";
 		String result = instance.toString();
 		assertEquals(expResult, result);
-		// TODO review the generated test code and remove the default call to fail.
 		fail("The test case is a prototype.");
 	}
+
 }

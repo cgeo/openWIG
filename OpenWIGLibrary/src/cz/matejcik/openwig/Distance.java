@@ -54,6 +54,12 @@ public class Distance implements LuaTable, Serializable {
 	{
 		setValue(value, unit);
 	}
+
+	public static Distance copy (Distance d)
+	{
+		if (d == null) return null;
+		return new Distance(d.value, null);
+	}
 	
 	public void setValue (double value, String unit) {
 		if (unit != null && conversions.containsKey(unit)) {
