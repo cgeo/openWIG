@@ -15,7 +15,6 @@ public class ZonePoint implements LuaTable, Serializable {
 	public static final double PI_180 = Math.PI / 180;
 	public static final double DEG_PI = 180 / Math.PI;
 	public static final double PI_2 = Math.PI / 2;
-	public static final double PI_MUL_2 = Math.PI * 2;
 	
 	public static ZonePoint copy (ZonePoint z) {
 		if (z == null) return null;
@@ -134,18 +133,21 @@ public class ZonePoint implements LuaTable, Serializable {
 	
 	public double bearing (double lat, double lon) {
 		// calculates bearing from specified point to here
-		return MathLib.atan2(latitude - lat, longitude - lon);
+		return MathLib.atan2(lat2m(latitude - lat), lon2m(lat, longitude - lon));
 	}
 	
 	public static double angle2azimuth (double angle) {
 		double degrees = -((angle - PI_2) * DEG_PI);
 		while (degrees < 0) degrees += 360;
-		while (degrees > 360) degrees -= 360;
+		while (degrees >= 360) degrees -= 360;
 		return degrees;
 	}
 	
 	public static double azimuth2angle (double azim) {
-		return -(azim * PI_180) + PI_2;
+		double ret = -(azim * PI_180) + PI_2;
+		while (ret > Math.PI) ret -= Math.PI * 2;
+		while (ret <= -Math.PI) ret += Math.PI * 2;
+		return ret;
 	}
 
 	public void setMetatable (LuaTable metatable) { }

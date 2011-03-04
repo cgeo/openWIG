@@ -16,6 +16,7 @@ import static org.junit.Assert.*;
  * @author matejcik
  */
 public class ZonePointTest {
+	/* TODO repeat random tests N times with different randoms */
 
 	@BeforeClass
 	public static void setUpClass () throws Exception {
@@ -27,11 +28,11 @@ public class ZonePointTest {
 		TestEngine.kill();
 	}
 
-	private static final double FUZZ = 1.0e-6;
+	private static final double FUZZ = 1.0e-5;
 	
 	private ZonePoint randomZonePoint ()
 	{
-		return new ZonePoint(Math.random(), Math.random(), Math.random());
+		return new ZonePoint(Math.random() * 360 - 180, Math.random() * 360 - 180, Math.random() * 2000);
 	}
 
 	private void assertEqualZP (ZonePoint a, ZonePoint b, double tolerance)
@@ -207,36 +208,52 @@ public class ZonePointTest {
 		fail("The test case is a prototype.");
 	}
 
+	private void assertAngle (ZonePoint z, double azim)
+	{
+		ZonePoint zz = z.translate(azim, 100);
+		assertEquals(azim, ZonePoint.angle2azimuth(zz.bearing(z.latitude, z.longitude)), FUZZ);
+	}
+
 	@Test
 	public void testBearing () {
-		System.out.println("bearing");
-		double lat = 0.0;
-		double lon = 0.0;
-		ZonePoint instance = new ZonePoint();
-		double expResult = 0.0;
-		double result = instance.bearing(lat, lon);
-		assertEquals(expResult, result, 0.0);
-		fail("The test case is a prototype.");
+		ZonePoint z = randomZonePoint();
+		double angle = Math.random() * 360;
+		assertAngle(z, angle);
+		assertAngle(z, 0);
+		assertAngle(z, 90);
+		assertAngle(z, 180);
+		assertAngle(z, 270);
 	}
 
 	@Test
-	public void testAngle2azimuth () {
-		System.out.println("angle2azimuth");
-		double angle = 0.0;
-		double expResult = 0.0;
-		double result = ZonePoint.angle2azimuth(angle);
-		assertEquals(expResult, result, 0.0);
-		fail("The test case is a prototype.");
-	}
+	public void testAzimuths () {
+		double angle = (Math.random() * Math.PI * 2) - Math.PI;
+		double azimuth = Math.random() * 360;
 
-	@Test
-	public void testAzimuth2angle () {
-		System.out.println("azimuth2angle");
-		double azim = 0.0;
-		double expResult = 0.0;
-		double result = ZonePoint.azimuth2angle(azim);
-		assertEquals(expResult, result, 0.0);
-		fail("The test case is a prototype.");
+		// reflexivity
+		double az = ZonePoint.angle2azimuth(angle);
+		double ra = ZonePoint.azimuth2angle(az);
+		assertEquals(angle, ra, FUZZ);
+
+		double an = ZonePoint.azimuth2angle(azimuth);
+		ra = ZonePoint.angle2azimuth(an);
+		assertEquals(azimuth, ra, FUZZ);
+
+		// known values
+		assertEquals(Math.PI / 2, ZonePoint.azimuth2angle(0), FUZZ);
+		assertEquals(0, ZonePoint.azimuth2angle(90), FUZZ);
+		assertEquals(0, ZonePoint.angle2azimuth(Math.PI / 2), FUZZ);
+
+		// sign handling, overflow, normalization
+		assertEquals(ZonePoint.azimuth2angle(180), ZonePoint.azimuth2angle(-180), FUZZ);
+		assertEquals(ZonePoint.azimuth2angle(270), ZonePoint.azimuth2angle(-90), FUZZ);
+		assertEquals(0, ZonePoint.azimuth2angle(360 * 5 + 90), FUZZ);
+		assertEquals(Math.PI / 2, ZonePoint.azimuth2angle(-360 * 5), FUZZ);
+
+		assertEquals(ZonePoint.angle2azimuth(-Math.PI), ZonePoint.angle2azimuth(Math.PI), FUZZ);
+		assertEquals(ZonePoint.angle2azimuth(3 * Math.PI / 2), ZonePoint.angle2azimuth(- Math.PI / 2), FUZZ);
+		assertEquals(270, ZonePoint.angle2azimuth(7 * Math.PI), FUZZ);
+		assertEquals(0, ZonePoint.angle2azimuth(-11 * Math.PI / 2), FUZZ);
 	}
 
 	@Test
