@@ -360,24 +360,26 @@ public class Engine implements Runnable {
 		replace(sb.toString(), "&nbsp;", " ", sb);
 		replace(sb.toString(), "&lt;", "<", sb);
 		replace(sb.toString(), "&gt;", ">", sb);
-/*		int pos = 0;
-		while (pos < s.length()) {
-			int np = s.indexOf("<BR>", pos);
-			if (np == -1) break;
-			sb.append(s.substring(pos, np));
-			pos = np + 4;
-		}
-		sb.append(s.substring(pos));
-		s = sb.toString(); pos = 0; sb.delete(0, sb.length());
-		while (pos < s.length()) {
-			int np = s.indexOf("&nbsp;", pos);
-			if (np == -1) break;
-			sb.append(s.substring(pos, np));
-			sb.append(' ');
-			pos = np + 6;
-		}
-		sb.append(s.substring(pos));*/
 		return sb.toString();
+	}
+	
+	private Runnable refresh = new Runnable() {
+		public void run () {
+			synchronized (instance) {
+				ui.refresh();
+				refreshScheduled = false;
+			}
+		}
+	};
+	private boolean refreshScheduled = false;
+
+	public static void refreshUI () {
+		synchronized (instance) {
+			if (!instance.refreshScheduled) {
+				instance.refreshScheduled = true;
+				instance.eventRunner.perform(instance.refresh);
+			}
+		}
 	}
 
 	private Runnable store = new Runnable() {

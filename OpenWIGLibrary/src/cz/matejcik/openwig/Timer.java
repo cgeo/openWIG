@@ -45,7 +45,7 @@ public class Timer extends EventTable {
 		public boolean restart = false;
 		public void run() {
 			tick();
-			Engine.ui.refresh();
+			Engine.refreshUI();
 			if (restart) {
 				cancel();
 				task = null;

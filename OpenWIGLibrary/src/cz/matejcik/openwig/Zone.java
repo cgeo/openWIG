@@ -148,7 +148,7 @@ public class Zone extends Thing {
 			default:
 				return;
 		}
-		Engine.ui.refresh();
+		Engine.refreshUI();
 	}
 
 	/** calculate bounding-box values */

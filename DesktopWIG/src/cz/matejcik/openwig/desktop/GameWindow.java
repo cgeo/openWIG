@@ -337,6 +337,7 @@ public class GameWindow extends JFrame implements UI {
 			savingDlg.pack();
 			savingDlg.setLocationRelativeTo(this);
 		}
+		System.out.println("blocking");
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run () {
 				savingDlg.setVisible(true);
@@ -346,7 +347,14 @@ public class GameWindow extends JFrame implements UI {
 
 	/** Hides the blocking dialog. If <code>closeAfterSave</code> is true, kills the window. */
 	public void unblock () {
-		if (savingDlg != null) savingDlg.setVisible(false);
+		System.out.println("unblocking");
+		if (savingDlg != null) {
+			SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				savingDlg.setVisible(false);
+			}
+			});
+		}
 		if (closeAfterSave) kill();
 	}
 }

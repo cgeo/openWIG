@@ -97,9 +97,9 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		updateNavi();
 	}
 	
-	private double round (double sum) {
-		while (sum > Math.PI) sum -= ZonePoint.PI_MUL_2;
-		while (sum < -Math.PI) sum += ZonePoint.PI_MUL_2;
+	private double normalize (double sum) {
+		while (sum > Math.PI) sum -= Math.PI * 2;
+		while (sum <= -Math.PI) sum += Math.PI * 2;
 		return sum;
 	}
 	
@@ -116,28 +116,28 @@ public class Navigation extends Canvas implements Pushable, Runnable, CommandLis
 		double nheading = ZonePoint.azimuth2angle(-Midlet.gps.getHeading());
 		if (nheading != theading) {
 			theading = nheading;
-			hstep = round(nheading - heading) / STEPS;
+			hstep = normalize(nheading - heading) / STEPS;
 		}
 		double bearing = target.bearing(Midlet.gps.getLatitude(), Midlet.gps.getLongitude());
 		double nangle = bearing + theading - ZonePoint.PI_2;
 		if (nangle != tangle) {
 			tangle = nangle;
-			astep = round(nangle - angle) / STEPS;
+			astep = normalize(nangle - angle) / STEPS;
 		}
 		
 		if (theading == heading && tangle == angle && ndistance.equals(distance)) return false;
 		distance = ndistance;
 		
-		double a = Math.abs(round(heading - theading));
+		double a = Math.abs(normalize(heading - theading));
 		if (hstep != 0 && a >= Math.abs(hstep)) {
-			heading = round(heading + hstep);
+			heading = normalize(heading + hstep);
 		} else {
 			heading = theading;
 			hstep = 0;
 		}
-		a = Math.abs(round(angle - tangle));
+		a = Math.abs(normalize(angle - tangle));
 		if (astep != 0 && a >= Math.abs(astep)) {
-			angle = round(angle + astep);
+			angle = normalize(angle + astep);
 		} else {
 			angle = tangle;
 			astep = 0;
