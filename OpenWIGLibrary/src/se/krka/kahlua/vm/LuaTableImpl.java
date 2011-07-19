@@ -316,7 +316,15 @@ public final class LuaTableImpl implements LuaTable {
 		}
 		__setValue(index, value);
 	}
+	
+	public Object rawget(int index) {
+		return rawgetHash(LuaState.toDouble(index));
+	}
 
+	public void rawset(int index, Object value) {
+		rawsetHash(LuaState.toDouble(index), value);
+	}
+	
 	public final Object rawget(Object key) {
 		checkKey(key);
 		if (key instanceof Double) {
@@ -377,16 +385,19 @@ public final class LuaTableImpl implements LuaTable {
 	}
 
 	public final int len() {
-		int high = keys.length;
+		int high = 2 * keys.length;
 		int low = 0;
 		while (low < high) {
 			int middle = (high + low + 1) >> 1;
-			Object value = rawget(LuaState.toDouble(middle));
+			Object value = rawget(middle);
 			if (value == null) {
 				high = middle - 1;
 			} else {
 				low = middle;
 			}
+		}
+		while (rawget(low + 1) != null) {
+			low++;
 		}
 		return low;
 	}

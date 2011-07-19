@@ -747,7 +747,7 @@ public final class StringLib implements JavaFunction {
 	private int stringChar(LuaCallFrame callFrame, int nArguments) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < nArguments; i++) {
-			int num = getDoubleArg(callFrame, 1, names[CHAR]).intValue();
+			int num = getDoubleArg(callFrame, i + 1, names[CHAR]).intValue();
 			sb.append((char) num);
 		}
 		return callFrame.push(sb.toString());
@@ -764,28 +764,24 @@ public final class StringLib implements JavaFunction {
 		int istart = (int) start;
 		int iend = (int) end;
 
+		int len = s.length();
 		if (istart < 0) {
-			istart = Math.max(s.length() + istart, 0);
-			// -1 puts start at last character of string, this is what we want
-		} else if (istart > 0) {
-			istart--;
-			// adjust to zero-indexed strings
-		} // istart == 0 is a special case that happens to have same meaning in Lua and Java
+			istart = Math.max(len + istart + 1, 1);
+		} else if (istart == 0) {
+			istart = 1;
+		}
+
 
 		if (iend < 0) {
-			iend = Math.max(s.length() + 1 + iend, 0);
-			// add 1 because ends are exclusive in Java and inclusive in Lua
-		} else {
-			// Lua's one-basedness offsets Java's exclusiveness
-			// so just coerce to string length
-			iend = Math.min(iend, s.length());
+			iend = Math.max(0, iend + len + 1);
+		} else if (iend > len) {
+			iend = len;
 		}
 
-		if (istart > iend ) {
-			callFrame.push("");
-			return 1;
+		if (istart > iend) {
+			return callFrame.push("");
 		}
-		res = s.substring(istart, iend);
+		res = s.substring(istart - 1, iend);
 
 		return callFrame.push(res);
 	}
