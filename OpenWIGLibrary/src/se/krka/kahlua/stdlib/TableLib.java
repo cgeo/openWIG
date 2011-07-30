@@ -22,8 +22,6 @@ THE SOFTWARE.
  */
 package se.krka.kahlua.stdlib;
 
-import se.krka.kahlua.vm.LuaArray;
-
 import se.krka.kahlua.vm.JavaFunction;
 import se.krka.kahlua.vm.LuaCallFrame;
 import se.krka.kahlua.vm.LuaState;
@@ -36,7 +34,7 @@ public final class TableLib implements JavaFunction {
 	private static final int INSERT = 1;
 	private static final int REMOVE = 2;
 	private static final int MAXN = 3;
-	private static final int NEWARRAY = 4;
+	private static final int GETN = 4;
 	private static final int NUM_FUNCTIONS = 5;
 
 	private static final String[] names;
@@ -48,7 +46,7 @@ public final class TableLib implements JavaFunction {
 		names[INSERT] = "insert";
 		names[REMOVE] = "remove";
 		names[MAXN] = "maxn";
-		names[NEWARRAY] = "newarray";
+		names[GETN] = "getn";
 	}
 	
 	private int index;
@@ -93,28 +91,17 @@ public final class TableLib implements JavaFunction {
 				return remove(callFrame, nArguments);
 			case MAXN:
 				return maxn(callFrame, nArguments);
-			case NEWARRAY:
-				return newarray(callFrame, nArguments);
+			case GETN:
+				return getn(callFrame, nArguments);
 			default:
 				return 0;
 		}
 	}
-
-	private int newarray(LuaCallFrame callFrame, int arguments) {
-		Object param = BaseLib.getOptArg(callFrame, 1, null);
-		LuaArray ret = new LuaArray();
-		if (param instanceof LuaTable && arguments == 1) {
-			LuaTable t = (LuaTable) param;
-			int n = t.len();
-			for (int i = n; i >= 1; i--) {
-				ret.rawset(i, t.rawget(LuaState.toDouble(i)));
-			}
-		} else {
-            for (int i = arguments; i >= 1; i--) {
-                ret.rawset(i, callFrame.get(i - 1));
-            }
-        }
-		return callFrame.push(ret);
+	
+	private static int getn (LuaCallFrame callFrame, int nArguments) {
+		BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
+		LuaTable table = (LuaTable)callFrame.get(0);
+		return callFrame.push(LuaState.toDouble(table.len()));
 	}
 
 	private static int concat (LuaCallFrame callFrame, int nArguments) {
