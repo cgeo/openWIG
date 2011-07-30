@@ -154,19 +154,21 @@ public class Engine implements Runnable {
 		// starting game normally
 		ui.debugMsg("Loading gwc...");
 		if (gwcfile == null) throw new IOException("invalid cartridge file");
+				
+		ui.debugMsg("pre-setting properties...");
+		player.rawset("CompletionCode", gwcfile.code);
+		player.rawset("Name", gwcfile.member);
+
 		ui.debugMsg("loading code...");
 		byte[] lbc = gwcfile.getBytecode();
 
 		ui.debugMsg("parsing...");
 		LuaClosure closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+
 		ui.debugMsg("calling...\n");
 		state.call(closure, null, null, null);
 		lbc = null;
 		closure = null;
-
-		ui.debugMsg("Setting remaining properties...\n");
-		player.rawset("CompletionCode", gwcfile.code);
-		player.rawset("Name", gwcfile.member);
 	}
 
 	/** main loop - periodically copy location data into Lua and evaluate zone positions */
