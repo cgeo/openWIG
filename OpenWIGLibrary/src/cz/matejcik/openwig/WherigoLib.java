@@ -138,11 +138,7 @@ public class WherigoLib implements JavaFunction {
 			case ZCHARACTER: return item(callFrame, nArguments, true);
 			case ZCOMMAND: return command(callFrame, nArguments);
 			case ZMEDIA: return media(callFrame, nArguments);
-			case ZINPUT:
-				EventTable et = new EventTable();
-				Engine.instance.cartridge.addObject(et);
-				callFrame.push(et);
-				return 1;
+			case ZINPUT: return input(callFrame, nArguments);
 			case ZTIMER: return timer(callFrame, nArguments);
 			case ZTASK: return task(callFrame, nArguments);
 			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
@@ -160,6 +156,10 @@ public class WherigoLib implements JavaFunction {
 	
 	private int cartridge (LuaCallFrame callFrame, int nArguments) {
 		Engine.instance.cartridge = new Cartridge();
+		if (nArguments > 0) try {
+			LuaTable t = (LuaTable)callFrame.get(0);
+			Engine.instance.cartridge.setTable(t);
+		} catch (ClassCastException e) { /* whatever */ }
 		callFrame.push(Engine.instance.cartridge);
 		return 1;
 	}
@@ -225,13 +225,32 @@ public class WherigoLib implements JavaFunction {
 	
 	private int media (LuaCallFrame callFrame, int nArguments) {
 		Media m = new Media();
+		if (nArguments > 0) try {
+			LuaTable t = (LuaTable)callFrame.get(0);
+			m.setTable(t);
+		} catch (ClassCastException e) { /* whatever */ }
 		Engine.instance.cartridge.addObject(m);
 		callFrame.push(m);
 		return 1;
 	}
 	
+	private int input (LuaCallFrame callFrame, int nArguments) {
+		EventTable et = new EventTable();
+		if (nArguments > 0) try {
+			LuaTable t = (LuaTable)callFrame.get(0);
+			et.setTable(t);
+		} catch (ClassCastException e) { /* whatever */ }
+		Engine.instance.cartridge.addObject(et);
+		callFrame.push(et);
+		return 1;
+	}
+	
 	private int timer (LuaCallFrame callFrame, int nArguments) {
 		Timer t = new Timer();
+		if (nArguments > 0) try {
+			LuaTable lt = (LuaTable)callFrame.get(0);
+			t.setTable(lt);
+		} catch (ClassCastException e) { /* whatever */ }
 		Engine.instance.cartridge.addObject(t);
 		callFrame.push(t);
 		return 1;
@@ -267,6 +286,10 @@ public class WherigoLib implements JavaFunction {
 	
 	private int task (LuaCallFrame callFrame, int nArguments) {
 		Task t = new Task();
+		if (nArguments > 0) try {
+			LuaTable lt = (LuaTable)callFrame.get(0);
+			t.setTable(lt);
+		} catch (ClassCastException e) { /* whatever */ }
 		Engine.instance.cartridge.addObject(t);
 		callFrame.push(t);
 		return 1;
