@@ -120,7 +120,7 @@ public class ZonePoint implements LuaTable, Serializable {
 		String an = String.valueOf(angle);
 		if (an.indexOf('.') != -1)
 			an = an.substring(0, Math.min(an.length(), an.indexOf('.') + 5));
-		return (neg ? "- " : "+ ") + String.valueOf(degrees) + "\uc2b0 " + an;
+		return (neg ? "- " : "+ ") + String.valueOf(degrees) + "\u00b0 " + an;
 	}
 
 	public static String makeFriendlyLatitude (double angle) {
