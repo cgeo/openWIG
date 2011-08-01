@@ -315,8 +315,8 @@ public class WherigoLib implements JavaFunction {
 		BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for VectorToPoint");
 		ZonePoint a = (ZonePoint)callFrame.get(0);
 		ZonePoint b = (ZonePoint)callFrame.get(1);
-		double bearing = ZonePoint.angle2azimuth(b.bearing(a.latitude, a.longitude));
-		Distance distance = new Distance(b.distance(a.latitude, a.longitude), "metres");
+		double bearing = ZonePoint.angle2azimuth(b.bearing(a));
+		Distance distance = new Distance(b.distance(a), "metres");
 		callFrame.push(distance);
 		callFrame.push(LuaState.toDouble(bearing));
 		return 2;
@@ -338,7 +338,14 @@ public class WherigoLib implements JavaFunction {
 
 	private int logMessage (LuaCallFrame callFrame, int nArguments) {
 		if (nArguments < 1) return 0;
-		String text = (String)callFrame.get(0);
+		Object arg = callFrame.get(0);
+		String text;
+		if (arg instanceof LuaTable) {
+			LuaTable lt = (LuaTable)arg;
+			text = (String)lt.rawget("Text");
+		} else {
+			text = arg.toString();
+		}
 		if (text != null && text.length() == 0) return 0;
 		Engine.log("CUST: " + text, Engine.LOG_CALL);
 		return 0;

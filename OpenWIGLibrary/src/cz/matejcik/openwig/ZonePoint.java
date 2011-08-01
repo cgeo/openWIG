@@ -136,6 +136,10 @@ public class ZonePoint implements LuaTable, Serializable {
 		return MathLib.atan2(lat2m(latitude - lat), lon2m(lat, longitude - lon));
 	}
 	
+	public double bearing (ZonePoint zp) {
+		return bearing(zp.latitude, zp.longitude);
+	}
+	
 	public static double angle2azimuth (double angle) {
 		double degrees = -((angle - PI_2) * DEG_PI);
 		while (degrees < 0) degrees += 360;
