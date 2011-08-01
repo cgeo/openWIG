@@ -54,7 +54,7 @@ public class Engine implements Runnable {
 	private PrintStream log;
 
 	/** event runner taking care of Lua state calls */
-	private BackgroundRunner eventRunner;
+	protected BackgroundRunner eventRunner;
 
 	/** Cartridge (a global Lua object) */
 	public Cartridge cartridge;
@@ -105,7 +105,7 @@ public class Engine implements Runnable {
 	}
 
 	/** prepares Lua state and some bookkeeping */
-	private void prepareState ()
+	protected void prepareState ()
 	throws IOException {
 		ui.debugMsg("Creating state...\n");
 		state = new LuaState(System.out);

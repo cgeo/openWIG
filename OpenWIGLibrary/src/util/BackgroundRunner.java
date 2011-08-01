@@ -45,6 +45,7 @@ public class BackgroundRunner extends Thread {
 		while (!end) {
 			synchronized (this) { while (paused) {
 				try { wait(); } catch (InterruptedException e) { }
+				if (end) return;
 			} }
 			events = false;
 			while (!queue.isEmpty()) {
