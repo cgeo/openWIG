@@ -222,6 +222,12 @@ public class WherigoLib implements JavaFunction {
 			LuaTable lt = (LuaTable)param;
 			c = (Cartridge)lt.rawget("Cartridge");
 			what.setTable((LuaTable)param);
+			if (what instanceof Container) {
+				Container cont = (Container)what;
+				Container target = (Container)lt.rawget("Container");
+				if (target != null)
+					cont.moveTo(target);
+			}
 		}
 		if (c == null) c = Engine.instance.cartridge;
 		c.addObject(what);
