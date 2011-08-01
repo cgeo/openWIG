@@ -29,8 +29,9 @@ public class WherigoLib implements JavaFunction {
 	private static final int SHOWSTATUSTEXT = 19;
 	private static final int VECTORTOPOINT = 20;
 	private static final int LOGMESSAGE = 21;
+	private static final int MADE = 22;
 	
-	private static final int NUM_FUNCTIONS = 22;
+	private static final int NUM_FUNCTIONS = 23;
 	
 	private static final String[] names;
 	static {
@@ -57,9 +58,12 @@ public class WherigoLib implements JavaFunction {
 		names[VECTORTOPOINT] = "VectorToPoint";
 		names[COMMAND] = "Command";
 		names[LOGMESSAGE] = "LogMessage";
+		names[MADE] = "made";
 	}
-
+	
 	private int index;
+	private Class klass;
+
 	private static WherigoLib[] functions;
 	static {
 		functions = new WherigoLib[NUM_FUNCTIONS];
@@ -68,8 +72,37 @@ public class WherigoLib implements JavaFunction {
 		}
 	}
 	
+	private Class assignClass () {
+		// because i'm too lazy to type out the break;s in a switch
+		switch (index) {
+			case DISTANCE:
+				return Distance.class;
+			case ZONEPOINT:
+				return ZonePoint.class;
+			case ZONE:
+				return Zone.class;
+			case ZCHARACTER: case ZITEM:
+				return Thing.class;
+			case ZCOMMAND:
+				return Action.class;
+			case ZMEDIA:
+				return Media.class;
+			case ZINPUT:
+				return EventTable.class;
+			case ZTIMER:
+				return Timer.class;
+			case ZTASK:
+				return Task.class;
+			case CARTRIDGE:
+				return Cartridge.class;
+			default:
+				return getClass();
+		}		
+	}
+	
 	public WherigoLib(int index) {
 		this.index = index;
+		this.klass = assignClass();
 	}
 
 	public static void register(LuaState state) {
@@ -82,6 +115,7 @@ public class WherigoLib implements JavaFunction {
 			wig.rawset(names[i], functions[i]);
 		}
 		
+		state.setClassMetatable(WherigoLib.class, wig);	
 		wig.rawset("__index", wig);
 		
 		wig.rawset("Player", Engine.instance.player);
@@ -128,19 +162,35 @@ public class WherigoLib implements JavaFunction {
 
 	public int call(LuaCallFrame callFrame, int nArguments) {
 		switch (index) {
+			case MADE: return made(callFrame, nArguments);
+				
+			// special constructors:
 			case ZONEPOINT: return zonePoint(callFrame, nArguments);
 			case DISTANCE: return distance(callFrame, nArguments);
-			case CARTRIDGE: return cartridge(callFrame, nArguments);
+				
+			// generic constructors:
+			case ZITEM: return construct(new Thing(false), callFrame, nArguments);
+			case ZCHARACTER: return construct(new Thing(true), callFrame, nArguments);
+			case CARTRIDGE: return construct(Engine.instance.cartridge = new Cartridge(), callFrame, nArguments);
+			case ZONE:
+			case ZCOMMAND:
+			case ZMEDIA:
+			case ZINPUT:
+			case ZTIMER:
+			case ZTASK:
+				try {
+					return construct((EventTable)klass.newInstance(), callFrame, nArguments);
+				} catch (InstantiationException e) {
+					/* will not happen */
+					return 0;
+				} catch (IllegalAccessException e) {
+					/* will not happen either */
+					return 0;
+				}
+				
+			// functions:
 			case MESSAGEBOX: return messageBox(callFrame, nArguments);
-			case ZONE: return zone(callFrame, nArguments);
 			case DIALOG: return dialog(callFrame, nArguments);
-			case ZITEM: return item(callFrame, nArguments, false);
-			case ZCHARACTER: return item(callFrame, nArguments, true);
-			case ZCOMMAND: return command(callFrame, nArguments);
-			case ZMEDIA: return media(callFrame, nArguments);
-			case ZINPUT: return input(callFrame, nArguments);
-			case ZTIMER: return timer(callFrame, nArguments);
-			case ZTASK: return task(callFrame, nArguments);
 			case NOCASEEQUALS: return nocaseequals(callFrame, nArguments);
 			case GETINPUT: return getinput(callFrame, nArguments);
 			case SHOWSCREEN: return showscreen(callFrame, nArguments);
@@ -154,14 +204,28 @@ public class WherigoLib implements JavaFunction {
 		}
 	}
 	
-	private int cartridge (LuaCallFrame callFrame, int nArguments) {
-		Engine.instance.cartridge = new Cartridge();
-		if (nArguments > 0) try {
-			LuaTable t = (LuaTable)callFrame.get(0);
-			Engine.instance.cartridge.setTable(t);
-		} catch (ClassCastException e) { /* whatever */ }
-		callFrame.push(Engine.instance.cartridge);
-		return 1;
+	private int made (LuaCallFrame callFrame, int nArguments) {
+		BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for object:made");
+		try {
+			WherigoLib maker = (WherigoLib)callFrame.get(0);
+			Object makee = callFrame.get(1);
+			return callFrame.push(LuaState.toBoolean(maker.klass == makee.getClass()));
+		} catch (ClassCastException e) { throw new RuntimeException("bad arguments to object:made"); }
+	}
+	
+	private int construct(EventTable what, LuaCallFrame callFrame, int nArguments) {
+		Object param = callFrame.get(0);
+		Cartridge c = null;
+		if (param instanceof Cartridge) {
+			c = (Cartridge)param;
+		} else if (param instanceof LuaTable) {
+			LuaTable lt = (LuaTable)param;
+			c = (Cartridge)lt.rawget("Cartridge");
+			what.setTable((LuaTable)param);
+		}
+		if (c == null) c = Engine.instance.cartridge;
+		c.addObject(what);
+		return callFrame.push(what);
 	}
 	
 	private int zonePoint (LuaCallFrame callFrame, int nArguments) {
@@ -204,97 +268,7 @@ public class WherigoLib implements JavaFunction {
 		Engine.dialog(texts, media);
 		return 0;
 	}
-	
-	private int zone (LuaCallFrame callFrame, int nArguments) {
-		Object param = callFrame.get(0);
-		Zone z = new Zone();
-		Cartridge c;
-		if (param instanceof Cartridge) {
-			c = (Cartridge)param;
-		} else if (param instanceof LuaTable) {
-			LuaTable lt = (LuaTable)param;
-			c = (Cartridge)lt.rawget("Cartridge");
-			z.setTable((LuaTable)param);
-		} else {
-			throw new RuntimeException("unknown constructor format: "+param.getClass().getName());
-		}
-		c.addObject(z);
-		callFrame.push(z);
-		return 1;
-	}
-	
-	private int media (LuaCallFrame callFrame, int nArguments) {
-		Media m = new Media();
-		if (nArguments > 0) try {
-			LuaTable t = (LuaTable)callFrame.get(0);
-			m.setTable(t);
-		} catch (ClassCastException e) { /* whatever */ }
-		Engine.instance.cartridge.addObject(m);
-		callFrame.push(m);
-		return 1;
-	}
-	
-	private int input (LuaCallFrame callFrame, int nArguments) {
-		EventTable et = new EventTable();
-		if (nArguments > 0) try {
-			LuaTable t = (LuaTable)callFrame.get(0);
-			et.setTable(t);
-		} catch (ClassCastException e) { /* whatever */ }
-		Engine.instance.cartridge.addObject(et);
-		callFrame.push(et);
-		return 1;
-	}
-	
-	private int timer (LuaCallFrame callFrame, int nArguments) {
-		Timer t = new Timer();
-		if (nArguments > 0) try {
-			LuaTable lt = (LuaTable)callFrame.get(0);
-			t.setTable(lt);
-		} catch (ClassCastException e) { /* whatever */ }
-		Engine.instance.cartridge.addObject(t);
-		callFrame.push(t);
-		return 1;
-	}
-	
-	private int item (LuaCallFrame callFrame, int nArguments, boolean character) {
-		Object o = callFrame.get(0);
-		Cartridge c;
-		Container cont = null;
-		if (o instanceof Cartridge) {
-			c = (Cartridge)o;
-		} else if (o instanceof LuaTable) {
-			LuaTable lt = (LuaTable)o;
-			c = (Cartridge)lt.rawget("Cartridge");
-			cont = (Container)lt.rawget("Container");
-		} else {
-			throw new RuntimeException("unknown constructor format: "+o.getClass().getName());
-		}
-		Thing i = new Thing(character);
-		c.addObject(i);
-		if (cont != null) i.moveTo(cont);
-		callFrame.push(i);
-		return 1;
-	}
-	
-	private int command (LuaCallFrame callFrame, int nArguments) {
-		LuaTable lt = (LuaTable)callFrame.get(0);
-		Action a = new Action(lt);
-		Engine.instance.cartridge.addObject(a);
-		callFrame.push(a);
-		return 1;
-	}
-	
-	private int task (LuaCallFrame callFrame, int nArguments) {
-		Task t = new Task();
-		if (nArguments > 0) try {
-			LuaTable lt = (LuaTable)callFrame.get(0);
-			t.setTable(lt);
-		} catch (ClassCastException e) { /* whatever */ }
-		Engine.instance.cartridge.addObject(t);
-		callFrame.push(t);
-		return 1;
-	}
-	
+
 	private int nocaseequals (LuaCallFrame callFrame, int nArguments) {
 		Object a = callFrame.get(0); Object b = callFrame.get(1);
 		String aa = a == null ? null : a.toString();
