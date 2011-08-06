@@ -362,6 +362,7 @@ public class Engine implements Runnable {
 		replace(sb.toString(), "&nbsp;", " ", sb);
 		replace(sb.toString(), "&lt;", "<", sb);
 		replace(sb.toString(), "&gt;", ">", sb);
+		replace(sb.toString(), "&amp;", "&", sb);
 		return sb.toString();
 	}
 	
