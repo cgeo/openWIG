@@ -1,6 +1,7 @@
 package cz.matejcik.openwig.desktop;
 
 import cz.matejcik.openwig.Engine;
+import cz.matejcik.openwig.WherigoLib;
 import cz.matejcik.openwig.desktop.gps.GPSManager;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -46,6 +47,9 @@ public class Main {
 	public static CartridgeSelector selector = new CartridgeSelector();
 
 	public static void main (String[] args) {
+		WherigoLib.env.put(WherigoLib.DEVICE_ID, "dsktpwig");
+			/* let's not call it "Desktop", otherwise some wiseass emulator detectors pick that */
+		WherigoLib.env.put(WherigoLib.PLATFORM, "J2SE");
 		// TODO implement loading cartridges from command line
 		selector.setVisible(true);
 	}

@@ -2,6 +2,8 @@
 package cz.matejcik.openwig;
 
 import cz.matejcik.openwig.platform.UI;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
@@ -61,6 +63,22 @@ public class WherigoLib implements JavaFunction {
 		names[MADE] = "made";
 	}
 	
+	public static final Hashtable env = new Hashtable(); /* Wherigo's Env table */
+	public static final String DEVICE_ID = "DeviceID";
+	public static final String PLATFORM = "Platform";
+	static {
+		//env.put("Device", Engine.instance.gwcfile.device);
+		//env.put("DeviceID", System.getProperty("microedition.platform"));
+		env.put("Platform", "MIDP-2.0/CLDC-1.1");
+		env.put("CartFolder", "c:/what/is/it/to/you");
+		env.put("SyncFolder", "c:/what/is/it/to/you");
+		env.put("LogFolder", "c:/what/is/it/to/you");
+		env.put("CartFilename", "cartridge.gwc");
+		env.put("PathSep", "/"); // no. you may NOT do file i/o on this device.
+		env.put("Version", "2.11-compatible(r"+Engine.VERSION+")");
+		env.put("Downloaded", new Double(0));
+	}
+	
 	private int index;
 	private Class klass;
 
@@ -106,6 +124,9 @@ public class WherigoLib implements JavaFunction {
 	}
 
 	public static void register(LuaState state) {
+		
+		if (env.get(DEVICE_ID) == null) throw new RuntimeException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
+		
 		LuaTable environment = state.getEnvironment();
 
 		LuaTable wig = new LuaTableImpl();
@@ -133,18 +154,14 @@ public class WherigoLib implements JavaFunction {
 		LuaTable loaded = (LuaTable)pack.rawget("loaded");
 		loaded.rawset("Wherigo", wig);
 		
-		LuaTable env = new LuaTableImpl();
-		env.rawset("Device", Engine.instance.gwcfile.device);
-		env.rawset("DeviceID", System.getProperty("microedition.platform"));
-		env.rawset("Platform", "MIDP-2.0/CLDC-1.1");
-		env.rawset("CartFolder", "c:/what/is/it/to/you");
-		env.rawset("SyncFolder", "c:/what/is/it/to/you");
-		env.rawset("LogFolder", "c:/what/is/it/to/you");
-		env.rawset("CartFilename", "cartridge.gwc");
-		env.rawset("PathSep", "/"); // no. you may NOT do file i/o on this device.
-		env.rawset("Version", "2.11-compatible(r"+Engine.VERSION+")");
-		env.rawset("Downloaded", new Double(0));
-		state.getEnvironment().rawset("Env", env);
+		LuaTable envtable = new LuaTableImpl(); /* Wherigo's Env table */
+		Enumeration e = env.keys();
+		while (e.hasMoreElements()) {
+			String key = (String)e.nextElement();
+			envtable.rawset(key, env.get(key));
+		}
+		envtable.rawset("Device", Engine.instance.gwcfile.device);
+		environment.rawset("Env", envtable);
 
 		Cartridge.register();
 		Container.register();
