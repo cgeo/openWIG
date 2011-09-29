@@ -1478,7 +1478,12 @@ public final class StringLib implements JavaFunction {
 					}
 					buf.append(str.substring(0, len));
 				} else {
-					Object o = ms.getCaptures()[replStr.getChar(i) - '1'];
+					int captureIndex = replStr.getChar(i) - '1';
+					Object[] captures = ms.getCaptures();
+					if (captures == null || captureIndex > ms.level) {
+						throw new RuntimeException("invalid capture index");
+					}
+					Object o = captures[captureIndex];
 					if(o instanceof Double) {
 						Double doubleValue = ((Double)o);
 						if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {

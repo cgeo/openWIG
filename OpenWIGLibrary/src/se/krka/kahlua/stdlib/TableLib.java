@@ -34,8 +34,7 @@ public final class TableLib implements JavaFunction {
 	private static final int INSERT = 1;
 	private static final int REMOVE = 2;
 	private static final int MAXN = 3;
-	private static final int GETN = 4;
-	private static final int NUM_FUNCTIONS = 5;
+	private static final int NUM_FUNCTIONS = 4;
 
 	private static final String[] names;
 	private static TableLib[] functions;
@@ -46,7 +45,6 @@ public final class TableLib implements JavaFunction {
 		names[INSERT] = "insert";
 		names[REMOVE] = "remove";
 		names[MAXN] = "maxn";
-		names[GETN] = "getn";
 	}
 	
 	private int index;
@@ -91,17 +89,9 @@ public final class TableLib implements JavaFunction {
 				return remove(callFrame, nArguments);
 			case MAXN:
 				return maxn(callFrame, nArguments);
-			case GETN:
-				return getn(callFrame, nArguments);
 			default:
 				return 0;
 		}
-	}
-	
-	private static int getn (LuaCallFrame callFrame, int nArguments) {
-		BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
-		LuaTable table = (LuaTable)callFrame.get(0);
-		return callFrame.push(LuaState.toDouble(table.len()));
 	}
 
 	private static int concat (LuaCallFrame callFrame, int nArguments) {
