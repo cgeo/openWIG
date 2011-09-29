@@ -2,13 +2,14 @@ package cz.matejcik.openwig;
 
 import java.io.*;
 
+import java.util.Hashtable;
 import se.krka.kahlua.vm.*;
 import se.krka.kahlua.stdlib.MathLib;
 
 public class ZonePoint implements LuaTable, Serializable {
 	public double latitude = 0;
 	public double longitude = 0;
-	public Distance altitude = null;
+	public double altitude = 0;
 	
 	public static final double LATITUDE_COEF = 110940.00000395167;
 	public static final double METRE_COEF = 9.013881377e-6;
@@ -21,27 +22,18 @@ public class ZonePoint implements LuaTable, Serializable {
 		else return new ZonePoint (z);
 	}
 
-	public ZonePoint () {
-		altitude = new Distance();
-	}
+	public ZonePoint () { }
 	
 	public ZonePoint (ZonePoint z) {
 		latitude = z.latitude;
 		longitude = z.longitude;
-		altitude = Distance.copy(z.altitude);
+		altitude = z.altitude;
 	}
 	
-	private ZonePoint (double lat, double lon, Distance alt) {
+	public ZonePoint (double lat, double lon, double alt) {
 		latitude = lat;
 		longitude = lon;
 		altitude = alt;
-	}
-	
-	public ZonePoint (double lat, double lon, double alt)
-	{
-		latitude = lat;
-		longitude = lon;
-		altitude = new Distance(alt,"metres");
 	}
 
 	public ZonePoint translate (double angle, double dist) {
@@ -49,10 +41,6 @@ public class ZonePoint implements LuaTable, Serializable {
 		double x = m2lat(dist * Math.sin(rad));
 		double y = m2lon(latitude, dist * Math.cos(rad));
 		return new ZonePoint(latitude + x, longitude + y, altitude);
-	}
-
-	public ZonePoint translate (double angle, Distance distance) {
-		return translate(angle, distance.value);
 	}
 
 	public void sync (ZonePoint z) {
@@ -82,6 +70,32 @@ public class ZonePoint implements LuaTable, Serializable {
 
 	public double distance (ZonePoint z) {
 		return distance(z.latitude, z.longitude, latitude, longitude);
+	}
+	
+	public static final Hashtable conversions = new Hashtable(6);
+	static {
+		conversions.put("feet", new Double(0.3048));
+		conversions.put("ft", new Double(0.3048));
+		conversions.put("miles", new Double(1609.344));
+		conversions.put("meters", new Double(1));
+		conversions.put("kilometers", new Double(1000));
+		conversions.put("nauticalmiles", new Double(1852));
+	}
+	
+	public static double convertDistanceTo (double value, String unit) {
+		if (unit != null && conversions.containsKey(unit)) {
+			return value * ((Double)conversions.get(unit)).doubleValue();
+		} else {
+			return value;
+		}
+	}
+	
+	public static double convertDistanceFrom (double value, String unit) {
+		if (unit != null && conversions.containsKey(unit)) {
+			return value / ((Double)conversions.get(unit)).doubleValue();
+		} else {
+			return value;
+		}
 	}
 
 	public static double distance (double lat1, double lon1, double lat2, double lon2) {
@@ -165,7 +179,7 @@ public class ZonePoint implements LuaTable, Serializable {
 		else if ("longitude".equals(name))
 			longitude = LuaState.fromDouble(value);
 		else if ("altitude".equals(name)) {
-			if (value instanceof Distance) altitude = (Distance)value;
+			altitude = LuaState.fromDouble(value);
 		}
 	}
 
@@ -174,7 +188,7 @@ public class ZonePoint implements LuaTable, Serializable {
 		String name = key.toString();
 		if ("latitude".equals(name)) return LuaState.toDouble(latitude);
 		if ("longitude".equals(name)) return LuaState.toDouble(longitude);
-		if ("altitude".equals(name)) return altitude;
+		if ("altitude".equals(name)) return LuaState.toDouble(altitude);
 		return null;
 	}
 
@@ -186,16 +200,16 @@ public class ZonePoint implements LuaTable, Serializable {
 	public void serialize (DataOutputStream out) throws IOException {
 		out.writeDouble(latitude);
 		out.writeDouble(longitude);
-		Engine.instance.savegame.storeValue(altitude, out);
+		out.writeDouble(altitude);
 	}
 
 	public void deserialize (DataInputStream in) throws IOException {
 		latitude = in.readDouble();
 		longitude = in.readDouble();
-		altitude = (Distance)Engine.instance.savegame.restoreValue(in, null);
+		altitude = in.readDouble();
 	}
 
 	public String toString () {
-		return "ZonePoint("+latitude+","+longitude+","+(altitude!=null ? altitude.toString() : "0")+")" /* + "-" + super.toString()*/;
+		return "ZonePoint("+latitude+","+longitude+","+altitude+")" /* + "-" + super.toString()*/;
 	}
 }

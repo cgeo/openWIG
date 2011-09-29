@@ -81,15 +81,15 @@ public class Zone extends Thing {
 			boolean a = LuaState.boolEval(value);
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
-		} else if ("DistanceRange".equals(key) && value instanceof Distance) {
-			distanceRange = ((Distance)value).getValue("meters");
+		} else if ("DistanceRange".equals(key) && value instanceof Double) {
+			distanceRange = LuaState.fromDouble(value);
 			preprocess();
 			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
-		} else if ("ProximityRange".equals(key) && value instanceof Distance) {
+		} else if ("ProximityRange".equals(key) && value instanceof Double) {
 			preprocess();
-			proximityRange = ((Distance)value).getValue("meters");
+			proximityRange = LuaState.fromDouble(value);
 		} else if ("ShowObjects".equals(key)) {
 			String v = (String)value;
 			if ("Always".equals(v)) {

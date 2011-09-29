@@ -178,7 +178,7 @@ public class Engine implements Runnable {
 				try {
 					if (gps.getLatitude() != player.position.latitude
 					|| gps.getLongitude() != player.position.longitude
-					|| gps.getAltitude() != player.position.altitude.value) {
+					|| gps.getAltitude() != player.position.altitude) {
 						player.refreshLocation();
 					}
 					cartridge.tick();

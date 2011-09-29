@@ -32,8 +32,9 @@ public class WherigoLib implements JavaFunction {
 	private static final int VECTORTOPOINT = 20;
 	private static final int LOGMESSAGE = 21;
 	private static final int MADE = 22;
+	private static final int GETVALUE = 23;
 	
-	private static final int NUM_FUNCTIONS = 23;
+	private static final int NUM_FUNCTIONS = 24;
 	
 	private static final String[] names;
 	static {
@@ -61,6 +62,7 @@ public class WherigoLib implements JavaFunction {
 		names[COMMAND] = "Command";
 		names[LOGMESSAGE] = "LogMessage";
 		names[MADE] = "made";
+		names[GETVALUE] = "GetValue";
 	}
 	
 	public static final Hashtable env = new Hashtable(); /* Wherigo's Env table */
@@ -94,7 +96,7 @@ public class WherigoLib implements JavaFunction {
 		// because i'm too lazy to type out the break;s in a switch
 		switch (index) {
 			case DISTANCE:
-				return Distance.class;
+				return Double.class;
 			case ZONEPOINT:
 				return ZonePoint.class;
 			case ZONE:
@@ -136,6 +138,12 @@ public class WherigoLib implements JavaFunction {
 			wig.rawset(names[i], functions[i]);
 		}
 		
+		LuaTable distanceMetatable = new LuaTableImpl();
+		distanceMetatable.rawset("__index", distanceMetatable);
+		distanceMetatable.rawset("__call", functions[GETVALUE]);
+		distanceMetatable.rawset(names[GETVALUE], functions[GETVALUE]);
+		state.setClassMetatable(Double.class, distanceMetatable);
+		
 		state.setClassMetatable(WherigoLib.class, wig);	
 		wig.rawset("__index", wig);
 		
@@ -165,7 +173,6 @@ public class WherigoLib implements JavaFunction {
 
 		Cartridge.register();
 		Container.register();
-		Distance.register();
 		Player.register();
 		Timer.register();
 
@@ -217,6 +224,7 @@ public class WherigoLib implements JavaFunction {
 			case COMMAND: return 0;
 			case SHOWSTATUSTEXT: return showStatusText(callFrame, nArguments);
 			case LOGMESSAGE: return logMessage(callFrame, nArguments);
+			case GETVALUE: return distanceGetValue(callFrame, nArguments);
 			default: return 0;
 		}
 	}
@@ -265,10 +273,31 @@ public class WherigoLib implements JavaFunction {
 		return 1;
 	}
 	
+	/** Fake Distance constructor
+	 * 
+	 * Called from Lua code: d = Wherigo.Distance(number, unit),
+	 * converts 'number' from specified unit to metres and returns
+	 * that as a double.
+	 */
 	private int distance (LuaCallFrame callFrame, int nArguments) {
 		double a = LuaState.fromDouble(callFrame.get(0));
 		String b = (String)callFrame.get(1);
-		callFrame.push(new Distance(a,b));
+		double dist = ZonePoint.convertDistanceFrom(a, b);
+		callFrame.push(LuaState.toDouble(dist));
+		return 1;
+	}
+	
+	/** Distance object's fake GetValue or __call method
+	 * 
+	 * Called from Lua code: dist:GetValue("metres") or dist("ft"),
+	 * where 'dist' is double, converts the number to specified units
+	 * and returns as double.
+	 */
+	private int distanceGetValue (LuaCallFrame callFrame, int nArguments) {
+		double a = LuaState.fromDouble(callFrame.get(0));
+		String b = (String)callFrame.get(1);
+		double dist = ZonePoint.convertDistanceTo(a, b);
+		callFrame.push(LuaState.toDouble(dist));
 		return 1;
 	}
 	
@@ -322,7 +351,7 @@ public class WherigoLib implements JavaFunction {
 	private int translatePoint (LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for TranslatePoint");
 		ZonePoint z = (ZonePoint)callFrame.get(0);
-		Distance dist = (Distance)callFrame.get(1);
+		double dist = LuaState.fromDouble(callFrame.get(1));
 		double angle = LuaState.fromDouble(callFrame.get(2));
 		callFrame.push(z.translate(angle, dist));
 		return 1;
@@ -333,8 +362,8 @@ public class WherigoLib implements JavaFunction {
 		ZonePoint a = (ZonePoint)callFrame.get(0);
 		ZonePoint b = (ZonePoint)callFrame.get(1);
 		double bearing = ZonePoint.angle2azimuth(b.bearing(a));
-		Distance distance = new Distance(b.distance(a), "metres");
-		callFrame.push(distance);
+		double distance = b.distance(a);
+		callFrame.push(LuaState.toDouble(distance));
 		callFrame.push(LuaState.toDouble(bearing));
 		return 2;
 	}

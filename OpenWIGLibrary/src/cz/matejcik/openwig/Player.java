@@ -8,7 +8,6 @@ import se.krka.kahlua.vm.*;
 public class Player extends Thing {
 
 	private LuaTableImpl insideOfZones = new LuaTableImpl();
-	private Distance positionAccuracy = new Distance(1.5, "metres");
 	
 	private static JavaFunction refreshLocation = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -23,7 +22,6 @@ public class Player extends Thing {
 	
 	public Player() {
 		super(true);
-		table.rawset("PositionAccuracy", positionAccuracy);
 		table.rawset("RefreshLocation", refreshLocation);
 		table.rawset("InsideOfZones", insideOfZones);
 		setPosition(new ZonePoint(360,360,0));
@@ -71,8 +69,8 @@ public class Player extends Thing {
 	public void refreshLocation() {
 		position.latitude = Engine.gps.getLatitude();
 		position.longitude = Engine.gps.getLongitude();
-		position.altitude.setValue(Engine.gps.getAltitude(), "metres");
-		positionAccuracy.value = Engine.gps.getPrecision();
+		position.altitude = Engine.gps.getAltitude();
+		table.rawset("PositionAccuracy", LuaState.toDouble(Engine.gps.getPrecision()));
 		Engine.instance.cartridge.walk(position);
 	}
 

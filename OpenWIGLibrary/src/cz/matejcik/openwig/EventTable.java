@@ -85,8 +85,8 @@ public class EventTable implements LuaTable, Serializable {
 
 	protected Object getItem (String key) {
 		if ("CurrentDistance".equals(key)) {
-			if (isLocated()) return new Distance(position.distance(Engine.instance.player.position), null);
-			else return new Distance();
+			if (isLocated()) return LuaState.toDouble(position.distance(Engine.instance.player.position));
+			else return LuaState.toDouble(-1);
 		} else if ("CurrentBearing".equals(key)) {
 			if (isLocated())
 				return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(Engine.instance.player.position)));
