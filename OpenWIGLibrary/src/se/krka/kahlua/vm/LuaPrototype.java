@@ -176,11 +176,23 @@ public final class LuaPrototype {
 		in.readFully(stringData, 2, iLen + 1);
 		loadAssert(stringData[2 + iLen] == 0, "String loading");
 
-		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(stringData));
-		String s = dis.readUTF();
-		dis.close();
+		try {
+			DataInputStream dis = new DataInputStream(new ByteArrayInputStream(stringData));
+			String s = dis.readUTF();
+			dis.close();
 
-		return s;
+			return s;
+		} catch (IOException e) {
+			return loadUndecodable(stringData);
+		}
+	}
+	
+	private static String loadUndecodable (byte[] bytes) {
+		// it is unlikely to be a broken UTF, more likely someting
+		// in an unknown encoding. replace every non-ASCII with '?'
+		for (int i = 2; i < bytes.length; i++)
+			if ((bytes[i] & 0x80) == 0x80) bytes[i] = (byte)'?';
+		return new String(bytes, 2, bytes.length - 2);
 	}
 
 	public static int rev(int v) {

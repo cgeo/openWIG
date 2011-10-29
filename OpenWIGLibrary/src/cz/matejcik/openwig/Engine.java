@@ -82,7 +82,6 @@ public class Engine implements Runnable {
 	}
 
 	protected Engine (CartridgeFile cf, OutputStream out) throws IOException {
-		instance = this;
 		gwcfile = cf;
 		savegame = cf.getSavegame();
 		if (out != null) log = new PrintStream(out);
