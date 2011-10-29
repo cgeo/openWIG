@@ -53,7 +53,7 @@ public class MainMenu extends WigList {
 	 * Called as a part of UI refresh routine.
 	 * @see cz.matejcik.openwig.platform.UI#refresh()
 	 */
-	public void refresh () {
+	public void prepareRefresh () {
 		int ln = parent.zones.length();
 		int yn = parent.yousee.length();
 		int in = parent.inventory.length();
@@ -66,6 +66,14 @@ public class MainMenu extends WigList {
 		inventory.setSubtitle(parent.inventory.getContents());
 		tasks.setName("Tasks (" + tn + ")");
 		tasks.setSubtitle(parent.tasks.getContents());
+	}
+	
+	/** Update display with new information
+	 * 
+	 * Must be called from Swing event thread,
+	 * after a call to <code>prepareRefresh()</code>
+	 */
+	public void refresh () {
 		model.refresh();
 	}
 

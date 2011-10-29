@@ -221,13 +221,20 @@ public class GameWindow extends JFrame implements UI {
 	}
 
 	public void refresh () {
-		zones.refresh();
-		yousee.refresh();
-		inventory.refresh();
-		tasks.refresh();
-		// the lists must refresh first, mainMenu refreshes based on what they see
-		mainMenu.refresh();
-		details.refresh();
+		zones.prepareRefresh();
+		yousee.prepareRefresh();
+		inventory.prepareRefresh();
+		tasks.prepareRefresh();
+		mainMenu.prepareRefresh();
+		
+		SwingUtilities.invokeLater(new Runnable() { public void run () {
+			zones.refresh();
+			yousee.refresh();
+			inventory.refresh();
+			tasks.refresh();
+			mainMenu.refresh();
+			details.refresh();
+		}});
 	}
 
 	public void start () {

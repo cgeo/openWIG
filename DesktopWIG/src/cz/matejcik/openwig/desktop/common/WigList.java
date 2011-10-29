@@ -15,8 +15,8 @@ import javax.swing.ListSelectionModel;
  * This list keeps its width fixed on a reasonable value
  * and resizes with its ScrollPane, preventing horizontal scrolling.
  * <p>
- * It also generates <code>onClick</code> events for items that really
- * react to mouse click and not only to selection changes.
+ * It also generates <code>onClick</code> events for every mouse click,
+ * not just for selection changes.
  */
 abstract public class WigList extends JList {
 
@@ -66,6 +66,7 @@ abstract public class WigList extends JList {
 	/** Updates navigation display.
 	 * Interested subclasses should override this to do something
 	 * sensible - usually refresh their model.
+	 * Must be called from Swing event thread.
 	 */
 	public void updateNavigation () { };
 }

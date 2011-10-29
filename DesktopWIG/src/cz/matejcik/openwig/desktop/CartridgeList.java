@@ -58,6 +58,7 @@ public class CartridgeList extends WigList {
 				continue;
 			}
 		}
+		model.refreshLater();
 		prefs.put("path", currentDirectory.getAbsolutePath());
 	}
 

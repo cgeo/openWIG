@@ -26,23 +26,40 @@ public class EventTableList extends WigList {
 	}
 	/** source for this list instance */
 	private Source source;
+	
+	private List<EventTable> privateModel;
 
 	private RefreshableListModel<EventTableListItem> model = new RefreshableListModel<EventTableListItem>();
 
 	private GameWindow parent;
 
-	/** Update the display with new information from source.
+	/** Prepare data for display refresh.
+	 * 
+	 * This method updates RefreshableListModel's model
+	 * with new information from source, so that subsequent
+	 * call to <code>refresh()</code> can display everything
+	 * in one go.
+	 * 
 	 * Called as part of the UI refresh routine.
 	 * @see cz.matejcik.openwig.platform.UI#refresh()
 	 */
-	public void refresh () {
-		List<EventTable> list = source.newSet();
-		ArrayList<EventTableListItem> i = new ArrayList<EventTableListItem>(list.size());
-		for (EventTable e : list) {
+	public void prepareRefresh () {
+		privateModel = source.newSet();
+		ArrayList<EventTableListItem> i = new ArrayList<EventTableListItem>(privateModel.size());
+		for (EventTable e : privateModel) {
 			i.add(new EventTableListItem(e));
 		}
-		model.clear();
-		model.addAll(i);
+		model.update(i);
+	}
+	
+	/** Update the display with new information from source.
+	 * Called as part of the UI refresh routine.
+	 * Must be called from Swing event thread.
+	 * @see cz.matejcik.openwig.platform.UI#refresh()
+	 * @see EventTableList#prepareRefresh() 
+	 */
+	public void refresh () {
+		model.refresh();
 	}
 
 	@Override
@@ -60,7 +77,7 @@ public class EventTableList extends WigList {
 	 * This is used by {@link MainMenu} to update its summary display.
 	 */
 	public int length () {
-		return model.getSize();
+		return privateModel.size();
 	}
 
 	/** Returns concatenated string of names of individual <code>EventTable</code>s
@@ -70,14 +87,14 @@ public class EventTableList extends WigList {
 	 */
 	public String getContents () {
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < model.getSize() - 1; i++) {
-			EventTableListItem item = (EventTableListItem)model.getElementAt(i);
-			sb.append(item.getName());
+		for (int i = 0; i < privateModel.size() - 1; i++) {
+			EventTable item = privateModel.get(i);
+			sb.append(item.name);
 			sb.append(", ");
 		}
-		if (model.getSize() > 0) {
-			EventTableListItem item = (EventTableListItem)model.getElementAt(model.getSize() - 1);
-			sb.append(item.getName());
+		if (!privateModel.isEmpty()) {
+			EventTable item = privateModel.get(privateModel.size() - 1);
+			sb.append(item.name);
 		}
 		return sb.toString();
 	}

@@ -74,6 +74,8 @@ public class TargetPickerWindow extends JDialog {
 
 	/** Shows the picker window and updates it with list of available
 	 * targets for the selected action.
+	 *
+	 * Must be called from Swing event thread.
 	 * @param a the action which needs a target
 	 */
 	public void showPicker (Action a) {
@@ -91,6 +93,7 @@ public class TargetPickerWindow extends JDialog {
 			Thing th = (Thing)t.rawget(key);
 			if (th.isVisible() && action.isTarget(th)) model.add(new TargetItem(th));
 		}
+		model.refresh();
 		setVisible(true);
 	}
 }

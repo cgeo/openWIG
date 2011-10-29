@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 public class RefreshableListModel<T> extends AbstractListModel {
 
 	private ArrayList<T> contents = new ArrayList<T>();
+	private ArrayList<T> newcontents = new ArrayList<T>();
 
 	/* Contract methods */
 	@Override
@@ -28,59 +29,51 @@ public class RefreshableListModel<T> extends AbstractListModel {
 
 	/* manipulation methods */
 	public void add (final T thing) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-				contents.add(thing);
-				fireIntervalAdded(this, contents.size() - 1, contents.size() - 1);
-			}
-		});
+		newcontents.add(thing);
 	}
 
 	public void remove (final int i) {
-				SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-
-		contents.remove(i);
-		fireIntervalRemoved(this, i, i);
-					}
-		});
+		newcontents.remove(i);
 	}
 
 	public void clear () {
-				SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-		if (!contents.isEmpty()) {
-			int size = contents.size();
-			contents.clear();
-			fireIntervalRemoved(this, 0, size - 1);
-		}
-					}
-		});
+		newcontents.clear();
+	}
+	
+	public void update (final Collection<? extends T> stuff) {
+		newcontents.clear();
+		newcontents.addAll(stuff);
 	}
 
 	public void add (final int i, final T thing) {
-				SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-		contents.add(i, thing);
-		fireIntervalAdded(this, i, i);
-					}
-		});
+		newcontents.add(i, thing);
 	}
 
 	public void addAll (final Collection<? extends T> stuff) {
-				SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-		contents.addAll(stuff);
-		if (!contents.isEmpty()) fireIntervalAdded(this, 0, contents.size() - 1);
-					}
-		});
+		newcontents.addAll(stuff);
 	}
 
-	public void refresh () {
-				SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-		fireContentsChanged(this, 0, contents.size() - 1);
-					}
-		});
+	/** Refresh on-display collection
+	 * 
+	 * copies <code>newcontents</code> to <code>contents</code>, generating
+	 * content change events as it goes
+	 */
+	synchronized public void refresh () {
+		int bigger = Math.max(contents.size(), newcontents.size());
+		int smaller = Math.min(contents.size(), newcontents.size());
+		int orig = contents.size();
+		contents.clear();
+		contents.addAll(newcontents);
+
+		if (smaller > 0) fireContentsChanged(this, 0, smaller - 1);
+		if (bigger == smaller) return;
+		if (orig == smaller) fireIntervalAdded(this, smaller, bigger - 1);
+		else fireIntervalRemoved(this, smaller, bigger - 1);
+	}
+	
+	public void refreshLater () {
+		SwingUtilities.invokeLater(new Runnable() { public void run () {
+			refresh();
+		}});
 	}
 }
