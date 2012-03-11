@@ -19,7 +19,7 @@ import util.Config;
 
 public class Midlet extends MIDlet implements CommandListener, UI, PlayerListener {
 
-	public static final String VERSION = "386";
+	public static final String VERSION = "428";
 	
 	// basemenu screens
 	public static Coordinates coordinates;

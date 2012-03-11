@@ -34,7 +34,7 @@ import util.BackgroundRunner;
  */
 public class Engine implements Runnable {
 
-	public static final String VERSION = "386";
+	public static final String VERSION = "428";
 
 	/** the main instance */
 	public static Engine instance;
