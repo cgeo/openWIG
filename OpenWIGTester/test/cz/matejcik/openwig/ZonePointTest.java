@@ -39,7 +39,7 @@ public class ZonePointTest {
 	{
 		assertEquals(a.latitude, b.latitude, tolerance);
 		assertEquals(a.longitude, b.longitude, tolerance);
-		assertEquals(a.altitude.value, b.altitude.value, tolerance);
+		assertEquals(a.altitude, b.altitude, tolerance);
 	}
 
 	@Test
@@ -261,7 +261,7 @@ public class ZonePointTest {
 		ZonePoint z = randomZonePoint();
 		double lat = Math.random();
 		double lon = Math.random();
-		Distance alt = new Distance(Math.random(), null);
+		double alt = Math.random();
 		z.rawset("latitude", lat);
 		assertEquals(z.latitude, lat, 0);
 		z.rawset("longitude", lon);
@@ -280,8 +280,8 @@ public class ZonePointTest {
 		assertEquals(z.latitude, lat, 0);
 		double lon = (Double)z.rawget("longitude");
 		assertEquals(z.longitude, lon, 0);
-		Distance alt = (Distance)z.rawget("altitude");
-		assertEquals(z.altitude, alt);
+		double alt = (Double)z.rawget("altitude");
+		assertEquals(z.altitude, alt, 0);
 
 		z.rawset("nonsense", true);
 		assertNull(z.rawget("nonsense"));
