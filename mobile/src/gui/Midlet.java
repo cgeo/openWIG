@@ -12,6 +12,7 @@ import se.krka.kahlua.vm.*;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.EventTable;
 import cz.matejcik.openwig.Media;
+import cz.matejcik.openwig.WherigoLib;
 import cz.matejcik.openwig.platform.UI;
 import java.io.ByteArrayInputStream;
 import util.Config;
@@ -84,6 +85,8 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 		err = "getting display";
 		display = Display.getDisplay(this);
 		if (instance == null) {
+			WherigoLib.env.put(WherigoLib.DEVICE_ID, System.getProperty("microedition.platform"));
+			
 			instance = this;
 			err = "config";
 			config = new Config("_configuration");
