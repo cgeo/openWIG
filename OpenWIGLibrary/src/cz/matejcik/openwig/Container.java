@@ -46,14 +46,12 @@ public class Container extends EventTable {
 		// location.things.removeElement(this);
 		if (c != null) {
 			TableLib.rawappend(c.inventory, this);
-			table.rawset("Container", c);
 			if (c == Engine.instance.player) setPosition(null);
 			else if (position != null) setPosition(c.position);
 			else if (container == Engine.instance.player) setPosition(ZonePoint.copy(Engine.instance.player.position));
 			container = c;
 		} else {
 			container = null;
-			table.rawset("Container", LuaState.toBoolean(false));
 			rawset("ObjectLocation", null);
 		}
 	}
@@ -78,6 +76,11 @@ public class Container extends EventTable {
 			return z.showThings();
 		}
 		return false;
+	}
+	
+	public Object rawget (Object key) {
+		if ("Container".equals(key)) return container;
+		else return super.rawget(key);
 	}
 
 	public void deserialize (DataInputStream in)

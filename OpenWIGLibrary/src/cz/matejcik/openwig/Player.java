@@ -44,6 +44,8 @@ public class Player extends Thing {
 
 	public void leaveZone (Zone z) {
 		TableLib.removeItem(insideOfZones, z);
+		if (insideOfZones.len() > 0)
+			container = (Container)insideOfZones.rawget(new Double(insideOfZones.len()));
 		//TableLib.removeItem(z.inventory, this);
 	}
 
