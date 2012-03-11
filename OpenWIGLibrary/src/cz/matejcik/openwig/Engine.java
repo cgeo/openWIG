@@ -355,7 +355,7 @@ public class Engine implements Runnable {
 	 * by Groundspeak Builder
 	 */
 	public static String removeHtml (String s) {
-		if (s == null) return null;
+		if (s == null) return "";
 		StringBuffer sb = new StringBuffer(s.length());
 		replace(s, "<BR>", "\n", sb);
 		replace(sb.toString(), "&nbsp;", " ", sb);
