@@ -126,6 +126,7 @@ public class EventTable implements LuaTable, Serializable {
 	}
 
 	public void rawset(Object key, Object value) {
+		// TODO unify rawset/setItem
 		if (key instanceof String) {
 			setItem((String) key, value);
 		}
@@ -138,6 +139,7 @@ public class EventTable implements LuaTable, Serializable {
 	public LuaTable getMetatable () { return metatable; }
 
 	public Object rawget (Object key) {
+		// TODO unify rawget/getItem
 		if (key instanceof String)
 			return getItem((String)key);
 		else

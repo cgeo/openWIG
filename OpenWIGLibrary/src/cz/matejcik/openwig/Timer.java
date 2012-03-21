@@ -60,6 +60,8 @@ public class Timer extends EventTable {
 	private static final int INTERVAL = 1;
 	private int type = COUNTDOWN;
 	
+	private static final Double ZERO = new Double(0);
+	
 	private long duration = -1;
 	private long lastTick = 0;
 	
@@ -88,7 +90,7 @@ public class Timer extends EventTable {
 			type = t;
 		} else if ("Duration".equals(key) && value instanceof Double) {
 			long d = (long)LuaState.fromDouble(value);
-			rawset("Remaining", value);
+			table.rawset("Remaining", ZERO);
 			duration = d * 1000;
 		} else super.setItem(key, value);
 	}
@@ -145,9 +147,13 @@ public class Timer extends EventTable {
 	}
 	
 	public void updateRemaining () {
-		long stm = System.currentTimeMillis();
-		long remaining = (duration/1000) - ((stm - lastTick)/1000);
-		table.rawset("Remaining", LuaState.toDouble(remaining));
+		if (task == null) {
+			table.rawset("Remaining", ZERO);
+		} else {
+			long stm = System.currentTimeMillis();
+			long remaining = (duration/1000) - ((stm - lastTick)/1000);
+			table.rawset("Remaining", LuaState.toDouble(remaining));
+		}
 	}
 	
 	public static void kill() {
