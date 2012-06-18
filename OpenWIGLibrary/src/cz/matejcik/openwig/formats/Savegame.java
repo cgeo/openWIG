@@ -38,7 +38,7 @@ public class Savegame {
 		return Engine.VERSION.equals(ver);
 	}
 
-	public void store (LuaTable table)
+	public void store (KahluaTable table)
 	throws IOException {
 		DataOutputStream out = null;
 		if (saveFile.exists())
@@ -70,7 +70,7 @@ public class Savegame {
 		level = 0;
 	}
 
-	public void restore (LuaTable table)
+	public void restore (KahluaTable table)
 	throws IOException {
 		DataInputStream dis = saveFile.openDataInputStream();
 		String sig = dis.readUTF();
@@ -104,20 +104,19 @@ public class Savegame {
 	private Hashtable javafuncToIdMap = new Hashtable(128);
 	private int currentJavafunc = 0;
 
-	public void buildJavafuncMap (LuaTable environment) {
-		LuaTable[] packages = new LuaTable[] {
+	public void buildJavafuncMap (KahluaTable environment) {
+		KahluaTable[] packages = new KahluaTable[] {
 			environment,
-			(LuaTable)environment.rawget("string"),
-			(LuaTable)environment.rawget("math"),
-			(LuaTable)environment.rawget("coroutine"),
-			(LuaTable)environment.rawget("os"),
-			(LuaTable)environment.rawget("table")
+			(KahluaTable)environment.rawget("string"),
+			(KahluaTable)environment.rawget("math"),
+			(KahluaTable)environment.rawget("coroutine"),
+			(KahluaTable)environment.rawget("os"),
+			(KahluaTable)environment.rawget("table")
 		};
 		for (int i = 0; i < packages.length; i++) {
-			LuaTable table = packages[i];
-			Object next = null;
-			while ((next = table.next(next)) != null) {
-				Object jf = table.rawget(next);
+			KahluaTableIterator it = packages[i].iterator();
+			while (it.advance()) {
+				Object jf = it.getValue();
 				if (jf instanceof JavaFunction) addJavafunc((JavaFunction)jf);
 			}
 		}
@@ -173,10 +172,10 @@ public class Savegame {
 				out.writeUTF(obj.getClass().getName());
 				if (debug) debug(obj.getClass().getName() + " (" + obj.toString()+")");
 				((Serializable)obj).serialize(out);
-			} else if (obj instanceof LuaTable) {
+			} else if (obj instanceof KahluaTable) {
 				out.writeByte(LUA_TABLE);
 				if (debug) debug("table("+obj.toString()+"):\n");
-				serializeLuaTable((LuaTable)obj, out);
+				serializeLuaTable((KahluaTable)obj, out);
 			} else if (obj instanceof LuaClosure) {
 				out.writeByte(LUA_CLOSURE);
 				if (debug) debug("closure("+obj.toString()+")");
@@ -217,16 +216,16 @@ public class Savegame {
 		}
 	}
 
-	public void serializeLuaTable (LuaTable table, DataOutputStream out)
+	public void serializeLuaTable (KahluaTable table, DataOutputStream out)
 	throws IOException {
 		level++;
-		Object next = null;
-		while ((next = table.next(next)) != null) {
-			Object value = table.rawget(next);
+		KahluaTableIterator it = table.iterator();
+		while (it.advance()) {
+			Object value = it.getValue();
 			out.writeByte(LUATABLE_PAIR);
 			if (debug) for (int i = 0; i < level; i++) debug("  ");
 
-			storeValue(next, out);
+			storeValue(it.getKey(), out);
 			if (debug) debug(" : ");
 			storeValue(value, out);
 			if (debug) debug("\n");
@@ -245,7 +244,7 @@ public class Savegame {
 			case LUA_DOUBLE:
 				double d = in.readDouble();
 				if (debug) debug(String.valueOf(d));
-				return LuaState.toDouble(d);
+				return KahluaUtil.toDouble(d);
 			case LUA_STRING:
 				String s = in.readUTF();
 				if (debug) debug("\"" + s + "\"");
@@ -253,7 +252,7 @@ public class Savegame {
 			case LUA_BOOLEAN:
 				boolean b = in.readBoolean();
 				if (debug) debug(String.valueOf(b));
-				return LuaState.toBoolean(b);
+				return KahluaUtil.toBoolean(b);
 			case LUA_JAVAFUNC:
 				int i = in.readInt();
 				JavaFunction jf = findJavafuncObject(i);
@@ -274,11 +273,11 @@ public class Savegame {
 	throws IOException {
 		switch (type) {
 			case LUA_TABLE:
-				LuaTable lti;
-				if (target instanceof LuaTable)
-					lti = (LuaTable)target;
+				KahluaTable lti;
+				if (target instanceof KahluaTable)
+					lti = (KahluaTable)target;
 				else
-					lti = new LuaTableImpl();
+					lti = Engine.platform.newTable();
 				restCache(lti);
 				if (debug) debug("table:\n");
 				return deserializeLuaTable(in, lti);
@@ -326,7 +325,7 @@ public class Savegame {
 
 	int level = 0;
 
-	public LuaTable deserializeLuaTable (DataInputStream in, LuaTable table)
+	public KahluaTable deserializeLuaTable (DataInputStream in, KahluaTable table)
 	throws IOException {
 		level++;
 		while (true) {
@@ -350,7 +349,7 @@ public class Savegame {
 			UpValue u = closure.upvalues[i];
 			if (u.value == null) {
 				Engine.log("STOR: unclosed upvalue in "+closure.toString(), Engine.LOG_WARN);
-				u.value = u.thread.objectStack[u.index];
+				u.value = u.coroutine.objectStack[u.index];
 			}
 			storeValue(u.value, out);
 		}
@@ -358,10 +357,10 @@ public class Savegame {
 
 	private LuaClosure deserializeLuaClosure (DataInputStream in)
 	throws IOException {
-		LuaClosure closure = LuaPrototype.loadByteCode(in, Engine.state.getEnvironment());
+		LuaClosure closure = Prototype.loadByteCode(in, Engine.environment);
 		restCache(closure);
 		for (int i = 0; i < closure.upvalues.length; i++) {
-			UpValue u = new UpValue();
+			UpValue u = new UpValue(Engine.vmThread.currentCoroutine,1);
 			u.value = restoreValue(in, null);
 			closure.upvalues[i] = u;
 		}

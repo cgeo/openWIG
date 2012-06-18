@@ -29,7 +29,7 @@ public class Thing extends Container {
 	
 	public Thing(boolean character) {
 		this.character = character;
-		table.rawset("Commands", new LuaTableImpl());
+		table.rawset("Commands", Engine.platform.newTable());
 	}
 	
 	protected void setItem (String key, Object value) {
@@ -42,13 +42,13 @@ public class Thing extends Container {
 			actions.removeAllElements();
 
 			// add new actions
-			LuaTable lt = (LuaTable)value;
-			Object i = null;
-			while ((i = lt.next(i)) != null) {
-				Action a = (Action)lt.rawget(i);
+			KahluaTableIterator it = ((KahluaTable)value).iterator();
+			while (it.advance()) {
+				Action a = (Action)it.getValue();
+				Object ikey = it.getKey();
 				//a.name = (String)i;
-				if (i instanceof Double) a.name = BaseLib.numberToString((Double)i);
-				else a.name = i.toString();
+				if (ikey instanceof Double) a.name = KahluaUtil.numberToString((Double)ikey);
+				else a.name = ikey.toString();
 				a.setActor(this);
 				actions.addElement(a);
 				a.associateWithTargets();

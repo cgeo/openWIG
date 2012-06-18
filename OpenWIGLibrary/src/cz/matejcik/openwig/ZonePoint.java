@@ -4,9 +4,10 @@ import java.io.*;
 
 import java.util.Hashtable;
 import se.krka.kahlua.vm.*;
-import se.krka.kahlua.stdlib.MathLib;
+import se.krka.kahlua.cldc11.MathLib;
+import se.krka.kahlua.util.NullIterator;
 
-public class ZonePoint implements LuaTable, Serializable {
+public class ZonePoint implements KahluaTable, Serializable {
 	public double latitude = 0;
 	public double longitude = 0;
 	public double altitude = 0;
@@ -168,27 +169,27 @@ public class ZonePoint implements LuaTable, Serializable {
 		return ret;
 	}
 
-	public void setMetatable (LuaTable metatable) { }
-	public LuaTable getMetatable () { return null; }
+	public void setMetatable (KahluaTable metatable) { }
+	public KahluaTable getMetatable () { return null; }
 
 	public void rawset (Object key, Object value) {
 		if (key == null) return;
 		String name = key.toString();
 		if ("latitude".equals(name))
-			latitude = LuaState.fromDouble(value);
+			latitude = KahluaUtil.fromDouble(value);
 		else if ("longitude".equals(name))
-			longitude = LuaState.fromDouble(value);
+			longitude = KahluaUtil.fromDouble(value);
 		else if ("altitude".equals(name)) {
-			altitude = LuaState.fromDouble(value);
+			altitude = KahluaUtil.fromDouble(value);
 		}
 	}
 
 	public Object rawget (Object key) {
 		if (key == null) return null;
 		String name = key.toString();
-		if ("latitude".equals(name)) return LuaState.toDouble(latitude);
-		if ("longitude".equals(name)) return LuaState.toDouble(longitude);
-		if ("altitude".equals(name)) return LuaState.toDouble(altitude);
+		if ("latitude".equals(name)) return KahluaUtil.toDouble(latitude);
+		if ("longitude".equals(name)) return KahluaUtil.toDouble(longitude);
+		if ("altitude".equals(name)) return KahluaUtil.toDouble(altitude);
 		return null;
 	}
 
@@ -212,4 +213,14 @@ public class ZonePoint implements LuaTable, Serializable {
 	public String toString () {
 		return "ZonePoint("+latitude+","+longitude+","+altitude+")" /* + "-" + super.toString()*/;
 	}
+
+	public void rawset (int key, Object value) { /* NOPE */ }
+
+	public Object rawget (int key) { /* NOPE */ return null; }
+
+	public KahluaTableIterator iterator () { return NullIterator.NULL_ITERATOR; }
+
+	public boolean isEmpty () { return false; }
+
+	public void wipe () { }
 }

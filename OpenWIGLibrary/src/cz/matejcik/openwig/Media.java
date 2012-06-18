@@ -35,10 +35,10 @@ public class Media extends EventTable {
 		if ("AltText".equals(key)) {
 			altText = (String)value;
 		} else if ("Resources".equals(key)) {
-			LuaTable lt = (LuaTable)value;
+			KahluaTable lt = (KahluaTable)value;
 			int n = lt.len();
 			for (int i = 1; i <= n; i++) {
-				LuaTable res = (LuaTable)lt.rawget(new Double(i));
+				KahluaTable res = (KahluaTable)lt.rawget(new Double(i));
 				String t = (String)res.rawget("Type");
 				if ("fdl".equals(t)) continue;
 				type = t.toLowerCase();

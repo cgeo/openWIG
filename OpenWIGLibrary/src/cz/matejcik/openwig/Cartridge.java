@@ -14,7 +14,7 @@ public class Cartridge extends EventTable {
 	
 	public Vector tasks = new Vector();
 	
-	public LuaTable allZObjects = new LuaTableImpl();
+	public KahluaTable allZObjects = Engine.platform.newTable();
 	
 	private static JavaFunction requestSync = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -72,8 +72,8 @@ public class Cartridge extends EventTable {
 		return count;
 	}
 	
-	public LuaTable currentThings () {
-		LuaTable ret = new LuaTableImpl();
+	public KahluaTable currentThings () {
+		KahluaTable ret = Engine.platform.newTable();
 		for (int i = 0; i < zones.size(); i++) {
 			Zone z = (Zone)zones.elementAt(i);
 			z.collectThings(ret);
@@ -115,10 +115,10 @@ public class Cartridge extends EventTable {
 	throws IOException {
 		super.deserialize(in);
 		Engine.instance.cartridge = this;
-		allZObjects = (LuaTable)table.rawget("AllZObjects");
-		Object next = null;
-		while ((next = allZObjects.next(next)) != null) {
-			sortObject(allZObjects.rawget(next));
+		allZObjects = (KahluaTable)table.rawget("AllZObjects");
+		KahluaTableIterator i = allZObjects.iterator();
+		while (i.advance()) {
+			sortObject(i.getValue());
 		}
 	}
 }

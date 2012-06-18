@@ -53,7 +53,7 @@ public class Zone extends Thing {
 	
 	protected void setItem (String key, Object value) {
 		if ("Points".equals(key) && value != null) {
-			LuaTable lt = (LuaTable) value;
+			KahluaTable lt = (KahluaTable) value;
 			int n = lt.len();
 			points = new ZonePoint[n];
 			for (int i = 1; i <= n; i++) {
@@ -66,7 +66,7 @@ public class Zone extends Thing {
 				//setcontain();
 			}
 		} else if ("Active".equals(key)) {
-			boolean a = LuaState.boolEval(value);
+			boolean a = KahluaUtil.boolEval(value);
 			if (a != active) callEvent("OnZoneState", null);
 			active = a;
 			if (a) preprocess();
@@ -78,18 +78,18 @@ public class Zone extends Thing {
 				Engine.instance.player.leaveZone(this);
 			}
 		} else if ("Visible".equals(key)) {
-			boolean a = LuaState.boolEval(value);
+			boolean a = KahluaUtil.boolEval(value);
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
 		} else if ("DistanceRange".equals(key) && value instanceof Double) {
-			distanceRange = LuaState.fromDouble(value);
+			distanceRange = KahluaUtil.fromDouble(value);
 			preprocess();
 			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
 		} else if ("ProximityRange".equals(key) && value instanceof Double) {
 			preprocess();
-			proximityRange = LuaState.fromDouble(value);
+			proximityRange = KahluaUtil.fromDouble(value);
 		} else if ("ShowObjects".equals(key)) {
 			String v = (String)value;
 			if ("Always".equals(v)) {
@@ -315,9 +315,9 @@ public class Zone extends Thing {
 	public int visibleThings() {
 		if (!showThings()) return 0;
 		int count = 0;
-		Object key = null;
-		while ((key = inventory.next(key)) != null) {
-			Object o = inventory.rawget(key);
+		KahluaTableIterator it = inventory.iterator();
+		while (it.advance()) {
+			Object o = it.getValue();
 			if (o instanceof Player) continue;
 			if (!(o instanceof Thing)) continue;
 			if (((Thing)o).isVisible()) count++;
@@ -325,12 +325,12 @@ public class Zone extends Thing {
 		return count;
 	}
 	
-	public void collectThings (LuaTable c) {
-		// XXX does this have to be a LuaTable? maybe it does...
+	public void collectThings (KahluaTable c) {
+		// XXX does this have to be a KahluaTable? maybe it does...
 		if (!showThings()) return;
-		Object key = null;
-		while ((key = inventory.next(key)) != null) {
-			Object z = inventory.rawget(key);
+		KahluaTableIterator it = inventory.iterator();
+		while (it.advance()) {
+			Object z = it.getValue();
 			if (z instanceof Thing && ((Thing)z).isVisible())
 				TableLib.rawappend(c, z);
 		}

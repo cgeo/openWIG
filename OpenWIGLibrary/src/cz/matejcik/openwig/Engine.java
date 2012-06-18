@@ -6,6 +6,7 @@ import se.krka.kahlua.vm.*;
 
 import java.io.*;
 import java.util.*;
+import se.krka.kahlua.cldc11.CLDC11Platform;
 
 import util.BackgroundRunner;
 
@@ -38,18 +39,23 @@ public class Engine implements Runnable {
 
 	/** the main instance */
 	public static Engine instance;
+	
+	/** Lua platform - we might want to implement our version */
+	public static Platform platform = CLDC11Platform.getInstance();
+	/** Lua environment */
+	public static KahluaTable environment;
 	/** Lua state - don't touch this if you don't have to */
-	public static LuaState state;
+	public static KahluaThread vmThread;
 
 	/** reference to UI implementation */
-	public static UI ui;
+	protected static UI ui;
 	/** reference to LocationService */
-	public static LocationService gps;
+	protected static LocationService gps;
 
 	/** reference to source file */
-	public CartridgeFile gwcfile;
+	protected CartridgeFile gwcfile;
 	/** reference to save file */
-	public Savegame savegame = null;
+	protected Savegame savegame = null;
 	/** reference to log stream */
 	private PrintStream log;
 
@@ -107,7 +113,8 @@ public class Engine implements Runnable {
 	protected void prepareState ()
 	throws IOException {
 		ui.debugMsg("Creating state...\n");
-		state = new LuaState(System.out);
+		environment = platform.newEnvironment();
+		vmThread = new KahluaThread(platform, environment);
 
 		/*write("Registering base libs...\n");
 		BaseLib.register(state);
@@ -117,18 +124,10 @@ public class Engine implements Runnable {
 		OsLib.register(state);*/
 
 		ui.debugMsg("Building javafunc map...\n");
-		savegame.buildJavafuncMap(state.getEnvironment());
-
-		ui.debugMsg("Loading stdlib...");
-		InputStream stdlib = getClass().getResourceAsStream("/cz/matejcik/openwig/stdlib.lbc");
-		LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
-		ui.debugMsg("calling...\n");
-		state.call(closure, null, null, null);
-		stdlib.close();
-		stdlib = null;
+		savegame.buildJavafuncMap(environment);
 
 		ui.debugMsg("Registering WIG libs...\n");
-		WherigoLib.register(state);
+		WherigoLib.register(vmThread, environment);
 
 		ui.debugMsg("Building event queue...\n");
 		eventRunner = new BackgroundRunner(true);
@@ -144,7 +143,7 @@ public class Engine implements Runnable {
 	throws IOException {
 		ui.debugMsg("Restoring saved state...");
 		cartridge = new Cartridge();
-		savegame.restore(state.getEnvironment());
+		savegame.restore(environment);
 	}
 
 	/** invokes creation of clean new game environment */
@@ -162,10 +161,10 @@ public class Engine implements Runnable {
 		byte[] lbc = gwcfile.getBytecode();
 
 		ui.debugMsg("parsing...");
-		LuaClosure closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+		LuaClosure closure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
 
 		ui.debugMsg("calling...\n");
-		state.call(closure, null, null, null);
+		vmThread.call(closure, null, null, null);
 		lbc = null;
 		closure = null;
 	}
@@ -193,7 +192,7 @@ public class Engine implements Runnable {
 			stacktrace(t);
 		} finally {
 			instance = null;
-			state = null;
+			vmThread = null;
 			if (eventRunner != null) eventRunner.kill();
 			eventRunner = null;
 		}
@@ -232,9 +231,9 @@ public class Engine implements Runnable {
 	public static void stacktrace (Throwable e) {
 		e.printStackTrace();
 		String msg;
-		if (state != null) {
-			System.out.println(state.currentThread.stackTrace);
-			msg = e.toString() + "\n\nstack trace: " + state.currentThread.stackTrace;
+		if (vmThread != null) {
+			System.out.println(vmThread.currentCoroutine.stackTrace);
+			msg = e.toString() + "\n\nstack trace: " + vmThread.currentCoroutine.stackTrace;
 		} else {
 			msg = e.toString();
 		}
@@ -250,12 +249,12 @@ public class Engine implements Runnable {
 	}
 
 	/** builds and calls a dialog from a Message table */
-	public static void message (LuaTable message) {
+	public static void message (KahluaTable message) {
 		String[] texts = {removeHtml((String)message.rawget("Text"))};
 		log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
 		Media[] media = {(Media)message.rawget("Media")};
 		String button1 = null, button2 = null;
-		LuaTable buttons = (LuaTable)message.rawget("Buttons");
+		KahluaTable buttons = (KahluaTable)message.rawget("Buttons");
 		if (buttons != null) {
 			button1 = (String)buttons.rawget(new Double(1));
 			button2 = (String)buttons.rawget(new Double(2));
@@ -295,7 +294,7 @@ public class Engine implements Runnable {
 			public void run () {
 				try {
 					Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed", LOG_CALL);
-					Engine.state.call(callback, value, null, null);
+					Engine.vmThread.call(callback, value, null, null);
 					Engine.log("BTTN END", LOG_CALL);
 				} catch (Throwable t) {
 					stacktrace(t);
@@ -389,7 +388,7 @@ public class Engine implements Runnable {
 			// perform the actual sync
 			try {
 				ui.blockForSaving();
-				savegame.store(state.getEnvironment());
+				savegame.store(environment);
 			} catch (IOException e) {
 				log("STOR: save failed: "+e.toString(), LOG_WARN);
 				ui.showError("Sync failed.\n" + e.getMessage());

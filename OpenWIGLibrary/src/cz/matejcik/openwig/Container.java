@@ -7,7 +7,7 @@ import se.krka.kahlua.vm.*;
 
 public class Container extends EventTable {
 
-	public LuaTable inventory = new LuaTableImpl();
+	public KahluaTable inventory = Engine.platform.newTable();
 	public Container container = null;
 	
 	private static JavaFunction moveTo = new JavaFunction() {
@@ -23,7 +23,7 @@ public class Container extends EventTable {
 		public int call (LuaCallFrame callFrame, int nArguments) {
 			Container p = (Container) callFrame.get(0);
 			Thing t = (Thing) callFrame.get(1);
-			callFrame.push(LuaState.toBoolean(p.contains(t)));
+			callFrame.push(KahluaUtil.toBoolean(p.contains(t)));
 			return 1;
 		}
 	};
@@ -57,9 +57,9 @@ public class Container extends EventTable {
 	}
 
 	public boolean contains (Thing t) {
-		Object key = null;
-		while ((key = inventory.next(key)) != null) {
-			Object value = inventory.rawget(key);
+		KahluaTableIterator i = inventory.iterator();
+		while (i.advance()) {
+			Object value = i.getValue();
 			if (value instanceof Thing) {
 				if (value == t) return true;
 				if (((Thing)value).contains(t)) return true;
@@ -86,7 +86,7 @@ public class Container extends EventTable {
 	public void deserialize (DataInputStream in)
 	throws IOException {
 		super.deserialize(in);
-		inventory = (LuaTable)table.rawget("Inventory");
+		inventory = (KahluaTable)table.rawget("Inventory");
 		Object o = table.rawget("Container");
 		if (o instanceof Container) container = (Container)o;
 		else container = null;

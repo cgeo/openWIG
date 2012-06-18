@@ -23,13 +23,13 @@ public class Task extends EventTable {
 	
 	protected void setItem (String key, Object value) {
 		if ("Active".equals(key)) {
-			boolean a = LuaState.boolEval(value);
+			boolean a = KahluaUtil.boolEval(value);
 			if (a != active) {
 				active = a;
 				callEvent("OnSetActive", null);
 			}
 		} else if ("Complete".equals(key)) {
-			boolean c = LuaState.boolEval(value);
+			boolean c = KahluaUtil.boolEval(value);
 			if (c != complete) {
 				complete = c;
 				callEvent("OnSetComplete", null);

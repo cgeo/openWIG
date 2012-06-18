@@ -89,7 +89,7 @@ public class Timer extends EventTable {
 			}
 			type = t;
 		} else if ("Duration".equals(key) && value instanceof Double) {
-			long d = (long)LuaState.fromDouble(value);
+			long d = (long)KahluaUtil.fromDouble(value);
 			table.rawset("Remaining", ZERO);
 			duration = d * 1000;
 		} else super.setItem(key, value);
@@ -152,7 +152,7 @@ public class Timer extends EventTable {
 		} else {
 			long stm = System.currentTimeMillis();
 			long remaining = (duration/1000) - ((stm - lastTick)/1000);
-			table.rawset("Remaining", LuaState.toDouble(remaining));
+			table.rawset("Remaining", KahluaUtil.toDouble(remaining));
 		}
 	}
 	

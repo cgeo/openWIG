@@ -7,7 +7,7 @@ import se.krka.kahlua.vm.*;
 
 public class Player extends Thing {
 
-	private LuaTableImpl insideOfZones = new LuaTableImpl();
+	private KahluaTable insideOfZones = Engine.platform.newTable();
 	
 	private static JavaFunction refreshLocation = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
@@ -60,9 +60,9 @@ public class Player extends Thing {
 	
 	public int visibleThings() {
 		int count = 0;
-		Object key = null;
-		while ((key = inventory.next(key)) != null) {
-			Object o = inventory.rawget(key);
+		KahluaTableIterator i = inventory.iterator();
+		while (i.advance()) {
+			Object o = i.getValue();
 			if (o instanceof Thing && ((Thing)o).isVisible()) count++;
 		}
 		return count;
@@ -72,7 +72,7 @@ public class Player extends Thing {
 		position.latitude = Engine.gps.getLatitude();
 		position.longitude = Engine.gps.getLongitude();
 		position.altitude = Engine.gps.getAltitude();
-		table.rawset("PositionAccuracy", LuaState.toDouble(Engine.gps.getPrecision()));
+		table.rawset("PositionAccuracy", KahluaUtil.toDouble(Engine.gps.getPrecision()));
 		Engine.instance.cartridge.walk(position);
 	}
 
