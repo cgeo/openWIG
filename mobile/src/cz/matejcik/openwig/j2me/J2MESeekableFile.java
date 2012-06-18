@@ -4,7 +4,7 @@ import cz.matejcik.openwig.platform.SeekableFile;
 import java.io.*;
 import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
-import se.krka.kahlua.vm.LuaPrototype;
+import se.krka.kahlua.vm.Prototype;
 
 public class J2MESeekableFile implements SeekableFile {
 
@@ -41,7 +41,7 @@ public class J2MESeekableFile implements SeekableFile {
 	}
 	
 	public int readInt() throws IOException {
-		int i = LuaPrototype.rev(input.readInt());
+		int i = Prototype.rev(input.readInt());
 		pos += 4;
 		return i;
 	}
@@ -57,7 +57,7 @@ public class J2MESeekableFile implements SeekableFile {
 	}
 	
 	public long readLong() throws IOException {
-		long l = LuaPrototype.rev(input.readLong());
+		long l = Prototype.rev(input.readLong());
 		pos += 8;
 		return l;
 	}

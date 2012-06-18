@@ -6,7 +6,8 @@ import javax.microedition.lcdui.AlertType;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.Thing;
 import cz.matejcik.openwig.Action;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.KahluaTableIterator;
 
 public class Targets extends ListOfStuff {
 
@@ -48,14 +49,15 @@ public class Targets extends ListOfStuff {
 	}
 
 	private void makeValidStuff() {
-		LuaTable current = Engine.instance.cartridge.currentThings();
+		KahluaTable current = Engine.instance.cartridge.currentThings();
 		int size = current.len() + Engine.instance.player.inventory.len();
 		validStuff = new Vector(size);
-		Object key = null;
-		while ((key = current.next(key)) != null)
-			validStuff.addElement(current.rawget(key));
-		while ((key = Engine.instance.player.inventory.next(key)) != null)
-			validStuff.addElement(Engine.instance.player.inventory.rawget(key));
+		KahluaTableIterator it = current.iterator();
+		while (it.advance())
+			validStuff.addElement(it.getValue());
+		it = Engine.instance.player.inventory.iterator();
+		while (it.advance())
+			validStuff.addElement(it.getValue());
 		
 		for (int i = 0; i < validStuff.size(); i++) {
 			Thing t = (Thing)validStuff.elementAt(i);

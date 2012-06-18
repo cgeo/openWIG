@@ -4,7 +4,7 @@ import javax.microedition.lcdui.*;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.EventTable;
 import cz.matejcik.openwig.Media;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
 import util.Config;
 
 public class Input implements CommandListener, ItemCommandListener, Cancellable, Pushable {
@@ -90,7 +90,7 @@ public class Input implements CommandListener, ItemCommandListener, Cancellable,
 		} else if ("MultipleChoice".equals(type)) {
 			// XXX class Input with this in interface would be more appropriate?
 			choice.deleteAll();
-			LuaTable choices = (LuaTable)input.table.rawget("Choices");
+			KahluaTable choices = (KahluaTable)input.table.rawget("Choices");
 			int n = choices.len();
 			for (int i = 1; i <= n; i++) {
 				choice.append((String)choices.rawget(new Double(i)), null);

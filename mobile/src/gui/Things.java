@@ -4,7 +4,8 @@ import javax.microedition.lcdui.*;
 import java.util.Vector;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.Thing;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.KahluaTableIterator;
 
 public class Things extends ListOfStuff {
 	
@@ -42,13 +43,13 @@ public class Things extends ListOfStuff {
 	}
 
 	protected Vector getValidStuff() {
-		LuaTable container;
+		KahluaTable container;
 		if (mode == INVENTORY) container = Engine.instance.player.inventory;
 		else container = Engine.instance.cartridge.currentThings();
 		Vector newthings = new Vector(container.len());
-		Object key = null;
-		while ((key = container.next(key)) != null) {
-			Thing t = (Thing)container.rawget(key);
+		KahluaTableIterator it = container.iterator();
+		while (it.advance()) {
+			Thing t = (Thing)it.getValue();
 			if (t.isVisible()) newthings.addElement(t);
 		}
 		return newthings;
