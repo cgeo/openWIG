@@ -9,7 +9,8 @@ import cz.matejcik.openwig.desktop.common.WigList;
 import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.KahluaTableIterator;
 
 /** Window with list of possible targets for a selected action.
  * <p>
@@ -81,16 +82,14 @@ public class TargetPickerWindow extends JDialog {
 	public void showPicker (Action a) {
 		action = a;
 		model.clear();
-		LuaTable t = Engine.instance.cartridge.currentThings();
-		Object key = null;
-		while ((key = t.next(key)) != null) {
-			Thing th = (Thing)t.rawget(key);
+		KahluaTableIterator it = Engine.instance.cartridge.currentThings().iterator();
+		while (it.advance()) {
+			Thing th = (Thing)it.getValue();
 			if (th.isVisible() && action.isTarget(th)) model.add(new TargetItem(th));
 		}
-		t = Engine.instance.player.inventory;
-		key = null;
-		while ((key = t.next(key)) != null) {
-			Thing th = (Thing)t.rawget(key);
+		it = Engine.instance.player.inventory.iterator();
+		while (it.advance()) {
+			Thing th = (Thing)it.getValue();
 			if (th.isVisible() && action.isTarget(th)) model.add(new TargetItem(th));
 		}
 		model.refresh();

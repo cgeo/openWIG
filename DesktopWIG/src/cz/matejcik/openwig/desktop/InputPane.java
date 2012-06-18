@@ -6,7 +6,7 @@ import cz.matejcik.openwig.desktop.common.DetailPane;
 import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JTextField;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
 
 /** GUI for displaying Inputs.
  * <p>
@@ -58,7 +58,7 @@ public class InputPane extends DetailPane {
 			// hide text/answer
 			textInput.setVisible(false);
 			answer.setVisible(false);
-			LuaTable choices = (LuaTable)input.rawget("Choices");
+			KahluaTable choices = (KahluaTable)input.rawget("Choices");
 			int n = choices.len();
 			// make sure we have enough buttons
 			for (int i = options.size(); i < n; i++) {

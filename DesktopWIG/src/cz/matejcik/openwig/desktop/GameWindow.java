@@ -17,7 +17,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.*;
 import se.krka.kahlua.vm.LuaClosure;
-import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.KahluaTableIterator;
 
 
 /** Main game window.
@@ -53,11 +54,11 @@ public class GameWindow extends JFrame implements UI {
 	 */
 	protected EventTableList yousee = new EventTableList(this, new EventTableList.Source() {
 		public List<EventTable> newSet () {
-			LuaTable container = Engine.instance.cartridge.currentThings();
+			KahluaTable container = Engine.instance.cartridge.currentThings();
 			List<EventTable> ret = new ArrayList<EventTable>(container.len());
-			Object key = null;
-			while ((key = container.next(key)) != null) {
-				Thing t = (Thing)container.rawget(key);
+			KahluaTableIterator it = container.iterator();
+			while (it.advance()) {
+				Thing t = (Thing)it.getValue();
 				if (t.isVisible()) ret.add(t);
 			}
 			return ret;
@@ -69,11 +70,11 @@ public class GameWindow extends JFrame implements UI {
 	 */
 	protected EventTableList inventory = new EventTableList(this, new EventTableList.Source() {
 		public List<EventTable> newSet () {
-			LuaTable container = Engine.instance.player.inventory;
+			KahluaTable container = Engine.instance.player.inventory;
 			List<EventTable> ret = new ArrayList<EventTable>(container.len());
-			Object key = null;
-			while ((key = container.next(key)) != null) {
-				Thing t = (Thing)container.rawget(key);
+			KahluaTableIterator it = container.iterator();
+			while (it.advance()) {
+				Thing t = (Thing)it.getValue();
 				if (t.isVisible()) ret.add(t);
 			}
 			return ret;
