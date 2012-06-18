@@ -1,0 +1,3 @@
+[submodule "kahlua2"]
+	path = kahlua2
+	url = https://github.com/krka/kahlua2.git
