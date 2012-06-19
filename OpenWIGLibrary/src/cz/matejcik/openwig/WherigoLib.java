@@ -157,10 +157,6 @@ public class WherigoLib implements JavaFunction {
 		wig.rawset("LOCATIONSCREEN", new Double(UI.LOCATIONSCREEN));
 		wig.rawset("TASKSCREEN", new Double(UI.TASKSCREEN));
 		
-		KahluaTable pack = (KahluaTable)environment.rawget("package");
-		KahluaTable loaded = (KahluaTable)pack.rawget("loaded");
-		loaded.rawset("Wherigo", wig);
-		
 		KahluaTable envtable = Engine.platform.newTable(); /* Wherigo's Env table */
 		Enumeration e = env.keys();
 		while (e.hasMoreElements()) {
