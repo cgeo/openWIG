@@ -365,4 +365,8 @@ public class GameWindow extends JFrame implements UI {
 		}
 		if (closeAfterSave) kill();
 	}
+	
+	public String getDeviceID () {
+		return "dsktpwig";
+	}
 }

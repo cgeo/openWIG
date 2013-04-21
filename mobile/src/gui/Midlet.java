@@ -84,9 +84,7 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 		try {
 		err = "getting display";
 		display = Display.getDisplay(this);
-		if (instance == null) {
-			WherigoLib.env.put(WherigoLib.DEVICE_ID, System.getProperty("microedition.platform"));
-			
+		if (instance == null) {			
 			instance = this;
 			err = "config";
 			config = new Config("_configuration");
@@ -385,5 +383,9 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 
 	public void unblock () {
 		display.setCurrent(currentDisplay);
+	}
+	
+	public String getDeviceID () {
+		return System.getProperty("microedition.platform");
 	}
 }
