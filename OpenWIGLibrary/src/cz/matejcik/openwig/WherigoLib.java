@@ -126,14 +126,15 @@ public class WherigoLib implements JavaFunction {
 
 	public static void register(KahluaThread state, KahluaTable environment) {
 		
-		if (env.get(DEVICE_ID) == null) throw new RuntimeException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
+		env.put(DEVICE_ID, Engine.instance.ui.getDeviceID());		
+		//if (env.get(DEVICE_ID) == null) throw new RuntimeException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
 		
 		KahluaTable metatables = KahluaUtil.getClassMetatables(Engine.platform, environment);
 		
 		KahluaTable wig = Engine.platform.newTable();
 		environment.rawset("Wherigo", wig);
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
-			Engine.instance.savegame.addJavafunc(functions[i]);
+			Engine.instance.savegame.addFunc(functions[i]);
 			wig.rawset(names[i], functions[i]);
 		}
 		

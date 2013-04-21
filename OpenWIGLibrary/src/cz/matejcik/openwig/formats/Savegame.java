@@ -3,14 +3,15 @@ package cz.matejcik.openwig.formats;
 import java.io.*;
 import java.util.Hashtable;
 
-import cz.matejcik.openwig.Engine;
-import cz.matejcik.openwig.Serializable;
+import cz.matejcik.openwig.*;
 import cz.matejcik.openwig.platform.FileHandle;
+import se.krka.kahlua.stdlib.RandomLib;
 import se.krka.kahlua.vm.*;
 
 public class Savegame {
 
-	private static final String SIGNATURE = "openWIG savegame\n";
+	private static final String SIGNATURE = "openWIG savegame - unified format\n";
+	private static final int VERSION = 1;
 	
 	private FileHandle saveFile;
 
@@ -34,10 +35,6 @@ public class Savegame {
 		return Class.forName(s);
 	}
 
-	protected boolean versionOk (String ver) {
-		return Engine.VERSION.equals(ver);
-	}
-
 	public void store (KahluaTable table)
 	throws IOException {
 		DataOutputStream out = null;
@@ -50,7 +47,7 @@ public class Savegame {
 			out = saveFile.openDataOutputStream();
 
 			out.writeUTF(SIGNATURE);
-			out.writeUTF(Engine.VERSION);
+			out.writeShort(VERSION);
 			resetObjectStore();
 
 			//specialcase cartridge:
@@ -76,8 +73,8 @@ public class Savegame {
 		String sig = dis.readUTF();
 		if (!SIGNATURE.equals(sig)) throw new IOException("Invalid savegame file: bad signature.");
 		try {
-			String ver = dis.readUTF();
-			if (!versionOk(ver)) throw new IOException("Savegame is for different version.");
+			short ver = dis.readShort();
+			if (ver != VERSION) throw new IOException("Savegame is for different version.");
 		} catch (UTFDataFormatException e) {
 			throw new IOException("Savegame is for different version.");
 		}
@@ -100,11 +97,11 @@ public class Savegame {
 	private Hashtable objectStore;
 	private int currentId;
 
-	private Hashtable idToJavafuncMap = new Hashtable(128);
-	private Hashtable javafuncToIdMap = new Hashtable(128);
-	private int currentJavafunc = 0;
+	private Hashtable idToFuncMap = new Hashtable(128);
+	private Hashtable funcToIdMap = new Hashtable(128);
+	private int currentFunc = 0;
 
-	public void buildJavafuncMap (KahluaTable environment) {
+	public void buildFuncMap (KahluaTable environment) {
 		KahluaTable[] packages = new KahluaTable[] {
 			environment,
 			(KahluaTable)environment.rawget("string"),
@@ -117,9 +114,19 @@ public class Savegame {
 			KahluaTableIterator it = packages[i].iterator();
 			while (it.advance()) {
 				Object jf = it.getValue();
-				if (jf instanceof JavaFunction) addJavafunc((JavaFunction)jf);
+				if (jf instanceof JavaFunction) addFunc((JavaFunction)jf);
 			}
 		}
+		// RandomLib hack
+		for (int i = 0; i < RandomLib.functions.length; i++) {
+			addFunc(RandomLib.functions[i]);
+		}
+	}
+	
+	public void walkPrototype (Prototype prototype) {
+		addFunc(prototype);
+		for (int i = 0; i < prototype.prototypes.length; i++)
+			walkPrototype(prototype.prototypes[i]);
 	}
 
 	private static final byte LUA_NIL	= 0x00;
@@ -134,22 +141,51 @@ public class Savegame {
 
 	private static final byte LUATABLE_PAIR = 0x10;
 	private static final byte LUATABLE_END  = 0x11;
-
-	public void addJavafunc (JavaFunction javafunc) {
-		Integer id = new Integer(currentJavafunc++);
-		idToJavafuncMap.put(id, javafunc);
-		javafuncToIdMap.put(javafunc, id);
+	
+	private static final byte OW_ACTION	= 0x20;
+	private static final byte OW_CARTRIDGE	= 0x21;
+	private static final byte OW_MEDIA	= 0x22;
+	private static final byte OW_PLAYER	= 0x23;
+	private static final byte OW_TASK	= 0x24;
+	private static final byte OW_THING	= 0x25;
+	private static final byte OW_TIMER	= 0x26;
+	private static final byte OW_ZONE	= 0x27;
+	private static final byte OW_ZONEPONINT	= 0x28;
+	private static final byte OW_OTHER	= 0x2f;
+	
+	private static final Class[] knownClasses = new Class[] {
+		Action.class,
+		Cartridge.class,
+		Media.class,
+		Player.class,
+		Task.class,
+		Thing.class,
+		Timer.class,
+		Zone.class,
+		ZonePoint.class
+	};
+	
+	private static Hashtable classmap = new Hashtable(8);
+	static {
+		for (int i = 0; i < knownClasses.length; i++) {
+			classmap.put(knownClasses[i], new Byte((byte)(0x20 + i)));
+		}
 	}
 
-	private int findJavafuncId (JavaFunction javafunc) {
-		Integer id = (Integer)javafuncToIdMap.get(javafunc);
+	public void addFunc (Object func) {
+		Integer id = new Integer(currentFunc++);
+		idToFuncMap.put(id, func);
+		funcToIdMap.put(func, id);
+	}
+
+	private int findFuncId (Object func) {
+		Integer id = (Integer)funcToIdMap.get(func);
 		if (id != null) return id.intValue();
-		else throw new RuntimeException("javafunc not found in map!");
+		else throw new RuntimeException("func not found in map!");
 	}
 
-	private JavaFunction findJavafuncObject (int id) {
-		JavaFunction jf = (JavaFunction)idToJavafuncMap.get(new Integer(id));
-		return jf;
+	private Object findFuncObject (int id) {
+		return idToFuncMap.get(new Integer(id));
 	}
 
 	private void storeObject (Object obj, DataOutputStream out)
@@ -167,11 +203,11 @@ public class Savegame {
 			i = new Integer(currentId++);
 			objectStore.put(obj, i);
 			if (debug) debug("(ref"+i.intValue()+")");
-			if (obj instanceof Serializable) {
+			if (obj instanceof OWSerializable) {
 				out.writeByte(LUA_OBJECT);
 				out.writeUTF(obj.getClass().getName());
 				if (debug) debug(obj.getClass().getName() + " (" + obj.toString()+")");
-				((Serializable)obj).serialize(out);
+				((OWSerializable)obj).serialize(out);
 			} else if (obj instanceof KahluaTable) {
 				out.writeByte(LUA_TABLE);
 				if (debug) debug("table("+obj.toString()+"):\n");
@@ -206,8 +242,8 @@ public class Savegame {
 			out.writeByte(LUA_DOUBLE);
 			if (debug) debug(obj.toString());
 			out.writeDouble(((Double)obj).doubleValue());
-		} else if (obj instanceof JavaFunction) {
-			int i = findJavafuncId((JavaFunction)obj);
+		} else if (obj instanceof JavaFunction || obj instanceof Prototype) {
+			int i = findFuncId((JavaFunction)obj);
 			if (debug) debug("javafunc("+i+")-"+obj.toString());
 			out.writeByte(LUA_JAVAFUNC);
 			out.writeInt(i);
@@ -255,7 +291,7 @@ public class Savegame {
 				return KahluaUtil.toBoolean(b);
 			case LUA_JAVAFUNC:
 				int i = in.readInt();
-				JavaFunction jf = findJavafuncObject(i);
+				Object jf = findFuncObject(i);
 				if (debug) debug("javafunc("+i+")-"+jf);
 				return jf;
 			default:
@@ -288,12 +324,12 @@ public class Savegame {
 				return lc;
 			case LUA_OBJECT:
 				String cls = in.readUTF();
-				Serializable s = null;
+				OWSerializable s = null;
 				try {
 					if (debug) debug("object of type "+cls+"...\n");
 					Class c = classForName(cls);
-					if (Serializable.class.isAssignableFrom(c)) {
-						s = (Serializable)c.newInstance();
+					if (OWSerializable.class.isAssignableFrom(c)) {
+						s = (OWSerializable)c.newInstance();
 					}
 				} catch (Throwable e) {
 					if (debug) debug("(failed to deserialize "+cls+")\n");

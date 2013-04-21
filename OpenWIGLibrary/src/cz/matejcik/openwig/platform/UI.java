@@ -141,4 +141,13 @@ public interface UI {
 	 * @see blockForSaving
 	 */
 	public void unblock ();
+	
+	/** Returns DeviceID
+	 * <p>
+	 * Wherigo API requires a field DeviceID in Env table. This field can be
+	 * used to differentiate between different devices or even player
+	 * apps on the same Env.Platform.
+	 * @return a string describing the device on which the UI runs
+	 */
+	public String getDeviceID ();
 }

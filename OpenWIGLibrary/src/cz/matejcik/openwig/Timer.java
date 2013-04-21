@@ -34,9 +34,9 @@ public class Timer extends EventTable {
 	};
 
 	public static void register () {
-		Engine.instance.savegame.addJavafunc(start);
-		Engine.instance.savegame.addJavafunc(stop);
-		Engine.instance.savegame.addJavafunc(tick);
+		Engine.instance.savegame.addFunc(start);
+		Engine.instance.savegame.addFunc(stop);
+		Engine.instance.savegame.addFunc(tick);
 	}
 
 	protected String luaTostring () { return "a ZTimer instance"; }

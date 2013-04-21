@@ -29,11 +29,11 @@ public class Container extends EventTable {
 	};
 
 	public static void register () {
-		Engine.instance.savegame.addJavafunc(moveTo);
-		Engine.instance.savegame.addJavafunc(contains);
+		Engine.instance.savegame.addFunc(moveTo);
+		Engine.instance.savegame.addFunc(contains);
 	}
 	
-	public Container() {
+	protected Container() {
 		table.rawset("MoveTo", moveTo);
 		table.rawset("Contains", contains);
 		table.rawset("Inventory", inventory);

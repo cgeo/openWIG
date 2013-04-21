@@ -5,7 +5,7 @@ import se.krka.kahlua.vm.*;
 
 import java.io.*;
 
-public class EventTable implements KahluaTable, Serializable {
+public class EventTable implements KahluaTable, OWSerializable {
 
 	public KahluaTable table = Engine.platform.newTable();
 

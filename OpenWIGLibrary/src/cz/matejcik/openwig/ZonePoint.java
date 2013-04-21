@@ -7,7 +7,7 @@ import se.krka.kahlua.vm.*;
 import se.krka.kahlua.cldc11.MathLib;
 import se.krka.kahlua.util.NullIterator;
 
-public class ZonePoint implements KahluaTable, Serializable {
+public class ZonePoint implements KahluaTable, OWSerializable {
 	public double latitude = 0;
 	public double longitude = 0;
 	public double altitude = 0;

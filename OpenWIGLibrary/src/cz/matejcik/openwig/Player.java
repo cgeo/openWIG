@@ -17,7 +17,7 @@ public class Player extends Thing {
 	};
 
 	public static void register () {
-		Engine.instance.savegame.addJavafunc(refreshLocation);
+		Engine.instance.savegame.addFunc(refreshLocation);
 	}
 	
 	public Player() {

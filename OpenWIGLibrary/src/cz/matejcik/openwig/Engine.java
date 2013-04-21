@@ -124,7 +124,7 @@ public class Engine implements Runnable {
 		OsLib.register(state);*/
 
 		ui.debugMsg("Building javafunc map...\n");
-		savegame.buildJavafuncMap(environment);
+		savegame.buildFuncMap(environment);
 
 		ui.debugMsg("Registering WIG libs...\n");
 		WherigoLib.register(vmThread, environment);
@@ -162,6 +162,7 @@ public class Engine implements Runnable {
 
 		ui.debugMsg("parsing...");
 		LuaClosure closure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
+		savegame.walkPrototype(closure.prototype);
 
 		ui.debugMsg("calling...\n");
 		vmThread.call(closure, null, null, null);

@@ -24,7 +24,7 @@ public class Cartridge extends EventTable {
 	};
 
 	public static void register () {
-		Engine.instance.savegame.addJavafunc(requestSync);
+		Engine.instance.savegame.addFunc(requestSync);
 	}
 
 	protected String luaTostring () { return "a ZCartridge instance"; }
