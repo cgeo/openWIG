@@ -3,14 +3,14 @@
     <type>org.netbeans.modules.kjava.j2meproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/j2me-project">
-            <name>OpenWIGLibrary</name>
+            <name>kahlua2-cldc11</name>
             <minimum-ant-version>1.6</minimum-ant-version>
         </data>
         <references xmlns="http://www.netbeans.org/ns/ant-project-references/2">
             <reference>
-                <foreign-project>kahlua2-cldc11</foreign-project>
+                <foreign-project>kahlua2-core</foreign-project>
                 <artifact-type>jar</artifact-type>
-                <script>${project.kahlua2-cldc11}/build.xml</script>
+                <script>${project.kahlua2-core}/build.xml</script>
                 <target>jar</target>
                 <clean-target>clean</clean-target>
                 <id>jar</id>

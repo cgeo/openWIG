@@ -23,6 +23,14 @@
                     <property name="config.active"/>
                 </properties>
             </reference>
+            <reference>
+                <foreign-project>kahlua2-j2se</foreign-project>
+                <artifact-type>jar</artifact-type>
+                <script>${project.kahlua2-j2se}/build.xml</script>
+                <target>jar</target>
+                <clean-target>clean</clean-target>
+                <id>jar</id>
+            </reference>
         </references>
     </configuration>
 </project>
