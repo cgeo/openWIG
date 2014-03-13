@@ -1,6 +1,7 @@
 package cz.matejcik.openwig;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import se.krka.kahlua.stdlib.TableLib;
 import se.krka.kahlua.vm.*;
@@ -82,13 +83,17 @@ public class Container extends EventTable {
 		if ("Container".equals(key)) return container;
 		else return super.rawget(key);
 	}
+	
+	public void serialize (DataOutputStream out)
+	throws IOException {
+		super.serialize(out);
+		Engine.instance.savegame.storeValue(container, out);
+	}
 
 	public void deserialize (DataInputStream in)
 	throws IOException {
 		super.deserialize(in);
+		container = (Container)Engine.instance.savegame.restoreValue(in, null);
 		inventory = (KahluaTable)table.rawget("Inventory");
-		Object o = table.rawget("Container");
-		if (o instanceof Container) container = (Container)o;
-		else container = null;
 	}
 }
