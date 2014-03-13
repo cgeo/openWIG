@@ -85,7 +85,7 @@ public class ZonePoint implements KahluaTable, OWSerializable {
 	
 	public static double convertDistanceTo (double value, String unit) {
 		if (unit != null && conversions.containsKey(unit)) {
-			return value * ((Double)conversions.get(unit)).doubleValue();
+			return value / ((Double)conversions.get(unit)).doubleValue();
 		} else {
 			return value;
 		}
@@ -93,7 +93,7 @@ public class ZonePoint implements KahluaTable, OWSerializable {
 	
 	public static double convertDistanceFrom (double value, String unit) {
 		if (unit != null && conversions.containsKey(unit)) {
-			return value / ((Double)conversions.get(unit)).doubleValue();
+			return value * ((Double)conversions.get(unit)).doubleValue();
 		} else {
 			return value;
 		}
