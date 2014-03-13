@@ -84,28 +84,44 @@ public interface UI {
 	 */
 	public void pushDialog (String[] texts, Media[] media, String button1, String button2, LuaClosure callback);
 
-	/** Request an input from the user.
+	/** Requests a text input from the user.
+	 * <p>
+	 * Displays a window with an optional description text and/or a picture,
+	 * and allows the user to input a free-form string as an answer.
 	 * <p>
 	 * If another dialog or input is open, it should be closed
 	 * before displaying this input.
 	 * <p>
-	 * The <code>input</code> table must contain a "Type" field,
-	 * which can be either "Text" (then the UI should offer an one-line text input),
-	 * or "MultipleChoice". In that case, "Choices" field holds
-	 * another Lua table with list of strings representing the individual choices.
-	 * UI can then offer either a button for each choice, or some other
-	 * method of choosing one answer (such as combo box, radio buttons).
-	 * <p>
-	 * "Text" field holds a text of this query - this should be displayed above the
-	 * input field or the choices. "Media" field holds the associated <code>Media</code>.
-	 * <p>
-	 * This EventTable has an event "OnGetInput". When the input is processed, this
-	 * event should be called with a string parameter - either text of the selected choice,
-	 * or text from the input line. If the input is closed by another API call, the event
-	 * should be called with null parameter.
-	 * @param input Lua table describing the input parameters
+	 * The user can enter any string, or cancel the question by a Back button.
+	 * When the user confirms their answer, the callback function should be
+	 * invoked with the text of the answer as an argument.
+	 * If the input is canceled, or closed by another API call, callback should
+	 * be invoked with null argument.
+	 * @param text description text for the question
+	 * @param media media object with a picture for the question
+	 * @param callback callback to call when closing the input, or null
 	 */
-	public void pushInput (EventTable input);
+	public void pushTextInput (String text, Media media, LuaClosure callback);
+	
+	/** Requests a multiple-choice selection from the user.
+	 * <p>
+	 * Displays a window with an optional description text and/or a picture,
+	 * and allows the user to choose one of several presented options.
+	 * <p>
+	 * If another dialog or input is open, it should be closed
+	 * before displaying this input.
+	 * <p>
+	 * The user can select one of the options, or cancel the question by
+	 * a Back button. The callback function should be invoked with the text
+	 * of the specified choice.
+	 * If the input is canceled, or closed by another API call, callback should
+	 * be invoked with null argument.
+	 * @param text description text for the question
+	 * @param media media object with a picture for the question
+	 * @param options array of available options. Must always contain at least one item.
+	 * @param callback callback to call when closing the input, or null
+	 */
+	public void pushChoiceInput (String text, Media media, String[] options, LuaClosure callback);	
 
 	/** Shows a specified screen
 	 * <p>

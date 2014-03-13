@@ -1,11 +1,10 @@
 package cz.matejcik.openwig;
 
-import se.krka.kahlua.stdlib.BaseLib;
 import se.krka.kahlua.vm.*;
 
 import java.io.*;
 
-public class EventTable implements KahluaTable, OWSerializable {
+abstract public class EventTable implements KahluaTable, OWSerializable {
 
 	public KahluaTable table = Engine.platform.newTable();
 

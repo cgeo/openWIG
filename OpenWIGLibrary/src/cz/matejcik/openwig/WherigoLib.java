@@ -4,6 +4,7 @@ package cz.matejcik.openwig;
 import cz.matejcik.openwig.platform.UI;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import se.krka.kahlua.cldc11.KahluaTableImpl;
 import se.krka.kahlua.vm.*;
 
 public class WherigoLib implements JavaFunction {
@@ -107,7 +108,7 @@ public class WherigoLib implements JavaFunction {
 			case ZMEDIA:
 				return Media.class;
 			case ZINPUT:
-				return EventTable.class;
+				return KahluaTable.class;
 			case ZTIMER:
 				return Timer.class;
 			case ZTASK:
@@ -192,10 +193,10 @@ public class WherigoLib implements JavaFunction {
 			case ZITEM: return construct(new Thing(false), callFrame, nArguments);
 			case ZCHARACTER: return construct(new Thing(true), callFrame, nArguments);
 			case CARTRIDGE: return construct(Engine.instance.cartridge = new Cartridge(), callFrame, nArguments);
+			case ZINPUT: return constructTable(callFrame, nArguments);
 			case ZONE:
 			case ZCOMMAND:
 			case ZMEDIA:
-			case ZINPUT:
 			case ZTIMER:
 			case ZTASK:
 				try {
@@ -253,6 +254,19 @@ public class WherigoLib implements JavaFunction {
 		if (c == null) c = Engine.instance.cartridge;
 		c.addObject(what);
 		return callFrame.push(what);
+	}
+	
+	private int constructTable (LuaCallFrame callFrame, int nArguments) {
+		Object param = callFrame.get(0);
+		KahluaTable lt;
+		if (param instanceof KahluaTable) {
+			lt = (KahluaTable)param;
+		} else {
+			lt = new KahluaTableImpl();
+			if (param instanceof Cartridge)
+				lt.rawset("Cartridge", param);
+		}
+		return callFrame.push(lt);
 	}
 	
 	private int zonePoint (LuaCallFrame callFrame, int nArguments) {
