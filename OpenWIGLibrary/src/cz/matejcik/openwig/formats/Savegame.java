@@ -35,7 +35,7 @@ public class Savegame {
 		return Class.forName(s);
 	}
 
-	public void store (KahluaTable table)
+	public void store (KahluaTable environment)
 	throws IOException {
 		DataOutputStream out = null;
 		if (saveFile.exists())
@@ -53,7 +53,7 @@ public class Savegame {
 			//specialcase cartridge:
 			storeValue(Engine.instance.cartridge, out);
 			
-			storeValue(table, out);
+			serializeRootTable(environment, out);
 			Engine.log("STOR: store successful", Engine.LOG_CALL);
 		} finally {
 			try { out.close(); } catch (Exception e) { }
@@ -100,6 +100,8 @@ public class Savegame {
 	private Hashtable idToFuncMap = new Hashtable(128);
 	private Hashtable funcToIdMap = new Hashtable(128);
 	private int currentFunc = 0;
+	
+	private static StringBuffer path = new StringBuffer();
 
 	public void buildFuncMap (KahluaTable environment) {
 		KahluaTable[] packages = new KahluaTable[] {
@@ -114,7 +116,7 @@ public class Savegame {
 			KahluaTableIterator it = packages[i].iterator();
 			while (it.advance()) {
 				Object jf = it.getValue();
-				if (jf instanceof JavaFunction) addFunc((JavaFunction)jf);
+				if (jf instanceof JavaFunction) addFunc(jf);
 			}
 		}
 		// RandomLib hack
@@ -165,7 +167,7 @@ public class Savegame {
 		ZonePoint.class
 	};
 	
-	private static Hashtable classmap = new Hashtable(8);
+	private static final Hashtable classmap = new Hashtable(8);
 	static {
 		for (int i = 0; i < knownClasses.length; i++) {
 			classmap.put(knownClasses[i], new Byte((byte)(0x20 + i)));
@@ -205,8 +207,16 @@ public class Savegame {
 			if (debug) debug("(ref"+i.intValue()+")");
 			if (obj instanceof OWSerializable) {
 				out.writeByte(LUA_OBJECT);
-				out.writeUTF(obj.getClass().getName());
-				if (debug) debug(obj.getClass().getName() + " (" + obj.toString()+")");
+				Byte cl = (Byte)classmap.get(obj.getClass());
+				if (cl != null) {
+					out.writeByte(cl.byteValue());
+					if (debug) debug("known class: " + obj.getClass().getName() + " (" + obj.toString()+")");					
+				} else {
+					Engine.log("STOR: unknown OWSerializable: " + obj.getClass().getName(), Engine.LOG_WARN);
+					out.writeByte(OW_OTHER);
+					out.writeUTF(obj.getClass().getName());
+					if (debug) debug("unknown class: " + obj.getClass().getName() + " (" + obj.toString()+")");
+				}				
 				((OWSerializable)obj).serialize(out);
 			} else if (obj instanceof KahluaTable) {
 				out.writeByte(LUA_TABLE);
@@ -220,7 +230,7 @@ public class Savegame {
 				// we're busted
 				out.writeByte(LUA_NIL);
 				if (debug) debug("UFO");
-				Engine.log("STOR: unable to store object of type "+obj.getClass().getName(), Engine.LOG_WARN);
+				Engine.log("STOR: at "+path+": unable to store object of type "+obj.getClass().getName(), Engine.LOG_WARN);
 			}
 		}
 	}
@@ -242,8 +252,8 @@ public class Savegame {
 			out.writeByte(LUA_DOUBLE);
 			if (debug) debug(obj.toString());
 			out.writeDouble(((Double)obj).doubleValue());
-		} else if (obj instanceof JavaFunction || obj instanceof Prototype) {
-			int i = findFuncId((JavaFunction)obj);
+		} else if (obj instanceof JavaFunction) {
+			int i = findFuncId(obj);
 			if (debug) debug("javafunc("+i+")-"+obj.toString());
 			out.writeByte(LUA_JAVAFUNC);
 			out.writeInt(i);
@@ -251,20 +261,47 @@ public class Savegame {
 			storeObject(obj, out);
 		}
 	}
+	
+	private void serializeRootTable (KahluaTable root, DataOutputStream out)
+	throws IOException {
+		out.writeByte(LUA_TABLE);
+		KahluaTableIterator it = root.iterator();
+		while (it.advance()) {
+			Object key = it.getKey();
+			Object value = it.getValue();
+			// do not store internals
+			if (!(key instanceof String)) continue;
+			if ("_G".equals(key)) continue;
+			if ("__classmetatables".equals(key)) continue;
+			if (value instanceof LuaClosure && "stdlib.lua".equals(((LuaClosure)value).prototype.name)) continue;
+			if ("string".equals(key)) continue;
+			if ("math".equals(key)) continue;
+			if ("table".equals(key)) continue;
+			if ("coroutine".equals(key)) continue;
+			
+			out.writeByte(LUATABLE_PAIR);
+			storeValue(key, out);
+			storeValue(value, out);
+		}
+		out.writeByte(LUATABLE_END);
+	}
 
-	public void serializeLuaTable (KahluaTable table, DataOutputStream out)
+	private void serializeLuaTable (KahluaTable table, DataOutputStream out)
 	throws IOException {
 		level++;
 		KahluaTableIterator it = table.iterator();
+		int ppos = path.length();
 		while (it.advance()) {
 			Object value = it.getValue();
 			out.writeByte(LUATABLE_PAIR);
 			if (debug) for (int i = 0; i < level; i++) debug("  ");
+			path.append("."); path.append(it.getKey());
 
 			storeValue(it.getKey(), out);
 			if (debug) debug(" : ");
 			storeValue(value, out);
 			if (debug) debug("\n");
+			path.setLength(ppos);
 		}
 		level--;
 		out.writeByte(LUATABLE_END);
@@ -323,17 +360,24 @@ public class Savegame {
 				if (debug) debug(lc.toString());
 				return lc;
 			case LUA_OBJECT:
-				String cls = in.readUTF();
+				byte cl = in.readByte();
+				Class c;
 				OWSerializable s = null;
 				try {
-					if (debug) debug("object of type "+cls+"...\n");
-					Class c = classForName(cls);
-					if (OWSerializable.class.isAssignableFrom(c)) {
+					if (cl != OW_OTHER) {
+						c = knownClasses[cl - 0x20];
+						if (debug) debug("object of known type "+c.getName()+"...\n");
 						s = (OWSerializable)c.newInstance();
+					} else {
+						String cls = in.readUTF();
+						if (debug) debug("object of unknown type "+cls+"...\n");
+						c = classForName(cls);
+						if (OWSerializable.class.isAssignableFrom(c))
+							s = (OWSerializable)c.newInstance();
 					}
 				} catch (Throwable e) {
-					if (debug) debug("(failed to deserialize "+cls+")\n");
-					Engine.log("REST: while trying to deserialize "+cls+":\n"+e.toString(), Engine.LOG_ERROR);
+					if (debug) debug("(failed to deserialize "+cl+")\n");
+					Engine.log("REST: while trying to deserialize "+cl+":\n"+e.toString(), Engine.LOG_ERROR);
 				}
 				if (s != null) {
 					restCache(s);
@@ -361,7 +405,7 @@ public class Savegame {
 
 	int level = 0;
 
-	public KahluaTable deserializeLuaTable (DataInputStream in, KahluaTable table)
+	private KahluaTable deserializeLuaTable (DataInputStream in, KahluaTable table)
 	throws IOException {
 		level++;
 		while (true) {
@@ -380,7 +424,13 @@ public class Savegame {
 
 	private void serializeLuaClosure (LuaClosure closure, DataOutputStream out)
 	throws IOException {
-		closure.prototype.dump(out);
+		Integer id = (Integer)funcToIdMap.get(closure.prototype);
+		if (id == null) {
+			Engine.log("STOR: at "+path+": unregistered prototype: " + closure.prototype.name, Engine.LOG_ERROR);
+			out.writeInt(-1);
+			return;
+		}
+		out.writeInt(id.intValue());
 		for (int i = 0; i < closure.upvalues.length; i++) {
 			UpValue u = closure.upvalues[i];
 			if (u.value == null) {
@@ -393,10 +443,12 @@ public class Savegame {
 
 	private LuaClosure deserializeLuaClosure (DataInputStream in)
 	throws IOException {
-		LuaClosure closure = Prototype.loadByteCode(in, Engine.environment);
+		int id = in.readInt();
+		Prototype proto = (Prototype)idToFuncMap.get(new Integer(id));
+		LuaClosure closure = new LuaClosure(proto, Engine.environment);
 		restCache(closure);
 		for (int i = 0; i < closure.upvalues.length; i++) {
-			UpValue u = new UpValue(Engine.vmThread.currentCoroutine,1);
+			UpValue u = new UpValue(Engine.vmThread.currentCoroutine, 1);
 			u.value = restoreValue(in, null);
 			closure.upvalues[i] = u;
 		}
