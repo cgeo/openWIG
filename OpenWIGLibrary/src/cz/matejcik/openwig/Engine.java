@@ -54,6 +54,8 @@ public class Engine implements Runnable {
 
 	/** reference to source file */
 	protected CartridgeFile gwcfile;
+	/** reference to top-level source closure */
+	protected LuaClosure gwcclosure;
 	/** reference to save file */
 	protected Savegame savegame = null;
 	/** reference to log stream */
@@ -136,6 +138,20 @@ public class Engine implements Runnable {
 				ui.refresh();
 			}
 		});
+		
+		ui.debugMsg("Loading gwc...");
+		if (gwcfile == null) throw new IOException("invalid cartridge file");
+				
+		ui.debugMsg("pre-setting properties...");
+		player.rawset("CompletionCode", gwcfile.code);
+		player.rawset("Name", gwcfile.member);
+
+		ui.debugMsg("loading code...");
+		byte[] lbc = gwcfile.getBytecode();
+
+		ui.debugMsg("parsing...");
+		gwcclosure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
+		savegame.walkPrototype(gwcclosure.prototype);
 	}
 
 	/** invokes game restore */
@@ -150,24 +166,9 @@ public class Engine implements Runnable {
 	private void newGame ()
 	throws IOException {
 		// starting game normally
-		ui.debugMsg("Loading gwc...");
-		if (gwcfile == null) throw new IOException("invalid cartridge file");
-				
-		ui.debugMsg("pre-setting properties...");
-		player.rawset("CompletionCode", gwcfile.code);
-		player.rawset("Name", gwcfile.member);
 
-		ui.debugMsg("loading code...");
-		byte[] lbc = gwcfile.getBytecode();
-
-		ui.debugMsg("parsing...");
-		LuaClosure closure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
-		savegame.walkPrototype(closure.prototype);
-
-		ui.debugMsg("calling...\n");
-		vmThread.call(closure, null, null, null);
-		lbc = null;
-		closure = null;
+		ui.debugMsg("calling top-level...\n");
+		vmThread.call(gwcclosure, null, null, null);
 	}
 
 	/** main loop - periodically copy location data into Lua and evaluate zone positions */
@@ -207,6 +208,9 @@ public class Engine implements Runnable {
 
 			if (doRestore) restoreGame();
 			else newGame();
+			
+			// drop gwcclosure, we won't need it anymore
+			gwcclosure = null;
 
 			loglevel = LOG_PROP;
 
@@ -273,9 +277,38 @@ public class Engine implements Runnable {
 	}
 
 	/** calls input to UI */
-	public static void input (EventTable input) {
-		log("CALL: GetInput - "+input.name, LOG_CALL);
-		ui.pushInput(input);
+	public static void input (KahluaTable input) {
+		String type = (String)input.rawget("InputType");
+		String name = (String)input.rawget("Name");
+		String text = removeHtml((String)input.rawget("Text"));
+		Media media = (Media)input.rawget("Media");
+		LuaClosure callback = (LuaClosure)input.rawget("OnGetInput");
+		
+		if (name == null) name = "(unnamed)";
+		if (type == null) {
+			log("CALL: GetInput without type!", LOG_ERROR);
+			return;
+		}
+		if ("MultipleChoice".equals(type)) {
+			KahluaTable choices = (KahluaTable)input.rawget("Choices");
+			if (choices == null || choices.isEmpty()) {
+				log("CALL: GetInput " + name + " has invalid choices", LOG_ERROR);
+				return;
+			}
+			int optsize = choices.len();
+			String[] options = new String[optsize];
+			KahluaTableIterator it = choices.iterator();
+			int i = 0;
+			while (it.advance()) options[i++] = it.getValue().toString();
+			log("CALL: GetInput " + name + " (multiple choice)", LOG_CALL);
+			ui.pushChoiceInput(text, media, options, callback);
+		} else {
+			if (!"Text".equals(type)) {
+				log("CALL: GetInput " + name + " has unknown type '" + type + "', assuming Text", LOG_WARN);
+			}
+			log("CALL: GetInput " + name + " (text)", LOG_CALL);
+			ui.pushTextInput(text, media, callback);
+		}
 	}
 
 	/** fires the specified event on the specified object in the event thread */
@@ -294,12 +327,15 @@ public class Engine implements Runnable {
 		instance.eventRunner.perform(new Runnable() {
 			public void run () {
 				try {
-					Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed", LOG_CALL);
+					if (value == null)
+						Engine.log("CBAK: UI element cancelled", LOG_CALL);
+					else
+						Engine.log("CBAK: user input is: '" + value.toString() + "'", LOG_CALL);
 					Engine.vmThread.call(callback, value, null, null);
-					Engine.log("BTTN END", LOG_CALL);
+					Engine.log("CBAK END", LOG_CALL);
 				} catch (Throwable t) {
 					stacktrace(t);
-					Engine.log("BTTN FAIL", LOG_CALL);
+					Engine.log("CBAK FAIL", LOG_CALL);
 				}
 			}
 		});
