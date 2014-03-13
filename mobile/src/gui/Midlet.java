@@ -199,15 +199,24 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 //		display.vibrate(500);
 	}
 	
-	synchronized public void pushInput(EventTable table) {
+	synchronized public void pushTextInput(String text, Media media, LuaClosure callback) {
 		Displayable parent = currentDisplay;
 		if (parent instanceof Cancellable) {
 			parent = ((Cancellable)parent).cancel();
 		}
-		input.reset(table, parent);
+		input.resetForText(text, media, callback, parent);
 		input.push();
-		//push(input);
 	}
+
+	synchronized public void pushChoiceInput(String text, Media media, String[] options, LuaClosure callback) {
+		Displayable parent = currentDisplay;
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
+		}
+		input.resetForChoice(text, media, options, callback, parent);
+		input.push();
+	}
+
 
 	public static void push (Displayable d) {
 		if (d instanceof Pushable) ((Pushable)d).push();

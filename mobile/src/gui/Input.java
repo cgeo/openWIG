@@ -2,9 +2,8 @@ package gui;
 
 import javax.microedition.lcdui.*;
 import cz.matejcik.openwig.Engine;
-import cz.matejcik.openwig.EventTable;
 import cz.matejcik.openwig.Media;
-import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.LuaClosure;
 import util.Config;
 
 public class Input implements CommandListener, ItemCommandListener, Cancellable, Pushable {
@@ -64,8 +63,8 @@ public class Input implements CommandListener, ItemCommandListener, Cancellable,
 	private static final int MULTI = 1;
 	private int mode = TEXT;
 	
-	private EventTable input;
-	private Displayable parent;
+	private Displayable parent;	
+	private LuaClosure callback;
 	
 	public Input () {
 		choice.setFitPolicy(Choice.TEXT_WRAP_ON);
@@ -78,34 +77,33 @@ public class Input implements CommandListener, ItemCommandListener, Cancellable,
 		multipleChoiceInput = new ConcreteInput(choice);
 	}
 	
-	public Input reset (EventTable input, Displayable parent) {
-		this.input = input;
+	public Input resetForChoice (String text, Media media, String[] choices, LuaClosure callback, Displayable parent)
+	{
+		mode = MULTI;
+		choice.deleteAll();
+		for (int i = 0; i < choices.length; i++)
+			choice.append(choices[i], null);
+		displayed = multipleChoiceInput;
+		
+		return finishReset (text, media, callback, parent);
+	}
+	
+	public Input resetForText (String text, Media media, LuaClosure callback, Displayable parent) {
+		answer.setString(null);
+		displayed = textInput;
+		mode = TEXT;
+		
+		return finishReset (text, media, callback, parent);
+	}
+	
+	private Input finishReset (String text, Media media, LuaClosure callback, Displayable parent) {
+		this.callback = callback;
 		this.parent = parent;
 
-		String type = (String)input.table.rawget("InputType");
-		if ("Text".equals(type)) {
-			answer.setString(null);
-			mode = TEXT;
-			displayed = textInput;
-		} else if ("MultipleChoice".equals(type)) {
-			// XXX class Input with this in interface would be more appropriate?
-			choice.deleteAll();
-			KahluaTable choices = (KahluaTable)input.table.rawget("Choices");
-			int n = choices.len();
-			for (int i = 1; i <= n; i++) {
-				choice.append((String)choices.rawget(new Double(i)), null);
-			}
-			mode = MULTI;
-			displayed = multipleChoiceInput;
-		} else {
-			throw new RuntimeException("input type " + type + " is not implemented");
-		}
-		
-		Media m = (Media)input.table.rawget("Media");
-		if (m != null) {
-			displayed.setAltText(m.altText);
+		if (media != null) {
+			displayed.setAltText(media.altText);
 			try {
-				byte[] is = Engine.mediaFile(m);
+				byte[] is = Engine.mediaFile(media);
 				Image i = Image.createImage(is, 0, is.length);
 				displayed.setImage(i);
 			} catch (Exception e) { }
@@ -113,7 +111,6 @@ public class Input implements CommandListener, ItemCommandListener, Cancellable,
 			displayed.unsetImage();
 		}
 		
-		String text = Engine.removeHtml((String)input.table.rawget("Text"));
 		displayed.setQuestionText(text);
 		displayed.scrollUp();
 		return this;
@@ -123,17 +120,17 @@ public class Input implements CommandListener, ItemCommandListener, Cancellable,
 		Midlet.push(parent);		
 		if (cmd == CMD_ANSWER) {
 			if (mode == TEXT) {
-				Engine.callEvent(input, "OnGetInput", answer.getString());
+				Engine.invokeCallback(callback, answer.getString());
 			} else if (mode == MULTI) {
-				Engine.callEvent(input, "OnGetInput", choice.getString(choice.getSelectedIndex()));
+				Engine.invokeCallback(callback, choice.getString(choice.getSelectedIndex()));
 			} else {
-				Engine.callEvent(input, "OnGetInput", null);
+				Engine.invokeCallback(callback, null);
 			}
 		}
 	}
 
 	public Displayable cancel() {
-		Engine.callEvent(input, "OnGetInput", null);
+		Engine.invokeCallback(callback, null);
 		return parent;
 	}
 
