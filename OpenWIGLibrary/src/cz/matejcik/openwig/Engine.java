@@ -85,6 +85,8 @@ public class Engine implements Runnable {
 		gwcfile = cf;
 		savegame = cf.getSavegame();
 		if (out != null) log = new PrintStream(out);
+		if(gwcfile != null && gwcfile.device != null)
+			WherigoLib.env.put("Device", gwcfile.device);
 	}
 
 	protected Engine () {

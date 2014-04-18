@@ -69,8 +69,8 @@ public class WherigoLib implements JavaFunction {
 	public static final String DEVICE_ID = "DeviceID";
 	public static final String PLATFORM = "Platform";
 	static {
-		env.put("Device", Engine.instance.gwcfile.device);
-		env.put("DeviceID", System.getProperty("microedition.platform", "undefined"));
+		env.put("Device", "undefined");
+		env.put("DeviceID", "undefined");
 		env.put("Platform", "MIDP-2.0/CLDC-1.1");
 		env.put("CartFolder", "c:/what/is/it/to/you");
 		env.put("SyncFolder", "c:/what/is/it/to/you");
