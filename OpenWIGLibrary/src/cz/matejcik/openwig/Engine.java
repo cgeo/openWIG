@@ -125,11 +125,11 @@ public class Engine implements Runnable {
 		CoroutineLib.register(state);
 		OsLib.register(state);*/
 
-		ui.debugMsg("Building javafunc map...\n");
-		savegame.buildFuncMap(environment);
-
 		ui.debugMsg("Registering WIG libs...\n");
 		WherigoLib.register(vmThread, environment);
+		
+		ui.debugMsg("Building javafunc map...\n");
+		savegame.buildFuncMap(environment);
 
 		ui.debugMsg("Building event queue...\n");
 		eventRunner = new BackgroundRunner(true);

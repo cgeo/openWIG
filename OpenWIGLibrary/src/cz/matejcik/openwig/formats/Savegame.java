@@ -99,36 +99,40 @@ public class Savegame {
 
 	private Hashtable idToFuncMap = new Hashtable(128);
 	private Hashtable funcToIdMap = new Hashtable(128);
-	private int currentFunc = 0;
 	
 	private static StringBuffer path = new StringBuffer();
 
 	public void buildFuncMap (KahluaTable environment) {
-		KahluaTable[] packages = new KahluaTable[] {
-			environment,
-			(KahluaTable)environment.rawget("string"),
-			(KahluaTable)environment.rawget("math"),
-			(KahluaTable)environment.rawget("coroutine"),
-			(KahluaTable)environment.rawget("os"),
-			(KahluaTable)environment.rawget("table")
-		};
+		// step 1: walk environment
+		KahluaTableIterator it = environment.iterator();
+		while (it.advance()) addKeyIfFunc(it.getKey().toString(), it.getValue());
+		
+		// step 2: walk known packages
+		String[] packages = {"string", "math", "coroutine", "os", "table", "Wherigo"};
 		for (int i = 0; i < packages.length; i++) {
-			KahluaTableIterator it = packages[i].iterator();
+			KahluaTable kt = (KahluaTable)environment.rawget(packages[i]);
+			it = kt.iterator();
 			while (it.advance()) {
-				Object jf = it.getValue();
-				if (jf instanceof JavaFunction) addFunc(jf);
+				String key = (String)it.getKey();
+				Object val = it.getValue();
+				addKeyIfFunc(packages[i] + "." + key, val);
 			}
 		}
-		// RandomLib hack
+		
+		// step 3: RandomLib hack
 		for (int i = 0; i < RandomLib.functions.length; i++) {
-			addFunc(RandomLib.functions[i]);
+			addKeyIfFunc("RandomLib[" + i + "]", RandomLib.functions[i]);
 		}
 	}
 	
 	public void walkPrototype (Prototype prototype) {
-		addFunc(prototype);
+		walkPrototype("prototype", prototype);
+	}
+	
+	private void walkPrototype (String name, Prototype prototype) {
+		addKeyIfFunc(name, prototype);
 		for (int i = 0; i < prototype.prototypes.length; i++)
-			walkPrototype(prototype.prototypes[i]);
+			walkPrototype(name + "[" + i + "]", prototype.prototypes[i]);
 	}
 
 	private static final byte LUA_NIL	= 0x00;
@@ -174,20 +178,11 @@ public class Savegame {
 		}
 	}
 
-	public void addFunc (Object func) {
-		Integer id = new Integer(currentFunc++);
-		idToFuncMap.put(id, func);
-		funcToIdMap.put(func, id);
-	}
-
-	private int findFuncId (Object func) {
-		Integer id = (Integer)funcToIdMap.get(func);
-		if (id != null) return id.intValue();
-		else throw new RuntimeException("func not found in map!");
-	}
-
-	private Object findFuncObject (int id) {
-		return idToFuncMap.get(new Integer(id));
+	private void addKeyIfFunc (String key, Object func) {
+		if (func instanceof JavaFunction || func instanceof Prototype) {
+			idToFuncMap.put(key, func);
+			funcToIdMap.put(func, key);
+		}
 	}
 
 	private void storeObject (Object obj, DataOutputStream out)
@@ -208,15 +203,9 @@ public class Savegame {
 			if (obj instanceof OWSerializable) {
 				out.writeByte(LUA_OBJECT);
 				Byte cl = (Byte)classmap.get(obj.getClass());
-				if (cl != null) {
-					out.writeByte(cl.byteValue());
-					if (debug) debug("known class: " + obj.getClass().getName() + " (" + obj.toString()+")");					
-				} else {
-					Engine.log("STOR: unknown OWSerializable: " + obj.getClass().getName(), Engine.LOG_WARN);
-					out.writeByte(OW_OTHER);
-					out.writeUTF(obj.getClass().getName());
-					if (debug) debug("unknown class: " + obj.getClass().getName() + " (" + obj.toString()+")");
-				}				
+				if (cl == null) throw new RuntimeException("Unregistered Serializable: " + obj.getClass().getName());
+				out.writeByte(cl.byteValue());
+				if (debug) debug("known class: " + obj.getClass().getName() + " (" + obj.toString()+")");
 				((OWSerializable)obj).serialize(out);
 			} else if (obj instanceof KahluaTable) {
 				out.writeByte(LUA_TABLE);
@@ -253,10 +242,19 @@ public class Savegame {
 			if (debug) debug(obj.toString());
 			out.writeDouble(((Double)obj).doubleValue());
 		} else if (obj instanceof JavaFunction) {
-			int i = findFuncId(obj);
-			if (debug) debug("javafunc("+i+")-"+obj.toString());
+			String func = (String)funcToIdMap.get(obj);
+			if (func == null) throw new RuntimeException("Unregistered JavaFunction detected");
+			if (debug) debug("javafunc("+func+")-" + obj.toString());
 			out.writeByte(LUA_JAVAFUNC);
-			out.writeInt(i);
+			out.writeUTF(func);
+		} else if (obj instanceof LuaClosure) {
+			String func = (String)funcToIdMap.get(obj);
+			if (func != null) {
+				out.writeByte(LUA_JAVAFUNC);
+				out.writeUTF(func);
+			} else {
+				storeObject(obj, out);
+			}
 		} else {
 			storeObject(obj, out);
 		}
@@ -278,6 +276,7 @@ public class Savegame {
 			if ("math".equals(key)) continue;
 			if ("table".equals(key)) continue;
 			if ("coroutine".equals(key)) continue;
+			if ("Wherigo".equals(key)) continue;
 			
 			out.writeByte(LUATABLE_PAIR);
 			storeValue(key, out);
@@ -327,10 +326,11 @@ public class Savegame {
 				if (debug) debug(String.valueOf(b));
 				return KahluaUtil.toBoolean(b);
 			case LUA_JAVAFUNC:
-				int i = in.readInt();
-				Object jf = findFuncObject(i);
-				if (debug) debug("javafunc("+i+")-"+jf);
-				return jf;
+				String key = in.readUTF();
+				Object func = idToFuncMap.get(key);
+				if (func == null) throw new RuntimeException("Unable to restore function: " + key);
+				if (debug) debug("javafunc("+key+")-"+func);
+				return func;
 			default:
 				return restoreObject(in, type, target);
 		}
@@ -364,17 +364,9 @@ public class Savegame {
 				Class c;
 				OWSerializable s = null;
 				try {
-					if (cl != OW_OTHER) {
-						c = knownClasses[cl - 0x20];
-						if (debug) debug("object of known type "+c.getName()+"...\n");
-						s = (OWSerializable)c.newInstance();
-					} else {
-						String cls = in.readUTF();
-						if (debug) debug("object of unknown type "+cls+"...\n");
-						c = classForName(cls);
-						if (OWSerializable.class.isAssignableFrom(c))
-							s = (OWSerializable)c.newInstance();
-					}
+					c = knownClasses[cl - 0x20];
+					if (debug) debug("object "+c.getName()+"...\n");
+					s = (OWSerializable)c.newInstance();
 				} catch (Throwable e) {
 					if (debug) debug("(failed to deserialize "+cl+")\n");
 					Engine.log("REST: while trying to deserialize "+cl+":\n"+e.toString(), Engine.LOG_ERROR);
@@ -424,13 +416,13 @@ public class Savegame {
 
 	private void serializeLuaClosure (LuaClosure closure, DataOutputStream out)
 	throws IOException {
-		Integer id = (Integer)funcToIdMap.get(closure.prototype);
-		if (id == null) {
+		String key = (String)funcToIdMap.get(closure.prototype);
+		if (key == null) {
 			Engine.log("STOR: at "+path+": unregistered prototype: " + closure.prototype.name, Engine.LOG_ERROR);
 			out.writeInt(-1);
 			return;
 		}
-		out.writeInt(id.intValue());
+		out.writeUTF(key);
 		for (int i = 0; i < closure.upvalues.length; i++) {
 			UpValue u = closure.upvalues[i];
 			if (u.value == null) {
@@ -443,8 +435,9 @@ public class Savegame {
 
 	private LuaClosure deserializeLuaClosure (DataInputStream in)
 	throws IOException {
-		int id = in.readInt();
-		Prototype proto = (Prototype)idToFuncMap.get(new Integer(id));
+		String key = in.readUTF();
+		Prototype proto = (Prototype)idToFuncMap.get(key);
+		if (proto == null) throw new RuntimeException("Unregistered prototype in savegame: " + key);
 		LuaClosure closure = new LuaClosure(proto, Engine.environment);
 		restCache(closure);
 		for (int i = 0; i < closure.upvalues.length; i++) {

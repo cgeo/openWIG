@@ -11,13 +11,14 @@ public class Player extends Thing {
 	
 	private static JavaFunction refreshLocation = new JavaFunction() {
 		public int call (LuaCallFrame callFrame, int nArguments) {
-			Engine.instance.player.refreshLocation();
+			Player player = (Player)callFrame.get(0);
+			player.refreshLocation();
 			return 0;
 		}
 	};
 
-	public static void register () {
-		Engine.instance.savegame.addFunc(refreshLocation);
+	public static void register (KahluaTable wherigo) {
+		wherigo.rawset("RefreshLocation", refreshLocation);
 	}
 	
 	public Player() {

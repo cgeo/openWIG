@@ -23,8 +23,8 @@ public class Cartridge extends EventTable {
 		}
 	};
 
-	public static void register () {
-		Engine.instance.savegame.addFunc(requestSync);
+	public static void register (KahluaTable wherigo) {
+		wherigo.rawset("RequestSync", requestSync);
 	}
 
 	protected String luaTostring () { return "a ZCartridge instance"; }

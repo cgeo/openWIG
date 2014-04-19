@@ -135,7 +135,6 @@ public class WherigoLib implements JavaFunction {
 		KahluaTable wig = Engine.platform.newTable();
 		environment.rawset("Wherigo", wig);
 		for (int i = 0; i < NUM_FUNCTIONS; i++) {
-			Engine.instance.savegame.addFunc(functions[i]);
 			wig.rawset(names[i], functions[i]);
 		}
 		
@@ -168,10 +167,10 @@ public class WherigoLib implements JavaFunction {
 		envtable.rawset("Device", Engine.instance.gwcfile.device);
 		environment.rawset("Env", envtable);
 
-		Cartridge.register();
-		Container.register();
-		Player.register();
-		Timer.register();
+		Cartridge.register(wig);
+		Container.register(wig);
+		Player.register(wig);
+		Timer.register(wig);
 
 		Media.reset();
 	}

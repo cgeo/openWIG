@@ -29,9 +29,9 @@ public class Container extends EventTable {
 		}
 	};
 
-	public static void register () {
-		Engine.instance.savegame.addFunc(moveTo);
-		Engine.instance.savegame.addFunc(contains);
+	public static void register (KahluaTable wherigo) {
+		wherigo.rawset("MoveTo", moveTo);
+		wherigo.rawset("Contains", contains);
 	}
 	
 	protected Container() {

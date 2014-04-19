@@ -33,10 +33,10 @@ public class Timer extends EventTable {
 		}
 	};
 
-	public static void register () {
-		Engine.instance.savegame.addFunc(start);
-		Engine.instance.savegame.addFunc(stop);
-		Engine.instance.savegame.addFunc(tick);
+	public static void register (KahluaTable wherigo) {
+		wherigo.rawset("TimerStart",start);
+		wherigo.rawset("TimerStop", stop);
+		wherigo.rawset("TimerTick", tick);
 	}
 
 	protected String luaTostring () { return "a ZTimer instance"; }
