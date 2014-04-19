@@ -1,11 +1,10 @@
 package gui;
 
 import javax.microedition.lcdui.*;
-import javax.microedition.lcdui.game.GameCanvas;
 import cz.matejcik.openwig.Zone;
 import cz.matejcik.openwig.ZonePoint;
 
-public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandListener {
+public class ZoneMap extends Canvas implements Pushable, Runnable, CommandListener {
 	
 	private Zone zone = null;
 	
@@ -19,19 +18,12 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 	private double height, width;
 	private double offX, offY;
 
-	public Graphics graphics;
-
 	private static ZoneMap instance = null;
 	public static ZoneMap getInstance() {
 		if (instance == null) instance = new ZoneMap();
 		return instance;
 	}
 
-	public ZoneMap () {
-		super(false);
-		graphics = getGraphics();
-	}
-		
 	public ZoneMap reset (Displayable parent, Zone z) {
 		this.parent = parent;
 		zone = z;
@@ -45,7 +37,7 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 		}
 		addCommand(Midlet.CMD_BACK);
 		setCommandListener(this);
-		updateNavi();
+		//repaint();
 		Midlet.show(this);
 	}
 
@@ -57,7 +49,7 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 		return (int)((lon - offX) * pixelX);
 	}
 	
-	synchronized private boolean updateNavi() {
+	synchronized public void paint (Graphics graphics) {
 		double lat = Midlet.gps.getLatitude();
 		double lon = Midlet.gps.getLongitude();
 		int x = xFromLon(lon);
@@ -71,24 +63,23 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 		graphics.setColor(0xffffff);
 		graphics.fillRect(0, 0, getWidth(), getHeight());
 
-		drawOnMap();
+		drawOnMap(graphics);
 
 		graphics.setColor(255, 0, 0);
-		drawCross(x, y);
+		drawCross(graphics, x, y);
 
 		int fh = graphics.getFont().getHeight();
 		graphics.setColor(0);
 		graphics.drawString("Dist: "+ZonePoint.makeFriendlyDistance(zone.distance), 5, getHeight() - (2*fh), Graphics.LEFT | Graphics.TOP);
 		graphics.drawString("Zoom: "+meritko+"m", 5, getHeight() - fh, Graphics.LEFT | Graphics.TOP);
-		return true;
 	}
 
-	private void drawCross (int x, int y) {
+	private void drawCross (Graphics graphics, int x, int y) {
 		graphics.drawLine(x - 3, y, x + 3, y);
 		graphics.drawLine(x, y - 3, x, y + 3);
 	}
 
-	private void drawOnMap () {
+	private void drawOnMap (Graphics graphics) {
 		// first draw the zone
 		graphics.setStrokeStyle(Graphics.SOLID);
 		graphics.setColor(0);
@@ -118,7 +109,7 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 		x = xFromLon(zone.nearestPoint.longitude);
 		y = yFromLat(zone.nearestPoint.latitude);
 		graphics.setColor(0, 128, 0);
-		drawCross(x,y);
+		drawCross(graphics, x,y);
 	}
 
 	protected void keyPressed (int code) {
@@ -128,7 +119,7 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 		if (mindex < 0) mindex = 0;
 		if (mindex >= meritka.length) mindex = meritka.length - 1;
 		meritko = meritka[mindex];
-		updateNavi();
+		repaint();
 	}
 
 	private boolean running = false;
@@ -148,7 +139,7 @@ public class ZoneMap extends GameCanvas implements Pushable, Runnable, CommandLi
 	public void run () {
 		while (running) {
 			try { Thread.sleep(200); } catch (InterruptedException e) { }
-			if (updateNavi()) repaint();
+			repaint();
 		}
 	}
 
