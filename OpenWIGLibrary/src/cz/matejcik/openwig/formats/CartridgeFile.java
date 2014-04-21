@@ -14,7 +14,7 @@ public class CartridgeFile {
 	private static final byte[] CART_ID = { 0x02, 0x0a, 0x43, 0x41, 0x52, 0x54, 0x00 };
 			// 02 0a CART 00
 
-	private static final int CACHE_LIMIT = 128000; // in kB
+	private static final int CACHE_LIMIT = 128000; // 128 kB
 	
 	private SeekableFile source;
 
@@ -30,7 +30,10 @@ public class CartridgeFile {
 
 	public String filename;
 	
-	protected CartridgeFile() { }
+	protected CartridgeFile(SeekableFile source, FileHandle savefile) {
+		this.source = source;
+		this.savegame = new Savegame(savefile);
+	}
 	
 	private boolean fileOk () throws IOException {
 		byte[] buf = new byte[CART_ID.length];
@@ -49,16 +52,13 @@ public class CartridgeFile {
 	 */
 	public static CartridgeFile read (SeekableFile source, FileHandle savefile)
 	throws IOException {
-		CartridgeFile cf = new CartridgeFile();
-		cf.source = source;
+		CartridgeFile cf = new CartridgeFile(source, savefile);
 		
 		if (!cf.fileOk()) throw new IOException("invalid cartridge file");
 		
 		cf.scanOffsets();
 		cf.scanHeader();
-
-		cf.savegame = new Savegame(savefile);
-			
+		
 		return cf;
 	}
 	
