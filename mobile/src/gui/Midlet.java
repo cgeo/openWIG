@@ -1,5 +1,6 @@
 package gui;
 
+import cz.matejcik.openwig.DialogObject;
 import cz.matejcik.openwig.platform.LocationService;
 import gps.NMEAParser;
 import cz.matejcik.openwig.formats.CartridgeFile;
@@ -8,10 +9,8 @@ import javax.microedition.media.*;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
-import se.krka.kahlua.vm.*;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.EventTable;
-import cz.matejcik.openwig.Media;
 import cz.matejcik.openwig.platform.UI;
 import java.io.ByteArrayInputStream;
 import util.Config;
@@ -186,37 +185,6 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 	public void showError (String text) {
 		error(text);
 	}
-	
-	synchronized public void pushDialog(String[] texts, Media[] media, String button1, String button2, LuaClosure callback) {
-		Displayable parent = currentDisplay;
-		if (parent instanceof Cancellable) {
-			parent = ((Cancellable)parent).cancel();
-		}
-		dialog.reset(texts, media, button1, button2, callback, parent);
-		push(dialog);
-
-//		display.flashBacklight(500);
-//		display.vibrate(500);
-	}
-	
-	synchronized public void pushTextInput(String text, Media media, LuaClosure callback) {
-		Displayable parent = currentDisplay;
-		if (parent instanceof Cancellable) {
-			parent = ((Cancellable)parent).cancel();
-		}
-		input.resetForText(text, media, callback, parent);
-		input.push();
-	}
-
-	synchronized public void pushChoiceInput(String text, Media media, String[] options, LuaClosure callback) {
-		Displayable parent = currentDisplay;
-		if (parent instanceof Cancellable) {
-			parent = ((Cancellable)parent).cancel();
-		}
-		input.resetForChoice(text, media, options, callback, parent);
-		input.push();
-	}
-
 
 	public static void push (Displayable d) {
 		if (d instanceof Pushable) ((Pushable)d).push();
@@ -395,5 +363,55 @@ public class Midlet extends MIDlet implements CommandListener, UI, PlayerListene
 	
 	public String getDeviceID () {
 		return System.getProperty("microedition.platform");
+	}
+
+
+	public void uiMessage (DialogObject dobj) {
+		uiConfirm(dobj, "OK");
+	}
+
+	synchronized public void uiConfirm (DialogObject dobj, String button) {
+		Displayable parent = currentDisplay;
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
+		}
+		dialog.reset(dobj, button, null, parent);
+		push(dialog);
+	}
+
+	synchronized public void uiInput (DialogObject dobj) {
+		Displayable parent = currentDisplay;
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
+		}
+		input.resetForText(dobj, parent);
+		input.push();
+	}
+
+	synchronized public void uiChoice (DialogObject dobj, String[] choices) {
+		Displayable parent = currentDisplay;
+		if (parent instanceof Cancellable) {
+			parent = ((Cancellable)parent).cancel();
+		}
+		if (choices.length <= 2) {
+			String btn2 = (choices.length == 2) ? choices[1] : null;
+			dialog.reset(dobj, choices[0], btn2, parent);
+			push(dialog);
+		} else {
+			input.resetForChoice(dobj, choices, parent);
+			input.push();
+		}
+	}
+
+	public void uiNotify (DialogObject dobj) {
+		throw new RuntimeException("not implemented");
+	}
+
+	public void uiCancel (Runnable callback) {
+		throw new RuntimeException("not implemented");
+	}
+
+	public void uiWait (Runnable callback) {
+		throw new RuntimeException("not implemented");
 	}
 }
