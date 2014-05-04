@@ -89,7 +89,7 @@ public interface UI {
 	 * @param button2 label for secondary button. If null, the button is not displayed.
 	 * @param callback callback to call when closing the dialog, or null
 	 */
-	public void pushDialog (String[] texts, Media[] media, String button1, String button2, LuaClosure callback);
+	//public void pushDialog (String[] texts, Media[] media, String button1, String button2, LuaClosure callback);
 
 	/** Requests a text input from the user.
 	 * <p>
@@ -108,7 +108,7 @@ public interface UI {
 	 * @param media media object with a picture for the question
 	 * @param callback callback to call when closing the input, or null
 	 */
-	public void pushTextInput (String text, Media media, LuaClosure callback);
+	//public void pushTextInput (String text, Media media, LuaClosure callback);
 	
 	/** Requests a multiple-choice selection from the user.
 	 * <p>
@@ -128,7 +128,7 @@ public interface UI {
 	 * @param options array of available options. Must always contain at least one item.
 	 * @param callback callback to call when closing the input, or null
 	 */
-	public void pushChoiceInput (String text, Media media, String[] options, LuaClosure callback);	
+	//public void pushChoiceInput (String text, Media media, String[] options, LuaClosure callback);	
 
 	/** Shows a specified screen
 	 * <p>
@@ -173,4 +173,14 @@ public interface UI {
 	 * @return a string describing the device on which the UI runs
 	 */
 	public String getDeviceID ();
+	
+	/* all of these get DialogObject, because that's their callback */
+	public void uiMessage (DialogObject dobj);
+	public void uiConfirm (DialogObject dobj, String button);
+	public void uiInput   (DialogObject dobj);
+	public void uiChoice  (DialogObject dobj, String[] choices);
+	public void uiNotify  (DialogObject dobj);
+	
+	public void uiCancel  (Runnable callback);
+	public void uiWait    (Runnable callback);
 }

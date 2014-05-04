@@ -321,15 +321,7 @@ public class WherigoLib implements JavaFunction {
 	
 	private int dialog (LuaCallFrame callFrame, int nArguments) {
 		KahluaTable lt = (KahluaTable)callFrame.get(0);
-		int n = lt.len();
-		String[] texts = new String[n];
-		Media[] media = new Media[n];
-		for (int i = 1; i <= n; i++) {
-			KahluaTable item = (KahluaTable)lt.rawget(new Double(i));
-			texts[i-1] = Engine.removeHtml((String)item.rawget("Text"));
-			media[i-1] = (Media)item.rawget("Media");
-		}
-		Engine.dialog(texts, media);
+		Engine.dialog(lt);
 		return 0;
 	}
 

@@ -262,34 +262,69 @@ public class Engine implements Runnable {
 
 	/** builds and calls a dialog from a Message table */
 	public static void message (KahluaTable message) {
-		String[] texts = {removeHtml((String)message.rawget("Text"))};
-		log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
-		Media[] media = {(Media)message.rawget("Media")};
-		String button1 = null, button2 = null;
+		String text = removeHtml((String)message.rawget("Text"));
+		log("CALL: MessageBox - " + text.substring(0, Math.min(100, text.length())), LOG_CALL);
+		Media media = (Media)message.rawget("Media");
+		String button1 = "OK", button2 = null;
 		KahluaTable buttons = (KahluaTable)message.rawget("Buttons");
 		if (buttons != null) {
 			button1 = (String)buttons.rawget(new Double(1));
 			button2 = (String)buttons.rawget(new Double(2));
 		}
-		LuaClosure callback = (LuaClosure)message.rawget("Callback");
-		ui.pushDialog(texts, media, button1, button2, callback);
+		final LuaClosure callback = (LuaClosure)message.rawget("Callback");
+		
+		DialogObject dobj = new DialogObject(null, text, media) {
+			public void doCallback (Object value) {
+				invokeCallback(callback, value);
+			}
+		};
+		
+		if (button2 != null)
+			ui.uiChoice(dobj, new String[] { button1, button2 });
+		else
+			ui.uiConfirm(dobj, button1);
 	}
 
 	/** builds and calls a dialog from a Dialog table */
-	public static void dialog (String[] texts, Media[] media) {
-		if (texts.length > 0) {
-			log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
-		}
-		ui.pushDialog(texts, media, null, null, null);
+	public static void dialog (final KahluaTable dialog) {
+		if (dialog.len() <= 0) return;
+		
+		DialogObject dobj = new DialogObject(null, null, null) {
+			private int i = 0;
+			
+			public void loadPage (int page) {
+				KahluaTable kt = (KahluaTable)dialog.rawget(page);
+				if (kt == null) throw new RuntimeException("dialog overrun");
+				this.sender = (EventTable)kt.rawget("Sender");
+				this.text = removeHtml((String)kt.rawget("Text"));
+				this.media = (Media)kt.rawget("Media");
+			}
+			
+			public void doCallback (Object value) {
+				if (value == null) return; /* dialog was canceled */
+				if (i >= dialog.len()) return; /* we are at end */
+				loadPage(++i);
+				log("CALL: Dialog - " + text.substring(0, Math.min(100, text.length())), LOG_CALL);
+				ui.uiMessage(this);
+			}
+		};
+		
+		/* XXX this is a hack. Because I want to be able to define DialogObject subclasses inline,
+		 * I can't call methods that are not part of the class (in this case, loadPage, to load the
+		 * first page of the dialog).
+		 * So instead, I call doCallback, which will flip to next page (`i` starts at 0 so next page is 1)
+		 * and invoke the uiMessage call by itself.
+		 */
+		dobj.doCallback("start");
 	}
 
 	/** calls input to UI */
-	public static void input (KahluaTable input) {
+	public static void input (final KahluaTable input) {
 		String type = (String)input.rawget("InputType");
 		String name = (String)input.rawget("Name");
 		String text = removeHtml((String)input.rawget("Text"));
 		Media media = (Media)input.rawget("Media");
-		LuaClosure callback = (LuaClosure)input.rawget("OnGetInput");
+		final LuaClosure callback = (LuaClosure)input.rawget("OnGetInput");
 		
 		if (name == null) name = "(unnamed)";
 		if (type == null) {
@@ -302,19 +337,35 @@ public class Engine implements Runnable {
 				log("CALL: GetInput " + name + " has invalid choices", LOG_ERROR);
 				return;
 			}
-			int optsize = choices.len();
-			String[] options = new String[optsize];
-			KahluaTableIterator it = choices.iterator();
-			int i = 0;
-			while (it.advance()) options[i++] = it.getValue().toString();
+			final int optsize = choices.len();
+			final String[] options = new String[optsize];
+			for (int i = 0; i < optsize; i++)
+				options[i] = (String)choices.rawget(i);
 			log("CALL: GetInput " + name + " (multiple choice)", LOG_CALL);
-			ui.pushChoiceInput(text, media, options, callback);
+			
+			DialogObject dobj = new DialogObject(null, text, media) {	
+				public void doCallback (Object value) {
+					// value should be Integer
+					int i = ((Integer)value).intValue();
+					if (i < 0 || i >= optsize) throw new RuntimeException("answer index out of bounds");
+					invokeCallbackOn(input, "OnGetInput", options[i]);
+				}
+			};
+			
+			ui.uiChoice(dobj, options);
 		} else {
 			if (!"Text".equals(type)) {
 				log("CALL: GetInput " + name + " has unknown type '" + type + "', assuming Text", LOG_WARN);
 			}
 			log("CALL: GetInput " + name + " (text)", LOG_CALL);
-			ui.pushTextInput(text, media, callback);
+			
+			DialogObject dobj = new DialogObject(null, text, media) {	
+				public void doCallback (Object value) {
+					invokeCallbackOn(input, "OnGetInput", value);
+				}
+			};
+			
+			ui.uiInput(dobj);
 		}
 	}
 
@@ -330,7 +381,8 @@ public class Engine implements Runnable {
 	}
 
 	/** invokes a Lua callback in the event thread */
-	public static void invokeCallback (final LuaClosure callback, final Object value) {
+	private static void invokeCallback (final LuaClosure callback, final Object value) {
+		if (callback == null) return;
 		instance.eventRunner.perform(new Runnable() {
 			public void run () {
 				try {
@@ -339,6 +391,30 @@ public class Engine implements Runnable {
 					else
 						Engine.log("CBAK: user input is: '" + value.toString() + "'", LOG_CALL);
 					Engine.vmThread.call(callback, value, null, null);
+					Engine.log("CBAK END", LOG_CALL);
+				} catch (Throwable t) {
+					stacktrace(t);
+					Engine.log("CBAK FAIL", LOG_CALL);
+				}
+			}
+		});
+	}
+	
+	/** invokes a Lua callback on a ZInput table (basically a simulated callEvent) */
+	private static void invokeCallbackOn (final KahluaTable self, final String eventName, final Object value) {
+		final LuaClosure callback = (LuaClosure)self.rawget(eventName);
+		if (callback == null) {
+			Engine.log("CBAK: user input is: '" + value.toString() + "'; no " + eventName + " registered", LOG_CALL);
+			return;
+		}
+		instance.eventRunner.perform(new Runnable() {
+			public void run () {
+				try {
+					if (value == null)
+						Engine.log("CBAK: UI element cancelled", LOG_CALL);
+					else
+						Engine.log("CBAK: user input is: '" + value.toString() + "'", LOG_CALL);
+					Engine.vmThread.call(callback, self, value, null);
 					Engine.log("CBAK END", LOG_CALL);
 				} catch (Throwable t) {
 					stacktrace(t);
