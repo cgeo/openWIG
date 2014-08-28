@@ -364,4 +364,8 @@ public class GameWindow extends JFrame implements UI {
 		}
 		if (closeAfterSave) kill();
 	}
+	
+	/** not implemented because of external dependencies for mp3 and ogg playback */
+    public void command (String cmd) {
+    }
 }

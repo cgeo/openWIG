@@ -186,7 +186,6 @@ public class GPSManager extends JDialog implements ActionListener {
 		getContentPane().add(makeGPSSelectionPanel(), BorderLayout.CENTER);
 
 		insertCard(new ManualCard());
-		insertCard(new BluetoothCard());
 		//insertCard(new Simulator());
 		insertCard(new NetworkCard());
 
