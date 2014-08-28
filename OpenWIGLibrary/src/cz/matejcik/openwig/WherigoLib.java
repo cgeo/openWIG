@@ -396,4 +396,13 @@ public class WherigoLib implements JavaFunction {
 		Engine.log("CUST: " + text, Engine.LOG_CALL);
 		return 0;
 	}
+	
+	private int command(LuaCallFrame callFrame, int nArguments) {
+	  BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for ShowStatusText");
+	  String cmd = (String) callFrame.get(0);
+	  if (cmd != null && cmd.length() == 0)
+	    cmd = null;
+	  Engine.ui.command(cmd);
+	  return 0;
+	}
 }
