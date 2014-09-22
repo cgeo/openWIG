@@ -221,7 +221,7 @@ public class WherigoLib implements JavaFunction {
 			case TRANSLATEPOINT: return translatePoint(callFrame, nArguments);
 			case AUDIO: return playAudio(callFrame, nArguments);
 			case VECTORTOPOINT: return vectorToPoint(callFrame, nArguments);
-			case COMMAND: return 0;
+			case COMMAND: return command(callFrame, nArguments);
 			case SHOWSTATUSTEXT: return showStatusText(callFrame, nArguments);
 			case LOGMESSAGE: return logMessage(callFrame, nArguments);
 			case GETVALUE: return distanceGetValue(callFrame, nArguments);
@@ -398,7 +398,7 @@ public class WherigoLib implements JavaFunction {
 	}
 	
 	private int command(LuaCallFrame callFrame, int nArguments) {
-	  BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for ShowStatusText");
+	  BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for Command");
 	  String cmd = (String) callFrame.get(0);
 	  if (cmd != null && cmd.length() == 0)
 	    cmd = null;
