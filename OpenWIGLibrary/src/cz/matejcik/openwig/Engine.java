@@ -7,14 +7,22 @@
  */
 package cz.matejcik.openwig;
 
-import cz.matejcik.openwig.formats.*;
-import cz.matejcik.openwig.platform.*;
-import se.krka.kahlua.vm.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Calendar;
 
-import java.io.*;
-import java.util.*;
+import cz.matejcik.openwig.formats.CartridgeFile;
+import cz.matejcik.openwig.formats.Savegame;
+import cz.matejcik.openwig.platform.LocationService;
+import cz.matejcik.openwig.platform.UI;
 import se.krka.kahlua.cldc11.CLDC11Platform;
-
+import se.krka.kahlua.vm.KahluaTable;
+import se.krka.kahlua.vm.KahluaThread;
+import se.krka.kahlua.vm.LuaClosure;
+import se.krka.kahlua.vm.Platform;
+import se.krka.kahlua.vm.Prototype;
 import util.BackgroundRunner;
 
 
@@ -43,58 +51,64 @@ import util.BackgroundRunner;
 public class Engine implements Runnable {
 
 	public static final String VERSION = "428";
-
+	public static final int LOG_PROP = 0;
+	public static final int LOG_CALL = 1;
+	public static final int LOG_WARN = 2;
+	public static final int LOG_ERROR = 3;
 	/** the main instance */
 	public static Engine instance;
-	
 	/** Lua platform - we might want to implement our version */
 	public static Platform platform = CLDC11Platform.getInstance();
 	/** Lua environment */
 	public static KahluaTable environment;
 	/** Lua state - don't touch this if you don't have to */
 	public static KahluaThread vmThread;
-
 	/** reference to UI implementation */
 	protected static UI ui;
 	/** reference to LocationService */
 	protected static LocationService gps;
-
+	/** Cartridge (a global Lua object) */
+	public Cartridge cartridge;
+	/** global Player Lua object */
+	public Player player = new Player();
 	/** reference to source file */
 	protected CartridgeFile gwcfile;
 	/** reference to top-level source closure */
 	protected LuaClosure gwcclosure;
 	/** reference to save file */
 	protected Savegame savegame = null;
-	/** reference to log stream */
-	private PrintStream log;
-
 	/** event runner taking care of Lua state calls */
 	protected BackgroundRunner eventRunner;
-
-	/** Cartridge (a global Lua object) */
-	public Cartridge cartridge;
-	/** global Player Lua object */
-	public Player player = new Player();
-
+	/** reference to log stream */
+	private PrintStream log;
 	private boolean doRestore = false;
 	private boolean end = false;
-	
-	public static final int LOG_PROP = 0;
-	public static final int LOG_CALL = 1;
-	public static final int LOG_WARN = 2;
-	public static final int LOG_ERROR = 3;
 	private int loglevel = LOG_WARN;
 
 	private Thread thread = null;
-
-	/** creates a new global Engine instance */
-	public static Engine newInstance (CartridgeFile cf, OutputStream log, UI ui, LocationService service) throws IOException {
-		ui.debugMsg("Creating engine...\n");
-		Engine.ui = ui;
-		Engine.gps = service;
-		instance = new Engine(cf, log);
-		return instance;
-	}
+	private boolean refreshScheduled = false;
+	private Runnable refresh = new Runnable() {
+		public void run () {
+			synchronized (instance) {
+				ui.refresh();
+				refreshScheduled = false;
+			}
+		}
+	};
+	private Runnable store = new Runnable() {
+		public void run () {
+			// perform the actual sync
+			try {
+				ui.blockForSaving();
+				savegame.store(environment);
+			} catch (IOException e) {
+				log("STOR: save failed: "+e.toString(), LOG_WARN);
+				ui.showError("Sync failed.\n" + e.getMessage());
+			} finally {
+				ui.unblock();
+			}
+		}
+	};
 
 	protected Engine (CartridgeFile cf, OutputStream out) throws IOException {
 		gwcfile = cf;
@@ -106,137 +120,13 @@ public class Engine implements Runnable {
 		/* for test mockups */
 	}
 
-	/** starts Engine's thread */
-	public void start () {
-		thread = new Thread(this);
-		thread.start();
-	}
-
-	/** marks game for resuming and starts thread */
-	public void restore () {
-		doRestore = true;
-		start();
-	}
-
-	/** prepares Lua state and some bookkeeping */
-	protected void prepareState ()
-	throws IOException {
-		ui.debugMsg("Creating state...\n");
-		environment = platform.newEnvironment();
-		vmThread = new KahluaThread(platform, environment);
-
-		/*write("Registering base libs...\n");
-		BaseLib.register(state);
-		MathLib.register(state);
-		StringLib.register(state);
-		CoroutineLib.register(state);
-		OsLib.register(state);*/
-
-		ui.debugMsg("Registering WIG libs...\n");
-		WherigoLib.register(vmThread, environment);
-		
-		ui.debugMsg("Building javafunc map...\n");
-		savegame.buildFuncMap(environment);
-
-		ui.debugMsg("Building event queue...\n");
-		eventRunner = new BackgroundRunner(true);
-		eventRunner.setQueueListener(new Runnable() {
-			public void run () {
-				ui.refresh();
-			}
-		});
-		
-		ui.debugMsg("Loading gwc...");
-		if (gwcfile == null) throw new IOException("invalid cartridge file");
-				
-		ui.debugMsg("pre-setting properties...");
-		player.rawset("CompletionCode", gwcfile.code);
-		player.rawset("Name", gwcfile.member);
-
-		ui.debugMsg("loading code...");
-		byte[] lbc = gwcfile.getBytecode();
-
-		ui.debugMsg("parsing...");
-		gwcclosure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
-		savegame.walkPrototype(gwcclosure.prototype);
-	}
-
-	/** invokes game restore */
-	private void restoreGame ()
-	throws IOException {
-		ui.debugMsg("Restoring saved state...");
-		cartridge = new Cartridge();
-		savegame.restore(environment);
-	}
-
-	/** invokes creation of clean new game environment */
-	private void newGame ()
-	throws IOException {
-		// starting game normally
-
-		ui.debugMsg("calling top-level...\n");
-		vmThread.call(gwcclosure, null, null, null);
-	}
-
-	/** main loop - periodically copy location data into Lua and evaluate zone positions */
-	private void mainloop () {
-		try {
-			while (!end) {
-				try {
-					if (gps.getLatitude() != player.position.latitude
-					|| gps.getLongitude() != player.position.longitude
-					|| gps.getAltitude() != player.position.altitude) {
-						player.refreshLocation();
-					}
-					cartridge.tick();
-				} catch (Exception e) {
-					stacktrace(e);
-				}
-
-				try { Thread.sleep(1000); } catch (InterruptedException e) { }
-			}
-			if (log != null) log.close();
-		} catch (Throwable t) {
-			ui.end();
-			stacktrace(t);
-		} finally {
-			instance = null;
-			vmThread = null;
-			if (eventRunner != null) eventRunner.kill();
-			eventRunner = null;
-		}
-	}
-
-	/** thread's run() method that does all the work in the right order */
-	public void run () {
-		try {
-			if (log != null) log.println("-------------------\ncartridge " + gwcfile.name + " started (openWIG r" + VERSION + ")\n-------------------");
-			prepareState ();
-
-			if (doRestore) restoreGame();
-			else newGame();
-			
-			// drop gwcclosure, we won't need it anymore
-			gwcclosure = null;
-
-			loglevel = LOG_PROP;
-
-			ui.debugMsg("Starting game...\n");
-			ui.start();
-
-			player.refreshLocation();
-			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
-			ui.refresh();
-			eventRunner.unpause();
-			
-			mainloop();
-		} catch (IOException e) {
-			ui.showError("Could not load cartridge: "+e.getMessage());
-		} catch (Throwable t) {
-			stacktrace(t);
-		} finally {
-			ui.end();
-		}
+	/** creates a new global Engine instance */
+	public static Engine newInstance (CartridgeFile cf, OutputStream log, UI ui, LocationService service) throws IOException {
+		ui.debugMsg("Creating engine...\n");
+		Engine.ui = ui;
+		Engine.gps = service;
+		instance = new Engine(cf, log);
+		return instance;
 	}
 
 	/** utility function to dump stack trace and show a semi-meaningful error */
@@ -272,13 +162,13 @@ public class Engine implements Runnable {
 			button2 = (String)buttons.rawget(new Double(2));
 		}
 		final LuaClosure callback = (LuaClosure)message.rawget("Callback");
-		
+
 		DialogObject dobj = new DialogObject(null, text, media) {
 			public void doCallback (Object value) {
 				invokeCallback(callback, value);
 			}
 		};
-		
+
 		if (button2 != null)
 			ui.uiChoice(dobj, new String[] { button1, button2 });
 		else
@@ -288,10 +178,10 @@ public class Engine implements Runnable {
 	/** builds and calls a dialog from a Dialog table */
 	public static void dialog (final KahluaTable dialog) {
 		if (dialog.len() <= 0) return;
-		
+
 		DialogObject dobj = new DialogObject(null, null, null) {
 			private int i = 0;
-			
+
 			public void loadPage (int page) {
 				KahluaTable kt = (KahluaTable)dialog.rawget(page);
 				if (kt == null) throw new RuntimeException("dialog overrun");
@@ -299,7 +189,7 @@ public class Engine implements Runnable {
 				this.text = removeHtml((String)kt.rawget("Text"));
 				this.media = (Media)kt.rawget("Media");
 			}
-			
+
 			public void doCallback (Object value) {
 				if (value == null) return; /* dialog was canceled */
 				if (i >= dialog.len()) return; /* we are at end */
@@ -308,7 +198,7 @@ public class Engine implements Runnable {
 				ui.uiMessage(this);
 			}
 		};
-		
+
 		/* XXX this is a hack. Because I want to be able to define DialogObject subclasses inline,
 		 * I can't call methods that are not part of the class (in this case, loadPage, to load the
 		 * first page of the dialog).
@@ -325,7 +215,7 @@ public class Engine implements Runnable {
 		String text = removeHtml((String)input.rawget("Text"));
 		Media media = (Media)input.rawget("Media");
 		final LuaClosure callback = (LuaClosure)input.rawget("OnGetInput");
-		
+
 		if (name == null) name = "(unnamed)";
 		if (type == null) {
 			log("CALL: GetInput without type!", LOG_ERROR);
@@ -340,10 +230,10 @@ public class Engine implements Runnable {
 			final int optsize = choices.len();
 			final String[] options = new String[optsize];
 			for (int i = 0; i < optsize; i++)
-				options[i] = (String)choices.rawget(i);
+				options[i] = (String)choices.rawget(i + 1);
 			log("CALL: GetInput " + name + " (multiple choice)", LOG_CALL);
-			
-			DialogObject dobj = new DialogObject(null, text, media) {	
+
+			DialogObject dobj = new DialogObject(null, text, media) {
 				public void doCallback (Object value) {
 					// value should be Integer
 					int i = ((Integer)value).intValue();
@@ -351,20 +241,20 @@ public class Engine implements Runnable {
 					invokeCallbackOn(input, "OnGetInput", options[i]);
 				}
 			};
-			
+
 			ui.uiChoice(dobj, options);
 		} else {
 			if (!"Text".equals(type)) {
 				log("CALL: GetInput " + name + " has unknown type '" + type + "', assuming Text", LOG_WARN);
 			}
 			log("CALL: GetInput " + name + " (text)", LOG_CALL);
-			
-			DialogObject dobj = new DialogObject(null, text, media) {	
+
+			DialogObject dobj = new DialogObject(null, text, media) {
 				public void doCallback (Object value) {
 					invokeCallbackOn(input, "OnGetInput", value);
 				}
 			};
-			
+
 			ui.uiInput(dobj);
 		}
 	}
@@ -399,7 +289,7 @@ public class Engine implements Runnable {
 			}
 		});
 	}
-	
+
 	/** invokes a Lua callback on a ZInput table (basically a simulated callEvent) */
 	private static void invokeCallbackOn (final KahluaTable self, final String eventName, final Object value) {
 		final LuaClosure callback = (LuaClosure)self.rawget(eventName);
@@ -469,7 +359,7 @@ public class Engine implements Runnable {
 		}
 		builder.append(source.substring(pos));
 	}
-
+	
 	/** strips a subset of HTML that tends to appear in descriptions generated
 	 * by Groundspeak Builder
 	 */
@@ -483,16 +373,6 @@ public class Engine implements Runnable {
 		replace(sb.toString(), "&amp;", "&", sb);
 		return sb.toString();
 	}
-	
-	private Runnable refresh = new Runnable() {
-		public void run () {
-			synchronized (instance) {
-				ui.refresh();
-				refreshScheduled = false;
-			}
-		}
-	};
-	private boolean refreshScheduled = false;
 
 	public static void refreshUI () {
 		synchronized (instance) {
@@ -503,28 +383,146 @@ public class Engine implements Runnable {
 		}
 	}
 
-	private Runnable store = new Runnable() {
-		public void run () {
-			// perform the actual sync
-			try {
-				ui.blockForSaving();
-				savegame.store(environment);
-			} catch (IOException e) {
-				log("STOR: save failed: "+e.toString(), LOG_WARN);
-				ui.showError("Sync failed.\n" + e.getMessage());
-			} finally {
-				ui.unblock();
+	/** requests save in event thread */
+	public static void requestSync () {
+		instance.eventRunner.perform(instance.store);
+	}
+
+	/** starts Engine's thread */
+	public void start () {
+		thread = new Thread(this);
+		thread.start();
+	}
+
+	/** marks game for resuming and starts thread */
+	public void restore () {
+		doRestore = true;
+		start();
+	}
+	
+	/** prepares Lua state and some bookkeeping */
+	protected void prepareState ()
+	throws IOException {
+		ui.debugMsg("Creating state...\n");
+		environment = platform.newEnvironment();
+		vmThread = new KahluaThread(platform, environment);
+
+		/*write("Registering base libs...\n");
+		BaseLib.register(state);
+		MathLib.register(state);
+		StringLib.register(state);
+		CoroutineLib.register(state);
+		OsLib.register(state);*/
+
+		ui.debugMsg("Registering WIG libs...\n");
+		WherigoLib.register(vmThread, environment);
+
+		ui.debugMsg("Building javafunc map...\n");
+		savegame.buildFuncMap(environment);
+
+		ui.debugMsg("Building event queue...\n");
+		eventRunner = new BackgroundRunner(true);
+		eventRunner.setQueueListener(new Runnable() {
+			public void run () {
+				ui.refresh();
 			}
+		});
+
+		ui.debugMsg("Loading gwc...");
+		if (gwcfile == null) throw new IOException("invalid cartridge file");
+
+		ui.debugMsg("pre-setting properties...");
+		player.rawset("CompletionCode", gwcfile.code);
+		player.rawset("Name", gwcfile.member);
+
+		ui.debugMsg("loading code...");
+		byte[] lbc = gwcfile.getBytecode();
+
+		ui.debugMsg("parsing...");
+		gwcclosure = Prototype.loadByteCode(new ByteArrayInputStream(lbc), environment);
+		savegame.walkPrototype(gwcclosure.prototype);
+	}
+
+	/** invokes game restore */
+	private void restoreGame ()
+	throws IOException {
+		ui.debugMsg("Restoring saved state...");
+		cartridge = new Cartridge();
+		savegame.restore(environment);
+	}
+
+	/** invokes creation of clean new game environment */
+	private void newGame ()
+	throws IOException {
+		// starting game normally
+
+		ui.debugMsg("calling top-level...\n");
+		vmThread.call(gwcclosure, null, null, null);
+	}
+
+	/** main loop - periodically copy location data into Lua and evaluate zone positions */
+	private void mainloop () {
+		try {
+			while (!end) {
+				try {
+					if (gps.getLatitude() != player.position.latitude
+					|| gps.getLongitude() != player.position.longitude
+					|| gps.getAltitude() != player.position.altitude) {
+						player.refreshLocation();
+					}
+					cartridge.tick();
+				} catch (Exception e) {
+					stacktrace(e);
+				}
+
+				try { Thread.sleep(1000); } catch (InterruptedException e) { }
+			}
+			if (log != null) log.close();
+		} catch (Throwable t) {
+			ui.end();
+			stacktrace(t);
+		} finally {
+			instance = null;
+			vmThread = null;
+			if (eventRunner != null) eventRunner.kill();
+			eventRunner = null;
 		}
-	};
+	}
+
+	/** thread's run() method that does all the work in the right order */
+	public void run () {
+		try {
+			if (log != null) log.println("-------------------\ncartridge " + gwcfile.name + " started (openWIG r" + VERSION + ")\n-------------------");
+			prepareState ();
+
+			if (doRestore) restoreGame();
+			else newGame();
+
+			// drop gwcclosure, we won't need it anymore
+			gwcclosure = null;
+
+			loglevel = LOG_PROP;
+
+			ui.debugMsg("Starting game...\n");
+			ui.start();
+
+			player.refreshLocation();
+			cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
+			ui.refresh();
+			eventRunner.unpause();
+
+			mainloop();
+		} catch (IOException e) {
+			ui.showError("Could not load cartridge: "+e.getMessage());
+		} catch (Throwable t) {
+			stacktrace(t);
+		} finally {
+			ui.end();
+		}
+	}
 
 	/** stores current game state */
 	public void store () {
 		store.run();
-	}
-
-	/** requests save in event thread */
-	public static void requestSync () {
-		instance.eventRunner.perform(instance.store);
 	}
 }
