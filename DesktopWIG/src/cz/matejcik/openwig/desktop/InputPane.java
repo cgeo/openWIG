@@ -1,5 +1,6 @@
 package cz.matejcik.openwig.desktop;
 
+import cz.matejcik.openwig.DialogObject;
 import cz.matejcik.openwig.Engine;
 import cz.matejcik.openwig.EventTable;
 import cz.matejcik.openwig.desktop.common.DetailPane;
@@ -23,7 +24,7 @@ public class InputPane extends DetailPane {
 	/** pool of buttons for multiple-choice inputs */
 	private ArrayList<JButton> options = new ArrayList<JButton>();
 
-	private EventTable input;
+	private DialogObject input;
 
 	private DialogWindow parent;
 
@@ -40,41 +41,36 @@ public class InputPane extends DetailPane {
 	 * @param input the input to show
 	 * @see cz.matejcik.openwig.platform.UI#pushInput(cz.matejcik.openwig.EventTable)
 	 */
-	public void showInput (EventTable input) {
-		this.input = input;
-		String text = Engine.removeHtml((String)input.rawget("Text"));
-		setDescription(text);
+	public void showInput (DialogObject dobj, String[] choices) {
+		this.input = dobj;
+		setDescription(input.text);
 		setMedia(input.media);
 
-		String type = (String)input.rawget("InputType");
-		if ("Text".equals(type)) {
+		if (choices == null || choices.length == 0) {
 			// hide buttons
 			for (JButton button : options) button.setVisible(false);
 			// show text/answer
 			textInput.setVisible(true);
 			textInput.setText("");
 			answer.setVisible(true);
-		} else if ("MultipleChoice".equals(type)) {
+		} else {
 			// hide text/answer
 			textInput.setVisible(false);
 			answer.setVisible(false);
-			KahluaTable choices = (KahluaTable)input.rawget("Choices");
-			int n = choices.len();
 			// make sure we have enough buttons
-			for (int i = options.size(); i < n; i++) {
+			for (int i = options.size(); i < choices.length; i++) {
 				JButton jb = new JButton();
 				options.add(jb);
 				addButton(jb);
 			}
 			// set up choices
-			for (int i = 0; i < n; i++) {
-				String choice = (String)choices.rawget(new Double(i+1));
+			for (int i = 0; i < choices.length; i++) {
 				JButton jb = options.get(i);
-				jb.setText(choice);
+				jb.setText(choices[i]);
 				jb.setVisible(true);
 			}
 			// hide the rest
-			for (int i = n; i < options.size(); i++) {
+			for (int i = choices.length; i < options.size(); i++) {
 				options.get(i).setVisible(false);
 			}
 		}
@@ -84,9 +80,9 @@ public class InputPane extends DetailPane {
 	@Override
 	protected void buttonClicked (JButton button) {
 		if (button == answer) {
-			Engine.callEvent(input, "OnGetInput", textInput.getText());
+			input.doCallback(textInput.getText());
 		} else {
-			Engine.callEvent(input, "OnGetInput", button.getText());
+			input.doCallback(button.getText());
 		}
 		parent.disappear();
 	}
@@ -95,7 +91,7 @@ public class InputPane extends DetailPane {
 	 * Calls the OnGetInput callback event with null parameter.
 	 */
 	public void cancel () {
-		Engine.callEvent(input, "OnGetInput", null);
+		input.doCallback(null);
 	}
 
 }

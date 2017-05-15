@@ -1,9 +1,10 @@
 package cz.matejcik.openwig.desktop;
 
+import cz.matejcik.openwig.DialogObject;
 import cz.matejcik.openwig.EventTable;
 import cz.matejcik.openwig.Media;
-import java.awt.Container;
-import java.awt.CardLayout;
+
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JDialog;
@@ -55,11 +56,12 @@ public class DialogWindow extends JDialog {
 	/** Prepares and shows a Wherigo Dialog.
 	 * @see cz.matejcik.openwig.platform.UI#pushDialog(java.lang.String[], cz.matejcik.openwig.Media[], java.lang.String, java.lang.String, se.krka.kahlua.vm.LuaClosure)
 	 */
-	public void showDialog (String[] texts, Media[] media, String button1, String button2, LuaClosure callback)
+
+	public void showDialog (DialogObject dobj, String button1, String button2)
 	{
 		cancelRunning();
 		nowShowing = DIALOG;
-		dialog.showDialog(texts, media, button1, button2, callback);
+		dialog.showDialog(dobj, button1, button2);
 		cards.show(getContentPane(), "dialog");
 		pack();
 		setVisible(true);
@@ -69,10 +71,10 @@ public class DialogWindow extends JDialog {
 	 * @see cz.matejcik.openwig.platform.UI#pushInput(cz.matejcik.openwig.EventTable)
 	 * @param input the input to show
 	 */
-	public void showInput (EventTable input) {
+	public void showInput (DialogObject dobj, String[] choices) {
 		cancelRunning();
 		nowShowing = INPUT;
-		this.input.showInput(input);
+		this.input.showInput(dobj, choices);
 		cards.show(getContentPane(), "input");
 		pack();
 		setVisible(true);

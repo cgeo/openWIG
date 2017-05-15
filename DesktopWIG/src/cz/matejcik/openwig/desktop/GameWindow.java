@@ -1,12 +1,9 @@
 package cz.matejcik.openwig.desktop;
 
-import cz.matejcik.openwig.Engine;
+import cz.matejcik.openwig.*;
+
 import java.util.*;
-import cz.matejcik.openwig.EventTable;
-import cz.matejcik.openwig.Media;
-import cz.matejcik.openwig.Task;
-import cz.matejcik.openwig.Thing;
-import cz.matejcik.openwig.Zone;
+
 import cz.matejcik.openwig.desktop.common.CardPanel;
 import cz.matejcik.openwig.desktop.common.FrameTimer;
 import cz.matejcik.openwig.platform.UI;
@@ -221,6 +218,7 @@ public class GameWindow extends JFrame implements UI {
 		submenus.show(key);
 	}
 
+	@Override
 	public void refresh () {
 		zones.prepareRefresh();
 		yousee.prepareRefresh();
@@ -238,43 +236,32 @@ public class GameWindow extends JFrame implements UI {
 		}});
 	}
 
+	@Override
 	public void start () {
 		setVisible(true);
 		Main.selector.setVisible(false);
 	}
 
+	@Override
 	public void end () {
 		setVisible(false);
 		dispose();
 		Main.selector.setVisible(true);
 	}
 
+	@Override
 	public void showError (String msg) {
 		JOptionPane.showMessageDialog(rootPane, msg, "error", JOptionPane.ERROR_MESSAGE);
 	}
 
+	@Override
 	public void debugMsg (String msg) {
 		System.err.print(msg);
 	}
 
 	/** not implemented, because nobody uses it anyway and it would only clutter the UI */
+	@Override
 	public void setStatusText (String text) {
-	}
-
-	public void pushDialog (final String[] texts, final Media[] media, final String button1, final String button2, final LuaClosure callback) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-				dialog.showDialog(texts, media, button1, button2, callback);
-			}
-		});
-	}
-
-	public void pushInput (final EventTable input) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run () {
-				dialog.showInput(input);
-			}
-		});
 	}
 
 	/** Actually perform the {@link #showScreen()} action.
@@ -368,5 +355,66 @@ public class GameWindow extends JFrame implements UI {
 	
 	public String getDeviceID () {
 		return "dsktpwig";
+	}
+
+	@Override
+	public void uiMessage(DialogObject dobj) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				dialog.showDialog(dobj, "OK", null);
+			}
+		});
+	}
+
+	@Override
+	public void uiConfirm(DialogObject dobj, String button) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				dialog.showDialog(dobj, button, null);
+			}
+		});
+	}
+
+	@Override
+	public void uiInput(DialogObject dobj) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				dialog.showInput(dobj, null);
+			}
+		});
+	}
+
+	@Override
+	public void uiChoice(DialogObject dobj, String[] choices) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				dialog.showInput(dobj, null);
+			}
+		});
+	}
+
+	@Override
+	public void uiNotify(DialogObject dobj) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run () {
+				dialog.showDialog(dobj, "OK", null);
+			}
+		});
+	}
+
+	@Override
+	public void uiCancel(Runnable callback) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				dialog.close();
+				callback.run();
+			}
+		});
+	}
+
+	@Override
+	public void uiWait(Runnable callback) {
+		throw new RuntimeException("not implemented");
+		// not implemented because not implemented
 	}
 }
