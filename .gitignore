@@ -1,0 +1,6 @@
+.gradle
+build
+*.swp
+
+# ignore the submodule dir -- for now at least
+/kahlua2
