@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = "com.github.matejcik"
+
+jar.baseName = "openwig"
+
+sourceSets.main {
+	java { srcDirs = ["src"] }
+	resources {
+		srcDirs = ["src"]
+		include "cz/matejcik/openwig/stdlib.lbc"
+	}
+}
