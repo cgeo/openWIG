@@ -129,6 +129,7 @@ public class Engine implements Runnable {
 
 		ui.debugMsg("Registering WIG libs...\n");
 		WherigoLib.register(state);
+		WherigoLib.env.put("Device", gwcfile.device);
 
 		ui.debugMsg("Building event queue...\n");
 		eventRunner = new BackgroundRunner(true);

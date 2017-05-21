@@ -126,8 +126,7 @@ public class WherigoLib implements JavaFunction {
 	}
 
 	public static void register(LuaState state) {
-		
-		if (env.get(DEVICE_ID) == null) throw new RuntimeException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
+		env.put(DEVICE_ID, Engine.instance.ui.getDeviceID());
 		
 		LuaTable environment = state.getEnvironment();
 
