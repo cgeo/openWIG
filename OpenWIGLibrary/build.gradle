@@ -5,6 +5,9 @@ group = "com.github.matejcik"
 
 jar.baseName = "openwig"
 
+targetCompatibility = '1.7'
+sourceCompatibility = '1.7'
+
 sourceSets.main {
 	java { srcDirs = ["src"] }
 	resources {
