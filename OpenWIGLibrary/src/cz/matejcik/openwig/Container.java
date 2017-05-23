@@ -92,8 +92,8 @@ public class Container extends EventTable {
 
 	public void deserialize (DataInputStream in)
 	throws IOException {
-		container = (Container)Engine.instance.savegame.restoreValue(in, null);
 		super.deserialize(in);
+		container = (Container)Engine.instance.savegame.restoreValue(in, null);
 		inventory = (LuaTable)table.rawget("Inventory");
 	}
 }
