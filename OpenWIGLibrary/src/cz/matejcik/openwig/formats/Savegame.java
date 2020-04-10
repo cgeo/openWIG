@@ -337,7 +337,7 @@ public class Savegame {
 			if (debug) debug(" : ");
 			Object value = restoreValue(in, table.rawget(key));
 			if (debug) debug("\n");
-			table.rawset(key, value);
+			table.rawset(key, value, false);
 		}
 		level--;
 		return table;
