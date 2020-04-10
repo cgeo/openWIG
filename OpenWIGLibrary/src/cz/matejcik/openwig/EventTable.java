@@ -126,8 +126,12 @@ public class EventTable implements LuaTable, Serializable {
 	}
 
 	public void rawset(Object key, Object value) {
+		rawset(key, value, false);
+	}
+
+	public void rawset(Object key, Object value, boolean justdeserialize) {
 		// TODO unify rawset/setItem
-		if (key instanceof String) {
+		if (!justdeserialize && key instanceof String) {
 			setItem((String) key, value);
 		}
 		table.rawset(key, value);
