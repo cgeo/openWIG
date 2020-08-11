@@ -241,7 +241,7 @@ public class Engine implements Runnable {
 			msg = e.toString();
 		}
 		log(msg, LOG_ERROR);
-		ui.showError("you hit a bug! please report at openwig.googlecode.com and i'll fix it for you!\n"+msg);
+		ui.showError("You hit a bug! Please report this to whereyougo@cgeo.org with a screenshot of this message.\n"+msg);
 	}
 
 	/** stops Engine */
