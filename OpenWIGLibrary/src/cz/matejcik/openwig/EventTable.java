@@ -11,6 +11,8 @@ public class EventTable implements LuaTable, Serializable {
 
 	private LuaTable metatable = new LuaTableImpl();
 
+	private boolean isDeserializing = false;
+
 	private static class TostringJavaFunc implements JavaFunction {
 
 		public EventTable parent;
@@ -36,7 +38,9 @@ public class EventTable implements LuaTable, Serializable {
 	}
 
 	public void deserialize (DataInputStream in) throws IOException {
+		isDeserializing = true;
 		Engine.instance.savegame.restoreValue(in, this);
+		isDeserializing = false;
 		//setTable(table);
 	}
 	
@@ -104,6 +108,15 @@ public class EventTable implements LuaTable, Serializable {
 	}
 	
 	public void callEvent(String name, Object param) {
+		/*
+		 workaround:  suppress RuntimeException when callEvent() is called at deserialiation
+		 @see https://github.com/cgeo/openWIG/issues/8#issuecomment-612182631
+		 TODO actually fix EventTable and ALL of its subclasses as described in the link
+		*/
+		if (isDeserializing) {
+			return;
+		}
+		/* end workaround */
 		try {
 			Object o = table.rawget(name);
 			if (o instanceof LuaClosure) {
@@ -124,6 +137,7 @@ public class EventTable implements LuaTable, Serializable {
 	public String toString()  {
 		return (name == null ? "(unnamed)" : name);
 	}
+
 
 	public void rawset(Object key, Object value) {
 		// TODO unify rawset/setItem
