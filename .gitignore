@@ -1,5 +1,13 @@
+*.swp
+
+# ignore the submodule dir -- for now at least
+/kahlua2
 # Ignore Gradle project-specific cache directory
 .gradle
 
 # Ignore Gradle build output directory
 build
+OpenWIGLibrary/local.properties
+gradle*
+.idea
+local.properties

@@ -12,4 +12,5 @@ plugins {
 }
 
 rootProject.name = "net.jakedot.openwig"
-include("lib")
+
+// api("lib")
